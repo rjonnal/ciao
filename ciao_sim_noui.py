@@ -10,10 +10,9 @@ sensor = ciao.sensors.Sensor(sim)
 mirror = sim
 
 app = QApplication(sys.argv)
-loop = ciao.loops.Loop(sensor,mirror,verbose=100)
+loop = ciao.loops.Loop(sensor,mirror,verbose=3)
 loop.load_poke('./etc_sim/ctrl/20190916142842_poke.txt')
 loop.closed = True
-#ui = ciao.ui.UI(loop)
 loop.start()
 sys.exit(app.exec_())
 

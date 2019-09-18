@@ -124,10 +124,21 @@ class Loop(QObject):
 
                 xs = self.sensor.x_slopes[np.where(self.active_lenslets)[0]]
                 ys = self.sensor.y_slopes[np.where(self.active_lenslets)[0]]
+                if self.verbose>=1:
+                    error = self.sensor.error
+                    pcount = int(round(error*1e8))
+                    print 'rms'+'.'*pcount
+                
                 slope_vec = np.hstack((xs,ys))
                 command = self.gain * np.dot(self.poke.ctrl,slope_vec)
                 command = self.mirror.get_command()*(1-self.loss) - command
                 self.mirror.set_command(command)
+
+                if self.verbose>=1:
+                    if command.max()>ccfg.mirror_command_max*.95:
+                        print 'actuator saturated'
+                    if command.min()<ccfg.mirror_command_min*.95:
+                        print 'actuator saturated'
                 
             self.finished.emit()
             sensor_mutex.unlock()
