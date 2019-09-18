@@ -50,10 +50,7 @@ class Loop(QObject):
 
         n_lenslets = self.sensor.n_lenslets
         n_actuators = self.mirror.n_actuators
-        dummy = np.ones((2*n_lenslets,n_actuators))
-        outfn = os.path.join(ccfg.poke_directory,'dummy_poke.txt')
-        np.savetxt(outfn,dummy)
-
+        
         #DEBUG
         self.sensor.moveToThread(self.sensor_thread)
         self.mirror.moveToThread(self.mirror_thread)
@@ -77,16 +74,22 @@ class Loop(QObject):
         self.unpause_signal.connect(self.mirror.unpause)
         self.poke = None
         self.closed = False
+
+
         
-        try:
-            self.load_poke(ccfg.poke_filename)
-        except Exception as e:
-            self.load_poke()
+        # try to load the poke file specified in
+        # ciao_config.py; if it doesn't exist, create
+        # a dummy poke with all 1's; this will result
+        # in an inverse control matrix with very low
+        # gains, i.e. the mirror won't be driven
+        if not os.path.exists(ccfg.poke_filename):
+            dummy = np.ones((2*n_lenslets,n_actuators))
+            np.savetxt(ccfg.poke_filename,dummy)
             
+        self.load_poke(ccfg.poke_filename)
         self.gain = ccfg.loop_gain
         self.loss = ccfg.loop_loss
         self.paused = False
-        
 
     def has_poke(self):
         return self.poke is not None
@@ -249,13 +252,25 @@ class Loop(QObject):
         y_response = np.mean(d_y_mat/d_commands,axis=2)
         poke = np.vstack((x_response,y_response))
         ns = now_string()
-        poke_fn = os.path.join(ccfg.poke_directory,'%s_poke.txt'%ns)
-        command_fn = os.path.join(ccfg.poke_directory,'%s_currents.txt'%ns)
-        chart_fn = os.path.join(ccfg.poke_directory,'%s_modes.pdf'%ns)
-        np.savetxt(poke_fn,poke)
-        np.savetxt(command_fn,commands)
-        save_modes_chart(chart_fn,poke,commands,self.mirror.mirror_mask)
 
+
+        # After we make a new poke matrix, we will save it in
+        # two files: an archive file that can be used to keep
+        # track of old poke matrices, and the file specified
+        # in the config file, e.g., 'poke.txt'.
+        # The archive filename will use the time date string
+        # generated above. This filename will also be used to
+        # save the commands and the mirror mode chart PDF.
+        
+        poke_fn = ccfg.poke_filename
+        archive_poke_fn = os.path.join(ccfg.poke_directory,'%s_poke.txt'%ns)
+        archive_command_fn = os.path.join(ccfg.poke_directory,'%s_currents.txt'%ns)
+        archive_chart_fn = os.path.join(ccfg.poke_directory,'%s_modes.pdf'%ns)
+        
+        np.savetxt(poke_fn,poke)
+        np.savetxt(archive_poke_fn,poke)
+        np.savetxt(archive_command_fn,commands)
+        save_modes_chart(archive_chart_fn,poke,commands,self.mirror.mirror_mask)
         self.poke = Poke(poke)
         
         time.sleep(1)

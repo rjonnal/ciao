@@ -46,15 +46,15 @@ class Sensor(QObject):
         self.estimate_background = ccfg.estimate_background
         self.reconstruct_wavefront = ccfg.sensor_reconstruct_wavefront
         self.remove_tip_tilt = ccfg.sensor_remove_tip_tilt
+
         try:
-            # check to see if the camera object produced its own
-            # search boxes, and if not, use reference coordinates
-            self.search_boxes = camera.search_boxes
-            self.sensor_mask = camera.lenslet_mask
-        except Exception as e:
             xy = np.loadtxt(ccfg.reference_coordinates_filename)
-            self.search_boxes = SearchBoxes(xy[:,0],xy[:,1],ccfg.search_box_half_width)
-            self.sensor_mask = np.loadtxt(ccfg.reference_mask_filename)
+        except Exception as e:
+            xy = np.loadtxt(ccfg.reference_coordinates_bootstrap_filename)
+            print 'Bootstrapping with %s'%ccfg.reference_coordinates_bootstrap_filename
+            
+        self.search_boxes = SearchBoxes(xy[:,0],xy[:,1],ccfg.search_box_half_width)
+        self.sensor_mask = np.loadtxt(ccfg.reference_mask_filename)
         
         self.x0 = np.zeros(self.search_boxes.x.shape)
         self.y0 = np.zeros(self.search_boxes.y.shape)
@@ -205,12 +205,28 @@ class Sensor(QObject):
             print '...done'
             xcent.append(self.x_centroids)
             ycent.append(self.y_centroids)
-            
-        x_ref = np.array(xcent).mean(0)
-        y_ref = np.array(ycent).mean(0)
+
+        xcent = np.array(xcent)
+        ycent = np.array(ycent)
+        x_ref = xcent.mean(0)
+        y_ref = ycent.mean(0)
+
+        x_var = xcent.var(0)
+        y_var = ycent.var(0)
+        err = np.sqrt(np.mean([x_var,y_var]))
+        print 'reference coordinate error %0.3e px RMS'%err
+        
         self.search_boxes = SearchBoxes(x_ref,y_ref,self.search_boxes.half_width)
-        outfn = os.path.join(ccfg.reference_directory,prepend('coords.txt',now_string()))
         refxy = np.array((x_ref,y_ref)).T
-        np.savetxt(outfn,refxy,fmt='%0.2f')
+
+        # Record the new reference set to two locations, the
+        # filename specified by reference_coordinates_filename
+        # in ciao config, and also an archival filename to keep
+        # track of the history.
+        archive_fn = os.path.join(ccfg.reference_directory,prepend('reference.txt',now_string()))
+        
+        np.savetxt(archive_fn,refxy,fmt='%0.3f')
+        np.savetxt(ccfg.reference_coordinates_filename,refxy,fmt='%0.3f')
+        
         self.unpause()
         time.sleep(1)

@@ -105,7 +105,8 @@ class Simulator(QObject):
         self.x_lenslet_coords = self.x_lenslet_coords[in_pupil]
         self.y_lenslet_coords = self.y_lenslet_coords[in_pupil]
 
-        self.search_boxes = SearchBoxes(self.x_lenslet_coords,self.y_lenslet_coords,ccfg.search_box_half_width)
+        
+        self.lenslet_boxes = SearchBoxes(self.x_lenslet_coords,self.y_lenslet_coords,ccfg.search_box_half_width)
 
         #plt.plot(self.x_lenslet_coords,self.y_lenslet_coords,'ks')
         #plt.show()
@@ -165,7 +166,7 @@ class Simulator(QObject):
             self.zernike_basis = np.array(zernike_basis)
             np.save(zfn,self.zernike_basis)
 
-        self.new_error_sigma = np.ones(self.n_zernike_terms)*10
+        self.new_error_sigma = np.ones(self.n_zernike_terms)*0.0
         self.new_error_sigma[:3] = 0.0
 
         self.timer = QTimer()
@@ -204,8 +205,8 @@ class Simulator(QObject):
     def get_new_error(self):
         #self.new_error_sigma = np.ones(self.n_zernike_terms)
         coefs = np.random.randn(self.n_zernike_terms)*self.new_error_sigma
-        coefs[:4] = 0.0
-        coefs[5:] = 0.0
+        coefs[:3] = 0.0
+        coefs[4:] = 0.0
         return np.reshape(np.dot(coefs,self.zernike_basis),(self.sy,self.sx))
 
     def defocus_animation(self):
@@ -242,12 +243,12 @@ class Simulator(QObject):
         y_slope_vec = []
         x_slope_vec = []
         self.spots[:] = 0.0
-        for idx,(x,y,x1,x2,y1,y2) in enumerate(zip(self.search_boxes.x,
-                                                   self.search_boxes.y,
-                                                   self.search_boxes.x1,
-                                                   self.search_boxes.x2,
-                                                   self.search_boxes.y1,
-                                                   self.search_boxes.y2)):
+        for idx,(x,y,x1,x2,y1,y2) in enumerate(zip(self.lenslet_boxes.x,
+                                                   self.lenslet_boxes.y,
+                                                   self.lenslet_boxes.x1,
+                                                   self.lenslet_boxes.x2,
+                                                   self.lenslet_boxes.y1,
+                                                   self.lenslet_boxes.y2)):
             subwf = self.wavefront[y1:y2+1,x1:x2+1]
             yslope = np.mean(np.diff(subwf.mean(1)))
             dy = yslope*self.f/self.pixel_size_m

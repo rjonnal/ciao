@@ -356,7 +356,6 @@ class Reconstructor:
         
         for j in range(self.N):
             n,m = Z.j2nm(j)
-            print j,n,m
             h = Z.get_surface(n,m,refx,refy,kind='h')
             dx = Z.get_surface(n,m,refx,refy,kind='dx')
             dy = Z.get_surface(n,m,refx,refy,kind='dy')

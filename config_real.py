@@ -5,7 +5,7 @@
 ##############################################################
 # A unique, permanent identifier for the optical system
 # associated with this installation of ciao:
-system_id = 'simulator'
+system_id = 'AOSSFFOCT'
 
 # An identifier for the deformable mirror, used to load
 # the correct configuration files:
@@ -40,14 +40,10 @@ simulated_camera_image_directory = ciao_root + '/data/spots/'
 
 # The reference coordinates need a starting point (see README.md), and these
 # were recorded using calibration/record_reference_coordinates.py:
-reference_coordinates_filename = reference_directory + 'reference_initial.txt'
-
-# reference_coordinates_filename = reference_directory + 'reference_coordinates.txt'
-
-
-
+reference_coordinates_bootstrap_filename = reference_directory + 'reference_initial.txt'
+reference_coordinates_filename = reference_directory + 'reference.txt'
 reference_mask_filename = reference_directory + 'reference_mask.txt'
-poke_filename = poke_directory + 'dummy_poke.txt'
+poke_filename = poke_directory + 'poke.txt'
 
 # sensor settings:
 reference_n_measurements = 10

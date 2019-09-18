@@ -39,11 +39,10 @@ simulated_camera_image_directory = ciao_root + '/data/spots/'
 
 # The reference coordinates need a starting point (see README.md), and these
 # were recorded using calibration/record_reference_coordinates.py:
-reference_coordinates_filename = reference_directory + 'reference_initial.txt'
-
-# reference_coordinates_filename = reference_directory + 'reference_coordinates.txt'
+reference_coordinates_bootstrap_filename = reference_directory + 'reference_initial.txt'
+reference_coordinates_filename = reference_directory + 'reference.txt'
 reference_mask_filename = reference_directory + 'reference_mask.txt'
-poke_filename = poke_directory + 'dummy_poke.txt'
+poke_filename = poke_directory + 'poke.txt'
 
 # sensor settings:
 reference_n_measurements = 10
@@ -57,7 +56,7 @@ estimate_background = True
 background_correction = -100
 search_box_half_width = 2 #9
 spots_threshold = 100.0
-sensor_update_rate = 10.0
+sensor_update_rate = 3.0
 sensor_filter_lenslets = False
 sensor_reconstruct_wavefront = True
 sensor_remove_tip_tilt = True
@@ -65,7 +64,7 @@ centroiding_num_threads = 1
 iterative_centroiding_step = 2
 centroiding_iterations = 1
 
-mirror_update_rate = 10.0
+mirror_update_rate = 3.0
 mirror_n_actuators = 97
 mirror_flat_filename = ciao_root + '/etc_sim/dm/flat.txt'
 mirror_mask_filename = ciao_root + '/etc_sim/dm/mirror_mask.txt'
