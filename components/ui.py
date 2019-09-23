@@ -28,8 +28,8 @@ from frame_timer import FrameTimer
 from poke import Poke
 import os
 
-sensor_mutex = QMutex()
-mirror_mutex = QMutex()
+#sensor_mutex = QMutex()
+#mirror_mutex = QMutex()
 
 try:
     os.mkdir('.gui_settings')
@@ -37,18 +37,57 @@ except Exception as e:
     print e
 
 
+class Overlay(QWidget):
+    """Stores a list of 4-tuples (x1,x2,y1,y2), and can draw
+    these over its pixmap as either lines between (x1,y1) and (x2,y2),
+    or rects [(x1,y1),(x2,y1),(x2,y2),(x1,y2),(x1,y1)]."""
+    
+    def __init__(self,coords=[],color=(255,255,255,255),thickness=1.0,mode='rects',visible=True):
+        self.coords = coords
+        self.pen = QPen()
+        self.pen.setColor(QColor(*color))
+        self.pen.setWidth(thickness)
+        self.mode = mode
+        self.visible = visible
+        
+    def draw(self,pixmap):
+        if not self.visible:
+            return
+        if self.mode=='lines':
+            painter = QPainter()
+            painter.begin(pixmap)
+            painter.setPen(self.pen)
+            for index,(x1,x2,y1,y2) in enumerate(self.coords):
+                painter.drawLine(QLine(x1,y1,x2,y2))
+            painter.end()
+        elif self.mode=='rects':
+            painter = QPainter()
+            painter.begin(pixmap)
+            painter.setPen(self.pen)
+            for index,(x1,x2,y1,y2) in enumerate(self.coords):
+                width = x2-x1
+                height = y2-y1
+                painter.drawRect(x1,y1,width,height)
+            painter.end()
+            
+    
+    
 class ZoomDisplay(QWidget):
-    def __init__(self,name,clim=(0,255),colormap='gray',zoom=1.0):
+    def __init__(self,name,clim=(0,255),colormap='gray',zoom=1.0,overlays=[]):
         super(ZoomDisplay,self).__init__()
         self.name = name
         self.clim = clim
         self.zoom = zoom
         self.pixmap = QPixmap()
         self.label = QLabel()
-        
+        self.overlays = overlays
         self.colormap = colormap
         self.colortable = colortable(self.colormap)
         self.sized = False
+        self.display_ratio = 1.0
+        
+        self.mouse_coords = (ccfg.zoom_width/2.0,ccfg.zoom_height/2.0)
+        self.sy,self.sx = 256,256 #initialize to something random
         
         layout = QHBoxLayout()
         layout.addWidget(self.label)
@@ -76,8 +115,8 @@ class ZoomDisplay(QWidget):
             print e
             self.display_clim = self.clim
             
-        self.cmax_slider.setToolTip('%0.2f'%self.display_clim[1])
-        self.cmin_slider.setToolTip('%0.2f'%self.display_clim[0])
+        self.cmax_slider.setToolTip('%0.1e'%self.display_clim[1])
+        self.cmin_slider.setToolTip('%0.1e'%self.display_clim[0])
 
         self.cmin_slider.setValue(self.real2slider(self.display_clim[0]))
         self.cmax_slider.setValue(self.real2slider(self.display_clim[1]))
@@ -87,6 +126,31 @@ class ZoomDisplay(QWidget):
         layout.addWidget(self.cmin_slider)
         layout.addWidget(self.cmax_slider)
         self.setLayout(layout)
+        
+    def mousePressEvent(self,e):
+        self.mouse_coords = (e.x()*self.display_ratio,e.y()*self.display_ratio)
+        
+    def zoomed(self):
+        x1 = int(round(self.mouse_coords[0]-ccfg.zoom_width//2))
+        x2 = int(round(self.mouse_coords[0]+ccfg.zoom_width//2))
+        if x1<0:
+            x2 = x2 - x1
+            x1 = 0
+        if x2>=self.sx:
+            x1 = x1 - (x2-self.sx) - 1
+            x2 = self.sx - 1
+            
+        y1 = int(round(self.mouse_coords[1]-ccfg.zoom_height//2))
+        y2 = int(round(self.mouse_coords[1]+ccfg.zoom_height//2))
+        if y1<0:
+            y2 = y2 - y1
+            y1 = 0
+        
+        if y2>=self.sy:
+            y1 = y1 - (y2-self.sy) - 1
+            y2 = self.sy - 1
+
+        return self.data[y1:y2,x1:x2]
         
     def real2slider(self,val):
         # convert a real value into a slider value
@@ -99,14 +163,15 @@ class ZoomDisplay(QWidget):
     def set_cmax(self,slider_value):
         self.display_clim = (self.display_clim[0],self.slider2real(slider_value))
         np.savetxt('.gui_settings/clim_%s.txt'%self.name,self.display_clim)
-        self.cmax_slider.setToolTip('%0.2f'%self.display_clim[1])
+        self.cmax_slider.setToolTip('%0.1e'%self.display_clim[1])
         
     def set_cmin(self,slider_value):
         self.display_clim = (self.slider2real(slider_value),self.display_clim[1])
         np.savetxt('.gui_settings/clim_%s.txt'%self.name,self.display_clim)
-        self.cmin_slider.setToolTip('%0.2f'%self.display_clim[0])
+        self.cmin_slider.setToolTip('%0.1e'%self.display_clim[0])
 
     def show(self,data):
+        self.data = data
         if not self.sized:
             self.label.setMinimumHeight(int(self.zoom*data.shape[0]))
             self.label.setMinimumWidth(int(self.zoom*data.shape[1]))
@@ -114,28 +179,47 @@ class ZoomDisplay(QWidget):
         try:
             cmin,cmax = self.display_clim
             bmp = np.round(np.clip((data.astype(np.float)-cmin)/(cmax-cmin),0,1)*255).astype(np.uint8)
-            sy,sx = bmp.shape
+            self.sy,self.sx = bmp.shape
             n_bytes = bmp.nbytes
-            bytes_per_line = int(n_bytes/sy)
-            image = QImage(bmp,sy,sx,bytes_per_line,QImage.Format_Indexed8)
+            bytes_per_line = int(n_bytes/self.sy)
+            image = QImage(bmp,self.sy,self.sx,bytes_per_line,QImage.Format_Indexed8)
             image.setColorTable(self.colortable)
             self.pixmap.convertFromImage(image)
+            for o in self.overlays:
+                o.draw(self.pixmap)
             #self.label.setPixmap(self.pixmap)
             self.label.setPixmap(self.pixmap.scaled(self.label.width(),self.label.height(),Qt.KeepAspectRatio))
+            self.display_ratio = float(self.sx)/float(self.label.width())
+            print self.name,self.display_ratio
         except Exception as e:
             print e
-
-
 
 class UI(QWidget):
 
     def __init__(self,loop):
         super(UI,self).__init__()
+        self.sensor_mutex = QMutex()#loop.sensor_mutex
+        self.mirror_mutex = QMutex()#loop.mirror_mutex
         self.loop = loop
         self.loop.finished.connect(self.update)
+        self.draw_boxes = ccfg.show_search_boxes
+        self.draw_lines = ccfg.show_slope_lines
         self.init_UI()
         self.frame_timer = FrameTimer('UI',verbose=False)
         self.show()
+
+    #def get_draw_boxes(self):
+    #    return self.draw_boxes
+
+    def set_draw_boxes(self,val):
+        self.draw_boxes = val
+        self.overlay_boxes.visible = val
+    #def get_draw_lines(self):
+    #    return self.draw_lines
+
+    def set_draw_lines(self,val):
+        self.draw_lines = val
+        self.overlay_slopes.visible = val
 
     def init_UI(self):
         self.setWindowIcon(QIcon('./icons/ciao.png'))
@@ -145,16 +229,29 @@ class UI(QWidget):
         imax = 2**ccfg.bit_depth-1
         imin = 0
 
-        self.id_spots = ZoomDisplay('spots',clim=(0,4095),colormap=ccfg.spots_colormap,zoom=2.0)
-        layout.addWidget(self.id_spots,0,0,4,4)
+        boxes_coords = []
+        for x1,x2,y1,y2 in zip(self.loop.sensor.search_boxes.x1,
+                               self.loop.sensor.search_boxes.x2,
+                               self.loop.sensor.search_boxes.y1,
+                               self.loop.sensor.search_boxes.y2):
+            boxes_coords.append((x1,x2,y1,y2))
 
-        #self.id_mirror = ImageDisplay('mirror',downsample=1,clim=(-0.5,0.5),colormap=ccfg.mirror_colormap,image_min=ccfg.mirror_command_min,image_max=ccfg.mirror_command_max,width=256,height=256)
+        self.overlay_boxes = Overlay(coords=boxes_coords,mode='rects',color=ccfg.slope_line_color,thickness=ccfg.slope_line_thickness)
 
-        self.id_mirror = ZoomDisplay('mirror',clim=(-1,1),colormap=ccfg.mirror_colormap,zoom=10.0)
-        self.id_wavefront = ZoomDisplay('wavefront',clim=(-1.0e-8,1.0e-8),colormap=ccfg.wavefront_colormap,zoom=10.0)
+        self.overlay_slopes = Overlay(coords=[],mode='lines',color=ccfg.active_search_box_color,thickness=ccfg.slope_line_thickness)
+        
+        self.id_spots = ZoomDisplay('spots',clim=(0,4095),colormap=ccfg.spots_colormap,zoom=2.0,overlays=[self.overlay_boxes,self.overlay_slopes])
+        
+        layout.addWidget(self.id_spots,0,0,3,3)
 
-        layout.addWidget(self.id_mirror,0,4,2,2)
-        layout.addWidget(self.id_wavefront,2,4,2,2)
+        self.id_mirror = ZoomDisplay('mirror',clim=ccfg.mirror_clim,colormap=ccfg.mirror_colormap,zoom=30.0)
+        self.id_wavefront = ZoomDisplay('wavefront',clim=ccfg.wavefront_clim,colormap=ccfg.wavefront_colormap,zoom=10.0)
+
+        self.id_zoomed_spots = ZoomDisplay('zoomed_spots',clim=(0,4095),colormap=ccfg.spots_colormap,zoom=5.0)
+        
+        layout.addWidget(self.id_mirror,0,3,1,1)
+        layout.addWidget(self.id_wavefront,1,3,1,1)
+        layout.addWidget(self.id_zoomed_spots,2,3,1,1)
         
         column_2 = QVBoxLayout()
         column_2.setAlignment(Qt.AlignTop)
@@ -163,12 +260,12 @@ class UI(QWidget):
         self.cb_closed.stateChanged.connect(self.loop.set_closed)
 
         self.cb_draw_boxes = QCheckBox('Draw boxes')
-        #self.cb_draw_boxes.setChecked(self.id_spots.draw_boxes)
-        #self.cb_draw_boxes.stateChanged.connect(self.id_spots.set_draw_boxes)
+        self.cb_draw_boxes.setChecked(self.draw_boxes)
+        self.cb_draw_boxes.stateChanged.connect(self.set_draw_boxes)
 
         self.cb_draw_lines = QCheckBox('Draw lines')
-        #self.cb_draw_lines.setChecked(self.id_spots.draw_lines)
-        #self.cb_draw_lines.stateChanged.connect(self.id_spots.set_draw_lines)
+        self.cb_draw_lines.setChecked(self.draw_lines)
+        self.cb_draw_lines.stateChanged.connect(self.set_draw_lines)
 
         self.cb_logging = QCheckBox('Logging')
         self.cb_logging.setChecked(False)
@@ -180,7 +277,9 @@ class UI(QWidget):
         self.pb_record_reference = QPushButton('Record reference')
         self.pb_record_reference.clicked.connect(self.loop.sensor.record_reference)
         self.pb_flatten = QPushButton('&Flatten')
-        self.pb_flatten.clicked.connect(self.loop.mirror.flatten)
+        self.pb_flatten.clicked.connect(self.flatten)
+
+        
         self.pb_quit = QPushButton('&Quit')
         self.pb_quit.clicked.connect(sys.exit)
 
@@ -252,47 +351,56 @@ class UI(QWidget):
         column_2.addWidget(self.pb_record_reference)
         column_2.addWidget(self.cb_logging)
         
-        layout.addLayout(column_2,0,6,4,1)
+        layout.addLayout(column_2,0,6,3,1)
         
         self.setLayout(layout)
         
 
+    def flatten(self):
+        self.mirror_mutex.lock()
+        self.loop.mirror.flatten()
+        self.mirror_mutex.unlock()
+
+        
     @pyqtSlot()
     def update(self):
+        self.mirror_mutex.lock()
+        self.sensor_mutex.lock()
+        sensor = self.loop.sensor
+        mirror = self.loop.mirror
+
+        temp = [(x,xerr,y,yerr) for x,xerr,y,yerr in
+                zip(sensor.search_boxes.x,sensor.x_centroids,
+                    sensor.search_boxes.y,sensor.y_centroids)]
+
+        self.overlay_slopes.coords = []
+        for x,xerr,y,yerr in temp:
+            dx = (xerr-x)*ccfg.slope_line_magnification
+            dy = (yerr-y)*ccfg.slope_line_magnification
+            x2 = x+dx
+            y2 = y+dy
+            self.overlay_slopes.coords.append((x,x2,y,y2))
+
+        self.id_spots.show(sensor.image)
+
+        mirror_map = np.zeros(mirror.mirror_mask.shape)
+        mirror_map[np.where(mirror.mirror_mask)] = mirror.get_command()[:]
+        self.id_mirror.show(mirror_map)
+        self.id_wavefront.show(sensor.wavefront)
+
+        self.id_zoomed_spots.show(self.id_spots.zoomed())
         
-        try:
-            sensor = self.loop.sensor
-            mirror = self.loop.mirror
+        self.lbl_error.setText(ccfg.wavefront_error_fmt%(sensor.error*1e9))
+        self.lbl_tip.setText(ccfg.tip_fmt%(sensor.tip*1000000))
+        self.lbl_tilt.setText(ccfg.tilt_fmt%(sensor.tilt*1000000))
+        self.lbl_cond.setText(ccfg.cond_fmt%(self.loop.get_condition_number()))
+        self.lbl_sensor_fps.setText(ccfg.sensor_fps_fmt%sensor.frame_timer.fps)
+        self.lbl_mirror_fps.setText(ccfg.mirror_fps_fmt%mirror.frame_timer.fps)
+        self.lbl_ui_fps.setText(ccfg.ui_fps_fmt%self.frame_timer.fps)
 
-            sb = sensor.search_boxes
 
-            #if self.id_spots.draw_boxes:
-            #    boxes = [sb.x1,sb.x2,sb.y1,sb.y2]
-            #else:
-            #    boxes = None
-
-            #if self.id_spots.draw_lines:
-            #    lines = [sb.x,sb.x+sensor.x_slopes*ccfg.slope_line_magnification,
-            #             sb.y,sb.y+sensor.y_slopes*ccfg.slope_line_magnification]
-            #else:
-            #    lines = None
-                
-            self.id_spots.show(sensor.image)
-
-            mirror_map = np.zeros(mirror.mirror_mask.shape)
-            mirror_map[np.where(mirror.mirror_mask)] = mirror.get_command()[:]
-            self.id_mirror.show(mirror_map)
-            self.id_wavefront.show(sensor.wavefront)
-            
-            self.lbl_error.setText(ccfg.wavefront_error_fmt%(sensor.error*1e9))
-            self.lbl_tip.setText(ccfg.tip_fmt%(sensor.tip*1000000))
-            self.lbl_tilt.setText(ccfg.tilt_fmt%(sensor.tilt*1000000))
-            self.lbl_cond.setText(ccfg.cond_fmt%(self.loop.get_condition_number()))
-            self.lbl_sensor_fps.setText(ccfg.sensor_fps_fmt%sensor.frame_timer.fps)
-            self.lbl_mirror_fps.setText(ccfg.mirror_fps_fmt%mirror.frame_timer.fps)
-            self.lbl_ui_fps.setText(ccfg.ui_fps_fmt%self.frame_timer.fps)
-        except Exception as e:
-            print e
+        self.mirror_mutex.unlock()
+        self.sensor_mutex.unlock()
             
     def select_single_spot(self,click):
         x = click.x()*self.downsample

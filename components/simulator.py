@@ -31,7 +31,8 @@ class Simulator(QObject):
         super(Simulator,self).__init__()
 
         self.frame_timer = FrameTimer('simulator')
-
+        self.mutex = QMutex()
+        
         # We need to define a meshes on which to build the simulated spots images
         # and the simulated wavefront:
         self.sy = ccfg.image_height_px
@@ -58,11 +59,10 @@ class Simulator(QObject):
         XX,YY = np.meshgrid(xvec,yvec)
         d = np.sqrt(XX**2+YY**2)
         
-
         self.beam_diameter_m = ccfg.beam_diameter_m
         self.beam_radius_m = self.beam_diameter_m/2.0
         
-        self.disc_diameter = 90
+        self.disc_diameter = 170
         #self.disc_diameter = ccfg.beam_diameter_m/self.pixel_size_m # was just set to 110
         
         self.disc = np.zeros((self.sy,self.sx))
@@ -126,7 +126,7 @@ class Simulator(QObject):
         ax = ax-ax.mean()
 
         self.n_zernike_terms = ccfg.n_zernike_terms
-        actuator_sigma = actuator_spacing
+        actuator_sigma = actuator_spacing*1.0
         key = '%d'%hash((tuple(ax),tuple(ay),actuator_sigma,tuple(self.X),tuple(self.Y),self.n_zernike_terms))
         key = key.replace('-','m')
 
@@ -141,10 +141,11 @@ class Simulator(QObject):
                 xx = self.XX - x
                 yy = self.YY - y
                 surf = np.exp((-(xx**2+yy**2)/(2*actuator_sigma**2)))
+                surf = (surf - surf.min())/(surf.max()-surf.min())
                 actuator_basis.append(surf.ravel())
                 plt.clf()
                 plt.imshow(surf)
-                plt.title('%0.2f,%0.2f'%(x,y))
+                plt.title('generating actuator basis\n%0.2e,%0.2e'%(x,y))
                 plt.pause(.1)
 
             self.actuator_basis = np.array(actuator_basis)
@@ -166,9 +167,11 @@ class Simulator(QObject):
             self.zernike_basis = np.array(zernike_basis)
             np.save(zfn,self.zernike_basis)
 
-        self.new_error_sigma = np.ones(self.n_zernike_terms)*0.0
-        self.new_error_sigma[:3] = 0.0
+        #self.new_error_sigma = np.ones(self.n_zernike_terms)*10.0
 
+        self.new_error_sigma = 1.0/np.arange(self.n_zernike_terms)*0.0
+        self.new_error_sigma[:3] = 0.0
+        
         self.timer = QTimer()
         self.update_rate = ccfg.mirror_update_rate
         self.update()
@@ -185,14 +188,15 @@ class Simulator(QObject):
 
     def flatten(self):
         self.command[:] = 0.0
-        self.update()
+        #self.update()
+
         
     def get_command(self):
         return self.command
 
     def set_command(self,vec):
         self.command[:] = vec[:]
-        self.update()
+        #self.update()
         
     def set_actuator(self,index,value):
         self.command[index]=value
@@ -228,7 +232,9 @@ class Simulator(QObject):
         plt.show()
 
     def update(self):
+        self.mutex.lock()
         mirror = np.reshape(np.dot(self.command,self.actuator_basis),(self.sy,self.sx))
+        
         err = self.get_new_error()
         dx = np.diff(err,axis=1)
         dy = np.diff(err,axis=0)
@@ -265,12 +271,16 @@ class Simulator(QObject):
         self.x_slopes = np.array(x_slope_vec)
         self.y_slopes = np.array(y_slope_vec)
         self.frame_timer.tick()
+        self.mutex.unlock()
         
     def get_image(self):
+        self.mutex.lock()
         spots = (self.spots-self.spots.min())/(self.spots.max()-self.spots.min())*self.spots_range+self.dc
+        
         nspots = self.noise(spots)
         nspots = np.clip(nspots,0,4095)
         nspots = np.round(nspots).astype(np.int16)
+        self.mutex.unlock()
         return nspots
         
     def interpolate_dirac(self,x,y,frame):

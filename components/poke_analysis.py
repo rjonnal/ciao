@@ -6,7 +6,7 @@ font_size = 5
 plt.rcParams.update({'font.size': font_size})
 
 def save_modes_chart(outfn,poke,currents,mask):
-
+    plt.clf()
     cmin,cmax = np.min(currents),np.max(currents)
     
     U,s,V = np.linalg.svd(poke)

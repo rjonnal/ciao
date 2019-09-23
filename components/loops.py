@@ -27,9 +27,6 @@ from ciao import config as ccfg
 from frame_timer import FrameTimer
 from poke import Poke
 
-sensor_mutex = QMutex()
-mirror_mutex = QMutex()
-
 class Loop(QObject):
 
     finished = pyqtSignal()
@@ -38,6 +35,9 @@ class Loop(QObject):
     
     def __init__(self,sensor,mirror,verbose=0):
         super(Loop,self).__init__()
+
+        self.sensor_mutex = QMutex()
+        self.mirror_mutex = QMutex()
 
         self.verbose = verbose
         
@@ -91,6 +91,8 @@ class Loop(QObject):
         self.loss = ccfg.loop_loss
         self.paused = False
 
+        self.n = 0
+        
     def has_poke(self):
         return self.poke is not None
 
@@ -115,9 +117,17 @@ class Loop(QObject):
         if not self.paused:
             if self.verbose>=5:
                 print 'Updating loop.'
-            sensor_mutex.lock()
-            mirror_mutex.lock()
+            self.sensor_mutex.lock()
+            self.mirror_mutex.lock()
             # compute the mirror command here
+
+            if False:
+                fn = '%09d_%0.1f_%0.1f.png'%(self.n,self.sensor.error*1e8,self.sensor.x_slopes.std()*1e5)
+                plt.cla()
+                plt.imshow(self.sensor.cam.spots,cmap='gray')
+                plt.savefig('tmp/%s'%fn)
+            
+            
             if self.closed and self.has_poke():
                 current_active_lenslets = np.zeros(self.active_lenslets.shape)
                 current_active_lenslets[np.where(self.sensor.box_maxes>ccfg.spots_threshold)] = 1
@@ -144,12 +154,13 @@ class Loop(QObject):
                         print 'actuator saturated'
                 
             self.finished.emit()
-            sensor_mutex.unlock()
-            mirror_mutex.unlock()
+            self.sensor_mutex.unlock()
+            self.mirror_mutex.unlock()
+            self.n = self.n + 1
                 
     def load_poke(self,poke_filename=None):
-        sensor_mutex.lock()
-        mirror_mutex.lock()
+        self.sensor_mutex.lock()
+        self.mirror_mutex.lock()
         try:
             poke = np.loadtxt(poke_filename)
         except Exception as e:
@@ -177,8 +188,8 @@ class Loop(QObject):
             
         self.poke = Poke(poke)
 
-        sensor_mutex.unlock()
-        mirror_mutex.unlock()
+        self.sensor_mutex.unlock()
+        self.mirror_mutex.unlock()
 
     def invert(self):
         if self.poke is not None:
@@ -231,15 +242,15 @@ class Loop(QObject):
             self.mirror.flatten()
             for k_command in range(n_commands):
                 cur = commands[k_command]
-                print k_actuator,cur
+                #print k_actuator,cur
                 self.mirror.set_actuator(k_actuator,cur)
                 QApplication.processEvents()
                 time.sleep(.01)
                 self.sensor.sense()
-                sensor_mutex.lock()
+                self.sensor_mutex.lock()
                 x_mat[:,k_actuator,k_command] = self.sensor.x_slopes
                 y_mat[:,k_actuator,k_command] = self.sensor.y_slopes
-                sensor_mutex.unlock()
+                self.sensor_mutex.unlock()
                 self.finished.emit()
         # print 'done'
         self.mirror.flatten()
