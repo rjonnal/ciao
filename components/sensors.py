@@ -77,7 +77,7 @@ class Sensor(QObject):
         self.tip = 0.0
         self.tilt = 0.0
         self.zernikes = None
-        self.wavefront = None
+        self.wavefront = np.zeros((n_lenslets,n_lenslets))
 
         self.cam = camera
         self.frame_timer = FrameTimer('Sensor',verbose=False)
@@ -159,6 +159,7 @@ class Sensor(QObject):
         yr = np.zeros(self.search_boxes.y.shape)
         yr[:] = self.search_boxes.y[:]
         half_width = sb.half_width
+        
         for iteration in range(self.centroiding_iterations):
             #QApplication.processEvents()
             msi = iteration==self.centroiding_iterations-1
@@ -192,7 +193,7 @@ class Sensor(QObject):
         self.image = image
         if self.reconstruct_wavefront:
             self.zernikes,self.wavefront,self.error = self.reconstructor.get_wavefront(self.x_slopes,self.y_slopes)
-
+        
     
     def record_reference(self):
         print 'recording reference'

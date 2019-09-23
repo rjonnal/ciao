@@ -4,6 +4,7 @@ import centroid
 import sys
 from PyQt5.QtCore import (QThread, QTimer, pyqtSignal, Qt, QPoint, QLine,
                           QMutex, QObject, pyqtSlot)
+                          
 
 from PyQt5.QtWidgets import (QApplication, QPushButton, QWidget,
                              QHBoxLayout, QVBoxLayout, QGraphicsScene,
@@ -50,7 +51,8 @@ class Overlay(QWidget):
         self.mode = mode
         self.visible = visible
         
-    def draw(self,pixmap):
+    def draw(self,pixmap,downsample=1):
+        d = float(downsample)
         if not self.visible:
             return
         if self.mode=='lines':
@@ -58,7 +60,7 @@ class Overlay(QWidget):
             painter.begin(pixmap)
             painter.setPen(self.pen)
             for index,(x1,x2,y1,y2) in enumerate(self.coords):
-                painter.drawLine(QLine(x1,y1,x2,y2))
+                painter.drawLine(QLine(x1/d,y1/d,x2/d,y2/d))
             painter.end()
         elif self.mode=='rects':
             painter = QPainter()
@@ -67,13 +69,13 @@ class Overlay(QWidget):
             for index,(x1,x2,y1,y2) in enumerate(self.coords):
                 width = x2-x1
                 height = y2-y1
-                painter.drawRect(x1,y1,width,height)
+                painter.drawRect(x1/d,y1/d,width/d,height/d)
             painter.end()
             
     
     
 class ZoomDisplay(QWidget):
-    def __init__(self,name,clim=(0,255),colormap='gray',zoom=1.0,overlays=[]):
+    def __init__(self,name,clim=(0,255),colormap='gray',zoom=1.0,overlays=[],downsample=1):
         super(ZoomDisplay,self).__init__()
         self.name = name
         self.clim = clim
@@ -85,6 +87,7 @@ class ZoomDisplay(QWidget):
         self.colortable = colortable(self.colormap)
         self.sized = False
         self.display_ratio = 1.0
+        self.downsample = downsample
         
         self.mouse_coords = (ccfg.zoom_width/2.0,ccfg.zoom_height/2.0)
         self.sy,self.sx = 256,256 #initialize to something random
@@ -171,6 +174,7 @@ class ZoomDisplay(QWidget):
         self.cmin_slider.setToolTip('%0.1e'%self.display_clim[0])
 
     def show(self,data):
+        data = data[::self.downsample,::self.downsample]
         self.data = data
         if not self.sized:
             self.label.setMinimumHeight(int(self.zoom*data.shape[0]))
@@ -186,11 +190,10 @@ class ZoomDisplay(QWidget):
             image.setColorTable(self.colortable)
             self.pixmap.convertFromImage(image)
             for o in self.overlays:
-                o.draw(self.pixmap)
+                o.draw(self.pixmap,self.downsample)
             #self.label.setPixmap(self.pixmap)
             self.label.setPixmap(self.pixmap.scaled(self.label.width(),self.label.height(),Qt.KeepAspectRatio))
             self.display_ratio = float(self.sx)/float(self.label.width())
-            print self.name,self.display_ratio
         except Exception as e:
             print e
 
@@ -211,6 +214,28 @@ class UI(QWidget):
     #def get_draw_boxes(self):
     #    return self.draw_boxes
 
+
+    def keyPressEvent(self,event):
+        if event.key()==Qt.Key_W:
+            self.loop.sensor.search_boxes.up()
+        if event.key()==Qt.Key_Z:
+            self.loop.sensor.search_boxes.down()
+        if event.key()==Qt.Key_A:
+            self.loop.sensor.search_boxes.left()
+        if event.key()==Qt.Key_S:
+            self.loop.sensor.search_boxes.right()
+        self.update_box_coords()
+        
+    def update_box_coords(self):
+        self.boxes_coords = []
+        for x1,x2,y1,y2 in zip(self.loop.sensor.search_boxes.x1,
+                               self.loop.sensor.search_boxes.x2,
+                               self.loop.sensor.search_boxes.y1,
+                               self.loop.sensor.search_boxes.y2):
+            self.boxes_coords.append((x1,x2,y1,y2))
+            self.overlay_boxes.coords = self.boxes_coords
+    
+        
     def set_draw_boxes(self,val):
         self.draw_boxes = val
         self.overlay_boxes.visible = val
@@ -229,18 +254,18 @@ class UI(QWidget):
         imax = 2**ccfg.bit_depth-1
         imin = 0
 
-        boxes_coords = []
+        self.boxes_coords = []
         for x1,x2,y1,y2 in zip(self.loop.sensor.search_boxes.x1,
                                self.loop.sensor.search_boxes.x2,
                                self.loop.sensor.search_boxes.y1,
                                self.loop.sensor.search_boxes.y2):
-            boxes_coords.append((x1,x2,y1,y2))
+            self.boxes_coords.append((x1,x2,y1,y2))
 
-        self.overlay_boxes = Overlay(coords=boxes_coords,mode='rects',color=ccfg.slope_line_color,thickness=ccfg.slope_line_thickness)
+        self.overlay_boxes = Overlay(coords=self.boxes_coords,mode='rects',color=ccfg.slope_line_color,thickness=ccfg.slope_line_thickness)
 
         self.overlay_slopes = Overlay(coords=[],mode='lines',color=ccfg.active_search_box_color,thickness=ccfg.slope_line_thickness)
         
-        self.id_spots = ZoomDisplay('spots',clim=(0,4095),colormap=ccfg.spots_colormap,zoom=2.0,overlays=[self.overlay_boxes,self.overlay_slopes])
+        self.id_spots = ZoomDisplay('spots',clim=(0,4095),colormap=ccfg.spots_colormap,zoom=0.25,overlays=[self.overlay_boxes,self.overlay_slopes],downsample=2)
         
         layout.addWidget(self.id_spots,0,0,3,3)
 

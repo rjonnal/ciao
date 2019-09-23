@@ -45,6 +45,26 @@ class SearchBoxes(QObject):
         if not self.in_bounds(self.x1,self.x2,self.y1,self.y2):
             sys.exit('Search boxes extend beyond image edges. x %d %d, y %d, %d.'%
                      (self.x1.min(),self.x2.max(),self.y1.min(),self.y2.max()))
+                     
+    def left(self):
+        newx = self.x-1
+        newy = self.y
+        self.move(newx,newy)
+        
+    def right(self):
+        newx = self.x+1
+        newy = self.y
+        self.move(newx,newy)
+        
+    def up(self):
+        newx = self.x
+        newy = self.y-1
+        self.move(newx,newy)
+        
+    def down(self):
+        newx = self.x
+        newy = self.y+1
+        self.move(newx,newy)
 
     def in_bounds(self,x1,x2,y1,y2):
         return (x1.min()>=0 and x2.max()<=self.xmax and
