@@ -677,3 +677,97 @@ class ImageDisplay(QWidget):
     def set_draw_boxes(self,val):
         self.draw_boxes = val
         
+
+
+
+class MirrorUI(QWidget):
+
+    def __init__(self,mirror):
+        super(MirrorUI,self).__init__()
+        self.mirror = mirror
+        self.indices = np.ones(self.mirror.mirror_mask.shape,dtype=int)*-1
+        self.n_actuators = int(np.sum(self.mirror.mirror_mask))
+        self.n_actuators_x = self.mirror.mirror_mask.shape[1]
+        self.n_actuators_y = self.mirror.mirror_mask.shape[0]
+        
+        self.indices[np.where(self.mirror.mirror_mask)] = np.arange(self.n_actuators,dtype=int)
+        self.init_UI()
+        self.show()
+
+    def actuate(self,idx,val):
+        print 'setting actuator %d to %0.3f'%(idx,val)
+        self.mirror.set_actuator(idx,val)
+        
+    def init_UI(self):
+        self.setWindowIcon(QIcon('./icons/ciao.png'))
+        self.setWindowTitle('CIAO Mirror')
+        
+        layout = QGridLayout()
+
+        ny,nx = self.indices.shape
+        controls = []
+
+        actuator_funcs = []
+
+        self.sb_vec = []
+        for y in range(ny):
+            for x in range(nx):
+                idx = self.indices[y,x]
+                if idx==-1:
+                    continue
+                sb = QDoubleSpinBox()
+                sb.setDecimals(3)
+                sb.setSingleStep(0.001)
+                sb.setMaximum(1.0)
+                sb.setMinimum(-1.0)
+                sb.setValue(self.mirror.flat[idx])
+                sb.valueChanged.connect(lambda val,idx=idx: self.actuate(idx,val))
+                hbox = QVBoxLayout()
+                hbox.addWidget(QLabel('A%03d'%idx))
+                hbox.addWidget(sb)
+                w = QWidget()
+                w.setLayout(hbox)
+                layout.addWidget(w,y,x,1,1)
+                self.sb_vec.append(sb)
+
+
+        qb = QPushButton('&Quit')
+        qb.clicked.connect(sys.exit)
+        layout.addWidget(qb,self.n_actuators_y,0,1,1)
+        
+        qb = QPushButton('&Flatten')
+        qb.clicked.connect(self.flatten)
+        layout.addWidget(qb,self.n_actuators_y,1,1,1)
+
+        qb = QPushButton('&Save')
+        qb.clicked.connect(self.save)
+        layout.addWidget(qb,self.n_actuators_y,2,1,1)
+
+        self.mirror_zd = ZoomDisplay('mirror_ui',clim=ccfg.mirror_clim,colormap=ccfg.mirror_colormap,zoom=30.0)
+        layout.addWidget(self.mirror_zd,0,self.n_actuators_x,*self.indices.shape)
+        
+        self.setLayout(layout)
+        
+    @pyqtSlot()
+    def update(self):
+        pass
+
+    def paintEvent(self,event):
+        mirror_map = np.zeros(self.mirror.mirror_mask.shape)
+        mirror_map[np.where(self.mirror.mirror_mask)] = self.mirror.get_command()[:]
+        self.mirror_zd.show(mirror_map)
+
+    def flatten(self):
+        ny,nx = self.indices.shape
+        for y in range(ny):
+            for x in range(nx):
+                idx = self.indices[y,x]
+                if idx==-1:
+                    continue
+                self.sb_vec[idx].setValue(self.mirror.flat[idx])
+        self.mirror.flatten()
+
+
+    def save(self):
+        out = self.mirror.get_command()
+        np.savetxt('manual_flat.txt',out)

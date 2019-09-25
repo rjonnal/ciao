@@ -125,6 +125,8 @@ class Simulator(QObject):
         ay = ay-ay.mean()
         ax = ax-ax.mean()
 
+        self.flat = np.zeros(int(np.sum(self.mirror_mask)))
+        
         self.n_zernike_terms = ccfg.n_zernike_terms
         actuator_sigma = actuator_spacing*0.75
         key = '%d'%hash((tuple(ax),tuple(ay),actuator_sigma,tuple(self.X),tuple(self.Y),self.n_zernike_terms))
