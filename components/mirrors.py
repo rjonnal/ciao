@@ -85,6 +85,32 @@ class MirrorControllerPython(MirrorController):
         self.clip()
         return self.dm.Send(self.command)
         
+        
+class MirrorControllerPythonOld(MirrorController):
+
+    def __init__(self):
+        super(MirrorControllerPythonOld,self).__init__()
+        sys.path.append(os.path.dirname(__file__))
+        from PyAcedev5 import PyAcedev5
+        mirrorID = os.path.join(ccfg.dm_directory,ccfg.mirror_id)
+        self.dm = PyAcedev5(ccfg.mirror_id)
+        n_actuators_queried = int(self.dm.GetNbActuator())
+        try:
+            assert n_actuators_queried==ccfg.mirror_n_actuators
+        except AssertionError as ae:
+            print 'Number of actuator disagreement.'
+        self.command[:] = 0.0 # this doesn't really matter
+        
+    def set(self,vec):
+        self.command[:] = vec[:]
+        
+    def send(self):
+        self.clip()
+        self.dm.values[:] = self.command[:]
+        return self.dm.Send()
+
+        
+        
 class Mirror(QObject):
     finished = pyqtSignal(QObject)
     
@@ -97,12 +123,17 @@ class Mirror(QObject):
         except Exception as e:
             print 'Mirror python initialization failed:',e
             try:
-                self.controller = MirrorControllerCtypes()
-                print 'Mirror c initialization succeeded.'
+                self.controller = MirrorControllerPythonOld()
+                print 'Mirror python (old style) initialization succeeded.'
             except Exception as e:
-                print e
-                print 'No mirror driver found. Using virtual mirror.'
-                self.controller = MirrorController()
+                print 'Mirror python (old style) initialization failed:',e
+                try:
+                    self.controller = MirrorControllerCtypes()
+                    print 'Mirror c initialization succeeded.'
+                except Exception as e:
+                    print e
+                    print 'No mirror driver found. Using virtual mirror.'
+                    self.controller = MirrorController()
             
         self.mirror_mask = np.loadtxt(ccfg.mirror_mask_filename)
         self.n_actuators = ccfg.mirror_n_actuators

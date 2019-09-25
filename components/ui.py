@@ -306,7 +306,7 @@ class UI(QWidget):
 
         
         self.pb_quit = QPushButton('&Quit')
-        self.pb_quit.clicked.connect(sys.exit)
+        self.pb_quit.clicked.connect(self.quit)
 
         poke_layout = QHBoxLayout()
         poke_layout.addWidget(QLabel('Modes:'))
@@ -380,7 +380,10 @@ class UI(QWidget):
         
         self.setLayout(layout)
         
-
+    def quit(self):
+        self.loop.sensor.cam.close()
+        sys.exit()
+        
     def flatten(self):
         self.mirror_mutex.lock()
         self.loop.mirror.flatten()

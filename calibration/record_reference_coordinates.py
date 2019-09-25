@@ -17,7 +17,10 @@ if len(sys.argv)<4:
 N = int(sys.argv[1])
 
 if sys.argv[2].lower()=='real':
-    cam = cameras.PylonCamera()
+    try:
+        cam = cameras.PylonCamera()
+    except Exception as e:
+        cam = cameras.AOCameraAce()
 elif sys.argv[2].lower()=='simulated':
     cam = simulator.Simulator()
 

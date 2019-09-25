@@ -5,7 +5,8 @@ import sys
 from PyQt5.QtWidgets import QApplication
 
 #cam = ciao.cameras.SimulatedCamera()
-cam = ciao.cameras.PylonCamera()
+#cam = ciao.cameras.PylonCamera()
+cam = ciao.cameras.AOCameraAce()
 sensor = ciao.sensors.Sensor(cam)
 
 sb = sensor.search_boxes
