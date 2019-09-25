@@ -73,8 +73,8 @@ mirror_command_max = 1.0
 mirror_command_min = -1.0
 mirror_settling_time_s = 0.001
 
-poke_command_max = 0.3
-poke_command_min = -0.3
+poke_command_max = 0.2
+poke_command_min = -0.2
 poke_n_command_steps = 5
 
 ctrl_dictionary_max_size = 10
@@ -91,12 +91,12 @@ zernike_dioptric_equivalent = 1.5
 image_downsample_factor = 1
 active_search_box_color = (16,127,16,255)
 inactive_search_box_color = (0,63,127,255)
-search_box_thickness = 1.0
+search_box_thickness = 0.2
 show_search_boxes = True
 show_slope_lines = True
-slope_line_thickness = 5.0
+slope_line_thickness = 3.0
 slope_line_color = (200,100,100,155)
-slope_line_magnification = 5e4
+slope_line_magnification = 10
 spots_colormap = 'bone'
 wavefront_colormap = 'jet'
 wavefront_clim = (-1e-6,1e-6)

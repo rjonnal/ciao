@@ -726,7 +726,7 @@ class MirrorUI(QWidget):
                 hbox.addWidget(sb)
                 w = QWidget()
                 w.setLayout(hbox)
-                layout.addWidget(w,y,x,1,1)
+                layout.addWidget(w,x,y,1,1)
                 self.sb_vec.append(sb)
 
 
@@ -742,8 +742,8 @@ class MirrorUI(QWidget):
         qb.clicked.connect(self.save)
         layout.addWidget(qb,self.n_actuators_y,2,1,1)
 
-        ta = QTextArea('temp.txt')
-        layout.addWidget(ta,self.n_actuators_y,3,1,1)
+        #ta = QTextArea('temp.txt')
+        #layout.addWidget(ta,self.n_actuators_y,3,1,1)
 
         self.mirror_zd = ZoomDisplay('mirror_ui',clim=ccfg.mirror_clim,colormap=ccfg.mirror_colormap,zoom=30.0)
         layout.addWidget(self.mirror_zd,0,self.n_actuators_x,*self.indices.shape)
