@@ -155,9 +155,15 @@ class ZoomDisplay(QWidget):
             self.display_clim = (self.data.min(),self.data.max())
         except Exception as e:
             print e
-        
+        self.set_sliders()
+
+    def set_sliders(self):
+        self.cmin_slider.setValue(self.real2slider(self.display_clim[0]))
+        self.cmax_slider.setValue(self.real2slider(self.display_clim[1]))
+            
     def contrast_reset(self):
         self.set_display_clim()
+        self.set_sliders()
         
     def set_display_clim(self):
         try:
@@ -165,7 +171,7 @@ class ZoomDisplay(QWidget):
         except Exception as e:
             print e
             self.display_clim = self.clim
-            
+        
     def zoomed(self):
         x1 = int(round(self.mouse_coords[0]-ccfg.zoom_width//2))
         x2 = int(round(self.mouse_coords[0]+ccfg.zoom_width//2))
