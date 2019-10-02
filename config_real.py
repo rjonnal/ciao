@@ -89,7 +89,7 @@ zernike_dioptric_equivalent = 1.5
 
 
 # UI settings:
-image_downsample_factor = 1
+spots_image_downsampling = 1
 active_search_box_color = (16,127,16,255)
 inactive_search_box_color = (0,63,127,255)
 search_box_thickness = 0.2
@@ -108,6 +108,7 @@ zoom_height = 50
 single_spot_color = (255,63,63,255)
 single_spot_thickness = 2.0
 
+contrast_button_width = 20
 
 
 ui_fps_fmt = '%0.2f Hz (UI)'

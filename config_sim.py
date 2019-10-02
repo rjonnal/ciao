@@ -54,7 +54,7 @@ interface_scale_factor = 0.5
 wavelength_m = 840e-9
 estimate_background = True
 background_correction = -100
-search_box_half_width = 4 #9
+search_box_half_width = 5 #9
 spots_threshold = 100.0
 sensor_update_rate = 5.0
 sensor_filter_lenslets = False
@@ -62,7 +62,7 @@ sensor_reconstruct_wavefront = True
 sensor_remove_tip_tilt = True
 centroiding_num_threads = 1
 iterative_centroiding_step = 2
-centroiding_iterations = 1
+centroiding_iterations = 2
 
 mirror_update_rate = 5.0
 mirror_n_actuators = 97
@@ -87,7 +87,7 @@ zernike_dioptric_equivalent = 1.5
 
 
 # UI settings:
-image_downsample_factor = 1
+spots_image_downsampling = 1
 inactive_search_box_color = (127,16,16,20)
 active_search_box_color = (0,63,127,20)
 search_box_thickness = 0.2
@@ -107,6 +107,7 @@ zoom_height = 30
 single_spot_color = (255,63,63,255)
 single_spot_thickness = 2.0
 
+contrast_button_width = 40
 
 
 ui_fps_fmt = '%0.2f Hz (UI)'

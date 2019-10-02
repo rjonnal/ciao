@@ -29,6 +29,9 @@ from frame_timer import FrameTimer
 from poke import Poke
 import os
 
+# machine epsilon
+eps = np.finfo(float).eps
+
 #sensor_mutex = QMutex()
 #mirror_mutex = QMutex()
 
@@ -75,7 +78,7 @@ class Overlay(QWidget):
     
     
 class ZoomDisplay(QWidget):
-    def __init__(self,name,clim=(0,255),colormap='gray',zoom=1.0,overlays=[],downsample=1):
+    def __init__(self,name,clim=(0,255),colormap='gray',zoom=1.0,overlays=[],downsample=1,n_contrast_steps=20):
         super(ZoomDisplay,self).__init__()
         self.name = name
         self.clim = clim
@@ -96,7 +99,10 @@ class ZoomDisplay(QWidget):
         layout.addWidget(self.label)
 
         # set up contrast sliders:
-        self.n_steps = 20
+        slider_button_layout = QVBoxLayout()
+        slider_layout = QHBoxLayout()
+        
+        self.n_steps = n_contrast_steps
         self.cmin_slider = QSlider(Qt.Vertical)
         self.cmax_slider = QSlider(Qt.Vertical)
 
@@ -112,12 +118,15 @@ class ZoomDisplay(QWidget):
         self.cmin_slider.setMaximum(self.n_steps)
         self.cmax_slider.setMaximum(self.n_steps)
 
-        try:
-            self.display_clim = np.loadtxt(os.path.join('.gui_settings','clim_%s.txt'%self.name))
-        except Exception as e:
-            print e
-            self.display_clim = self.clim
-            
+        self.creset_button = QPushButton('R')
+        self.cauto_button = QPushButton('A')
+        self.creset_button.setFixedWidth(ccfg.contrast_button_width)
+        self.cauto_button.setFixedWidth(ccfg.contrast_button_width)
+        self.creset_button.clicked.connect(self.contrast_reset)
+        self.cauto_button.clicked.connect(self.contrast_auto)
+
+        self.set_display_clim()
+        
         self.cmax_slider.setToolTip('%0.1e'%self.display_clim[1])
         self.cmin_slider.setToolTip('%0.1e'%self.display_clim[0])
 
@@ -126,13 +135,37 @@ class ZoomDisplay(QWidget):
         self.cmin_slider.valueChanged.connect(self.set_cmin)
         self.cmax_slider.valueChanged.connect(self.set_cmax)
 
-        layout.addWidget(self.cmin_slider)
-        layout.addWidget(self.cmax_slider)
+        #layout.addWidget(self.cmin_slider)
+        #layout.addWidget(self.cmax_slider)
+
+        slider_layout.addWidget(self.cmin_slider)
+        slider_layout.addWidget(self.cmax_slider)
+        slider_button_layout.addLayout(slider_layout)
+        slider_button_layout.addWidget(self.creset_button)
+        slider_button_layout.addWidget(self.cauto_button)
+        layout.addLayout(slider_button_layout)
+        
         self.setLayout(layout)
         
     def mousePressEvent(self,e):
         self.mouse_coords = (e.x()*self.display_ratio,e.y()*self.display_ratio)
+
+    def contrast_auto(self):
+        try:
+            self.display_clim = (self.data.min(),self.data.max())
+        except Exception as e:
+            print e
         
+    def contrast_reset(self):
+        self.set_display_clim()
+        
+    def set_display_clim(self):
+        try:
+            self.display_clim = np.loadtxt(os.path.join('.gui_settings','clim_%s.txt'%self.name))
+        except Exception as e:
+            print e
+            self.display_clim = self.clim
+            
     def zoomed(self):
         x1 = int(round(self.mouse_coords[0]-ccfg.zoom_width//2))
         x2 = int(round(self.mouse_coords[0]+ccfg.zoom_width//2))
@@ -182,7 +215,7 @@ class ZoomDisplay(QWidget):
             self.sized = True
         try:
             cmin,cmax = self.display_clim
-            bmp = np.round(np.clip((data.astype(np.float)-cmin)/(cmax-cmin),0,1)*255).astype(np.uint8)
+            bmp = np.round(np.clip((data.astype(np.float)-cmin)/(cmax-cmin+eps),0,1)*255).astype(np.uint8)
             self.sy,self.sx = bmp.shape
             n_bytes = bmp.nbytes
             bytes_per_line = int(n_bytes/self.sy)
@@ -265,12 +298,12 @@ class UI(QWidget):
 
         self.overlay_slopes = Overlay(coords=[],mode='lines',color=ccfg.active_search_box_color,thickness=ccfg.slope_line_thickness)
         
-        self.id_spots = ZoomDisplay('spots',clim=(0,4095),colormap=ccfg.spots_colormap,zoom=0.25,overlays=[self.overlay_boxes,self.overlay_slopes],downsample=2)
+        self.id_spots = ZoomDisplay('spots',clim=(0,4095),colormap=ccfg.spots_colormap,zoom=0.25,overlays=[self.overlay_boxes,self.overlay_slopes],downsample=ccfg.spots_image_downsampling)
         
         layout.addWidget(self.id_spots,0,0,3,3)
 
-        self.id_mirror = ZoomDisplay('mirror',clim=ccfg.mirror_clim,colormap=ccfg.mirror_colormap,zoom=30.0)
-        self.id_wavefront = ZoomDisplay('wavefront',clim=ccfg.wavefront_clim,colormap=ccfg.wavefront_colormap,zoom=10.0)
+        self.id_mirror = ZoomDisplay('mirror',clim=ccfg.mirror_clim,colormap=ccfg.mirror_colormap,zoom=1.0)
+        self.id_wavefront = ZoomDisplay('wavefront',clim=ccfg.wavefront_clim,colormap=ccfg.wavefront_colormap,zoom=1.0)
 
         self.id_zoomed_spots = ZoomDisplay('zoomed_spots',clim=(0,4095),colormap=ccfg.spots_colormap,zoom=5.0)
         

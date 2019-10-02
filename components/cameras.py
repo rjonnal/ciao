@@ -97,7 +97,6 @@ class AOCameraAce():
     _MilImage0 = c_longlong()
     _MilImage1 = c_longlong()
 
-    _cameraFilename = os.path.join(ccfg.dcf_directory,'acA2040-180km-4tap-12bit_reloaded.dcf')
     
     def __init__(self):
     
@@ -105,6 +104,8 @@ class AOCameraAce():
             self._mil = windll.LoadLibrary("mil")
         else:
             sys.exit('pyao.cameras assumes Windows DLL shared libraries')
+            
+        self._cameraFilename = os.path.join(ccfg.dcf_directory,'acA2040-180km-4tap-12bit_reloaded.dcf')
 
         # a quick fix to a deep problem; force mode 0; it slows things down a bit
         # but guards against the memory management issue

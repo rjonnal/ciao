@@ -77,7 +77,7 @@ class Sensor(QObject):
         self.tip = 0.0
         self.tilt = 0.0
         self.zernikes = None
-        self.wavefront = np.zeros((n_lenslets,n_lenslets))
+        self.wavefront = np.zeros(self.sensor_mask.shape)
 
         self.cam = camera
         self.frame_timer = FrameTimer('Sensor',verbose=False)
@@ -151,7 +151,7 @@ class Sensor(QObject):
         
         self.unpause()
         
-    def sense(self):
+    def sense(self,debug=False):
         image = self.cam.get_image()
         sb = self.search_boxes
         xr = np.zeros(self.search_boxes.x.shape)
@@ -163,6 +163,10 @@ class Sensor(QObject):
         for iteration in range(self.centroiding_iterations):
             #QApplication.processEvents()
             msi = iteration==self.centroiding_iterations-1
+            if debug:
+                plt.figure()
+                plt.imshow(image)
+                plt.title('iteration %d'%iteration)
             centroid.compute_centroids(spots_image=image,
                                        sb_x1_vec=sb.x1,
                                        sb_x2_vec=sb.x2,
@@ -180,7 +184,11 @@ class Sensor(QObject):
                                        modify_spots_image = msi)
             half_width-=self.iterative_centroiding_step
             sb = SearchBoxes(xr,yr,half_width)
-            
+        if debug:
+            plt.figure()
+            plt.imshow(image)
+            plt.show()
+            sys.exit()
         self.x_centroids[:] = xr[:]
         self.y_centroids[:] = yr[:]
         self.x_slopes = (self.x_centroids-self.search_boxes.x)*self.pixel_size_m/self.lenslet_focal_length_m
