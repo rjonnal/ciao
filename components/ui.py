@@ -75,7 +75,7 @@ class Overlay(QWidget):
                 painter.drawRect(x1/d,y1/d,width/d,height/d)
             painter.end()
             
-    
+#class StripChart(self):
     
 class ZoomDisplay(QWidget):
     def __init__(self,name,clim=(0,255),colormap='gray',zoom=1.0,overlays=[],downsample=1,n_contrast_steps=20):
