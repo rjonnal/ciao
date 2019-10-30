@@ -1,6 +1,6 @@
 import numpy as np
 import glob
-from ciao import config as ccfg
+import ciao_config as ccfg
 import os,sys
 try:
     from pypylon import pylon

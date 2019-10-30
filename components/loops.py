@@ -23,7 +23,7 @@ from poke_analysis import save_modes_chart
 from ctypes import CDLL,c_void_p
 from search_boxes import SearchBoxes
 from reference_generator import ReferenceGenerator
-from ciao import config as ccfg
+import ciao_config as ccfg
 from frame_timer import FrameTimer
 from poke import Poke
 
@@ -129,11 +129,19 @@ class Loop(QObject):
             
             
             if self.closed and self.has_poke():
+
                 current_active_lenslets = np.zeros(self.active_lenslets.shape)
                 current_active_lenslets[np.where(self.sensor.box_maxes>ccfg.spots_threshold)] = 1
-                if not all(self.active_lenslets==current_active_lenslets):
-                    self.active_lenslets[:] = current_active_lenslets[:]
-                    self.poke.invert(mask=self.active_lenslets)
+                n_active_lenslets = int(np.sum(current_active_lenslets))
+                
+                if ccfg.poke_invert_on_demand:
+                    if not all(self.active_lenslets==current_active_lenslets):
+                        self.active_lenslets[:] = current_active_lenslets[:]
+                        self.poke.invert(mask=self.active_lenslets)
+
+                else:
+                    if not self.sensor.n_lenslets==n_active_lenslets:
+                        return
 
                 xs = self.sensor.x_slopes[np.where(self.active_lenslets)[0]]
                 ys = self.sensor.y_slopes[np.where(self.active_lenslets)[0]]

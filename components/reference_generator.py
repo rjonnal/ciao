@@ -1,5 +1,5 @@
 import numpy as np
-from ciao import config as ccfg
+import ciao_config as ccfg
 import os,sys
 from tools import now_string
 

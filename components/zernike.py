@@ -12,7 +12,7 @@ Revision: 3.0 / 14 March 2019
 import numpy as np
 from matplotlib import pyplot as plt
 import sys,os
-from ciao import config as ccfg
+import ciao_config as ccfg
 
 def fact(num):
     """Implementation of factorial function.

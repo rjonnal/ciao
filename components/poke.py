@@ -1,4 +1,4 @@
-from ciao import config as ccfg
+import ciao_config as ccfg
 import numpy as np
 import time
 

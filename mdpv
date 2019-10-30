@@ -1,0 +1,12 @@
+#!/bin/bash
+if [ $# -lt 1 ]; then
+  echo 1>&2 "$0: not enough arguments"
+  exit 2
+elif [ $# -gt 1 ]; then
+  echo 1>&2 "$0: too many arguments"
+  exit 2
+fi
+mdfile="$1"
+pandoc -V geometry:margin=1in "$mdfile" -o /tmp/mdpv_temp_file.pdf
+evince /tmp/mdpv_temp_file.pdf
+rm /tmp/mdpv_temp_file.pdf

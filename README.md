@@ -16,9 +16,17 @@ These prerequisites assume you are using the default hardware (Alpao mirror and 
 7. Install [Basler Pylon 5.2](https://www.baslerweb.com/en/sales-support/downloads/software-downloads/pylon-5-2-0-windows/)
 8. Install [pypylon](https://github.com/basler/pypylon/releases/download/1.4.0/pypylon-1.4.0-cp27-cp27m-win_amd64.whl). First download, then use 'pip install pypylon...amd64.whl'.
 
-## Environment variable
+## CIAO sessions and ```ciao_config.py```
 
-Optionally, set an environment variable ```CIAO_ROOT`` to this repository's location, including the ```ciao```, e.g. ```C:\\programs\\ciao```.
+CIAO depends on a notion of a *session*, which allows multiple configurations to be installed on the same computer. For instance, it may be useful to have a closed-loop session, a wavefront sensing session (e.g., for system alignment with a separate, calibrated sensor), and a simulation session, all on one computer. Each session requires a dedicated folder/directory, and a dedicated ```ciao_config.py``` file which specifies all of the relevant parameters of the session. CIAO has many tools, and there is a broad variety of use cases, some covered below; however, the two main ways to use CIAO are 1) as part of a GUI-based program for wavefront sensing or correction, where real-time feedback is critical; and 2) as part of a script to calibrate the system or make measurements. By convention, these programs are prefaced with ```ui_``` and ```script_```, respectively. These scripts must all be located in the session folder, alongside ```ciao_config.py```.
+
+The advantage of this approach is that once things are configured correctly, the sessions can be run without modifications, even simultaneously (notwithstanding device driver conflicts). A disadvantage of this approach is that the top level programs scripts must add their filesystem locations to the Python path at runtime, because the rest of CIAO will all need access to the same ```ciao_config.py``` file, and attempt to import it. A related disadvantage is that users should be careful to avoid putting copies of ```ciao_config.py``` elsewhere, e.g. in the ```components``` directory or in any folder in the Python path, where it could in principle be loaded instead of the correct file for the session. Session directories should also never be added to the Python path, as this could result in the loading of incorrect versions of ```ciao_config.py```. (See **Design considerations** below for alternative approaches which were not pursued but may be preferable).
+
+In short, every top level script must begin with the following two lines:
+
+    import sys,os
+    sys.path.append(os.path.split(__file__)[0])
+
 
 # Creating mask files
 
@@ -61,6 +69,22 @@ Several approaches have been used to generate these coordinates, but a common ap
 3. **Avoid overspecification.** Specify parameters of the system in only one place. For example, since the number of lenslets is specified by the SHWS mask, don't specify it elsewhere. The size of the poke matrix, for instance, is implied by the SHWS and mirror masks, and needn't be specified anywhere else.
 
 4. **Variable naming.** Class names should be one word with a capitalized first letter; if multiple words are necessary, use CamelCase. Variable names should be descriptive, with underscores between words. In order to maximize the exploratory and educational value of the code, when a variable has a unit, please append it to the end of the variable name, e.g. ```wavelength_m = 800e-9```.
+
+# Design considerations
+
+## Installing mulitple instances of CIAO
+
+One probably common use case for CIAO is having multiple "installations" or "versions" of the software to, for instance, be able to run a simulator with a low resolution, computationally fast beam, and then a real hardware-based loop or wavefront sensor. There are many ways to do this, some of which are listed below.
+
+1. **Virtual environments**. These can be created using popular scientific Python distributions such as Anaconda or Enthought Python Distribution, or through the use of the ```virtualenv``` package. Advantages: the most *Pythonic* solution; enables multiple CIAOs; prevents other problems such as conflicts with pre-existing Python installations used for other purposes on the same computer. Disadvantages: requires moderate expertise on the topic of virtual environments; could cause major issues for novice developers.
+
+2. **Configure once**. In this approach, the config file would be loaded just once and, because imported modules are objects, passed as a required parameter for instantiating any subsequent CIAO objects. Advantages: this is the approach [advocated by Python Software Foundation Fellow, Alex Martelli](https://stackoverflow.com/questions/2348927/python-single-configuration-file/2348941); avoids potential collisions of conflicting ```ciao_config.py``` files--a problem that could be extremely difficult to debug. Disadvantages: requires the same object to be propagated through the entire instantiation hierarchy, leading to ugly/mystifying signatures for every class's constructor.
+
+3. **Multiple copies of config file**. Here we would have one file called ```ciao_config.py``` in the Python path, and others called, for instance ```ciao_config_simulation_version.py``` and ```ciao_config_closed_loop_version.py```, and one of the latter would be copied over the former whenever necessary. Advantages: the code base is cleanest, as it doesn't have to know anything other than to load ```ciao_config.py``` at runtime. Disadvantages: it's easy to make a mistake and delete a config file; requires a lot of bookkeeping.
+
+4. **Global variable**. Like **Configure once** but instead of passing the config object around, access it as a global variable. Advantages: avoids ugly constructor signatures; simple. Disadvantages: confusing code because of the config variable's broad scope.
+
+5. **Sessions**. Create folders with all top-level CIAO scripts and a single ```ciao_config.py``` in each. Advantages: once it's set up correctly you can forget about it; obviates confusing code in most of CIAO code base. Disadvantages: requires all scripts to live in the same directory as the config file; requires every script to modify ```sys.path``` at the very top, adding the session directory so that the only ```ciao_config.py``` file visible to any CIAO object is the session's. This is the approach I've selected, because it prioritizes ease of use, at the slight expense of transparency and flexibility.
 
 # Topics for conversation
 

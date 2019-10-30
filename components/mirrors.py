@@ -23,7 +23,7 @@ from poke_analysis import save_modes_chart
 from ctypes import CDLL,c_void_p
 from search_boxes import SearchBoxes
 from reference_generator import ReferenceGenerator
-from ciao import config as ccfg
+import ciao_config as ccfg
 from frame_timer import FrameTimer
 
 class MirrorController(object):

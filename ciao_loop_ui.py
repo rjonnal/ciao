@@ -9,7 +9,6 @@ from PyQt5.QtWidgets import QApplication
 cam = ciao.cameras.AOCameraAce()
 sensor = ciao.sensors.Sensor(cam)
 
-sb = sensor.search_boxes
 mirror = ciao.mirrors.Mirror()
 
 app = QApplication(sys.argv)

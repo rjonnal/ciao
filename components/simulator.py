@@ -1,6 +1,6 @@
 import numpy as np
 import time
-from ciao import config as ccfg
+import ciao_config as ccfg
 import sys
 from PyQt5.QtCore import (QThread, QTimer, pyqtSignal, Qt, QPoint, QLine,
                           QMutex, QObject, pyqtSlot)
@@ -132,7 +132,13 @@ class Simulator(QObject):
         key = '%d'%hash((tuple(ax),tuple(ay),actuator_sigma,tuple(self.X),tuple(self.Y),self.n_zernike_terms))
         key = key.replace('-','m')
 
+        try:
+            os.mkdir(ccfg.simulator_cache_directory)
+        except OSError as e:
+            pass
+
         cfn = os.path.join(ccfg.simulator_cache_directory,'%s_actuator_basis.npy'%key)
+        
         try:
             self.actuator_basis = np.load(cfn)
             print 'Loading cached actuator basis set...'
@@ -317,6 +323,9 @@ class Simulator(QObject):
             plt.imshow(b)
             plt.colorbar()
             plt.pause(.5)
+
+    def close(self):
+        print 'Closing simulator.'
         
 if __name__=='__main__':
 

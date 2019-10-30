@@ -24,7 +24,7 @@ from poke_analysis import save_modes_chart
 from ctypes import CDLL,c_void_p
 from search_boxes import SearchBoxes
 from reference_generator import ReferenceGenerator
-from ciao import config as ccfg
+import ciao_config as ccfg
 from frame_timer import FrameTimer
 from poke import Poke
 import os
@@ -300,9 +300,9 @@ class UI(QWidget):
                                self.loop.sensor.search_boxes.y2):
             self.boxes_coords.append((x1,x2,y1,y2))
 
-        self.overlay_boxes = Overlay(coords=self.boxes_coords,mode='rects',color=ccfg.slope_line_color,thickness=ccfg.slope_line_thickness)
+        self.overlay_boxes = Overlay(coords=self.boxes_coords,mode='rects',color=ccfg.search_box_color,thickness=ccfg.search_box_thickness)
 
-        self.overlay_slopes = Overlay(coords=[],mode='lines',color=ccfg.active_search_box_color,thickness=ccfg.slope_line_thickness)
+        self.overlay_slopes = Overlay(coords=[],mode='lines',color=ccfg.slope_line_color,thickness=ccfg.slope_line_thickness)
         
         self.id_spots = ZoomDisplay('spots',clim=(0,4095),colormap=ccfg.spots_colormap,zoom=0.25,overlays=[self.overlay_boxes,self.overlay_slopes],downsample=ccfg.spots_image_downsampling)
         
@@ -350,7 +350,8 @@ class UI(QWidget):
         poke_layout = QHBoxLayout()
         poke_layout.addWidget(QLabel('Modes:'))
         self.modes_spinbox = QSpinBox()
-        self.modes_spinbox.setMaximum(ccfg.mirror_n_actuators)
+        n_actuators = int(np.sum(self.loop.mirror.mirror_mask))
+        self.modes_spinbox.setMaximum(n_actuators)
         self.modes_spinbox.setMinimum(0)
         self.modes_spinbox.valueChanged.connect(self.loop.set_n_modes)
         self.modes_spinbox.setValue(self.loop.get_n_modes())
@@ -637,7 +638,7 @@ class ImageDisplay(QWidget):
         if boxes is not None and self.draw_boxes:
             x1vec,x2vec,y1vec,y2vec = boxes
             pen = QPen()
-            pen.setColor(QColor(*ccfg.active_search_box_color))
+            pen.setColor(QColor(*ccfg.search_box_color))
             pen.setWidth(ccfg.search_box_thickness)
             painter = QPainter()
             painter.begin(self.pixmap)

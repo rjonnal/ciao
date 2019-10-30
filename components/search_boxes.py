@@ -1,7 +1,7 @@
 from PyQt5.QtCore import QObject
 import numpy as np
 import sys
-from ciao import config as ccfg
+import ciao_config as ccfg
 
 class SearchBoxes(QObject):
 
