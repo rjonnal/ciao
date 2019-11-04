@@ -1042,12 +1042,12 @@ typedef npy_double __pyx_t_5numpy_double_t;
  */
 typedef npy_longdouble __pyx_t_5numpy_longdouble_t;
 
-/* "centroid.pyx":6
- * import cython
+/* "centroid.pyx":7
  * from cython.parallel import prange
+ * from libc.stdio cimport printf
  * ctypedef np.uint16_t uint16_t             # <<<<<<<<<<<<<<
  * 
- * @cython.boundscheck(False)
+ * 
  */
 typedef __pyx_t_5numpy_uint16_t __pyx_t_8centroid_uint16_t;
 /* Declarations.proto */
@@ -1114,19 +1114,16 @@ typedef npy_clongdouble __pyx_t_5numpy_clongdouble_t;
 typedef npy_cdouble __pyx_t_5numpy_complex_t;
 struct __pyx_opt_args_8centroid_compute_centroids;
 
-/* "centroid.pyx":10
+/* "centroid.pyx":37
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * cpdef compute_centroids(np.ndarray[np.int16_t,ndim=2] spots_image,             # <<<<<<<<<<<<<<
- *                         np.ndarray[np.int16_t,ndim=1] sb_x1_vec,
- *                         np.ndarray[np.int16_t,ndim=1] sb_x2_vec,
+ *                         np.ndarray[np.float_t,ndim=1] sb_x_vec,
+ *                         np.ndarray[np.float_t,ndim=1] sb_y_vec,
  */
 struct __pyx_opt_args_8centroid_compute_centroids {
   int __pyx_n;
-  PyObject *estimate_background;
-  PyObject *background_correction;
-  PyObject *num_threads;
-  PyObject *modify_spots_image;
+  PyObject *num_threads_p;
 };
 
 /* --- Runtime support code (head) --- */
@@ -1224,20 +1221,69 @@ static CYTHON_INLINE void __Pyx_SafeReleaseBuffer(Py_buffer* info);
 static Py_ssize_t __Pyx_minusones[] = { -1, -1, -1, -1, -1, -1, -1, -1 };
 static Py_ssize_t __Pyx_zeros[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
-/* pyobject_as_double.proto */
-static double __Pyx__PyObject_AsDouble(PyObject* obj);
-#if CYTHON_COMPILING_IN_PYPY
-#define __Pyx_PyObject_AsDouble(obj)\
-(likely(PyFloat_CheckExact(obj)) ? PyFloat_AS_DOUBLE(obj) :\
- likely(PyInt_CheckExact(obj)) ?\
- PyFloat_AsDouble(obj) : __Pyx__PyObject_AsDouble(obj))
+/* GetItemInt.proto */
+#define __Pyx_GetItemInt(o, i, type, is_signed, to_py_func, is_list, wraparound, boundscheck)\
+    (__Pyx_fits_Py_ssize_t(i, type, is_signed) ?\
+    __Pyx_GetItemInt_Fast(o, (Py_ssize_t)i, is_list, wraparound, boundscheck) :\
+    (is_list ? (PyErr_SetString(PyExc_IndexError, "list index out of range"), (PyObject*)NULL) :\
+               __Pyx_GetItemInt_Generic(o, to_py_func(i))))
+#define __Pyx_GetItemInt_List(o, i, type, is_signed, to_py_func, is_list, wraparound, boundscheck)\
+    (__Pyx_fits_Py_ssize_t(i, type, is_signed) ?\
+    __Pyx_GetItemInt_List_Fast(o, (Py_ssize_t)i, wraparound, boundscheck) :\
+    (PyErr_SetString(PyExc_IndexError, "list index out of range"), (PyObject*)NULL))
+static CYTHON_INLINE PyObject *__Pyx_GetItemInt_List_Fast(PyObject *o, Py_ssize_t i,
+                                                              int wraparound, int boundscheck);
+#define __Pyx_GetItemInt_Tuple(o, i, type, is_signed, to_py_func, is_list, wraparound, boundscheck)\
+    (__Pyx_fits_Py_ssize_t(i, type, is_signed) ?\
+    __Pyx_GetItemInt_Tuple_Fast(o, (Py_ssize_t)i, wraparound, boundscheck) :\
+    (PyErr_SetString(PyExc_IndexError, "tuple index out of range"), (PyObject*)NULL))
+static CYTHON_INLINE PyObject *__Pyx_GetItemInt_Tuple_Fast(PyObject *o, Py_ssize_t i,
+                                                              int wraparound, int boundscheck);
+static PyObject *__Pyx_GetItemInt_Generic(PyObject *o, PyObject* j);
+static CYTHON_INLINE PyObject *__Pyx_GetItemInt_Fast(PyObject *o, Py_ssize_t i,
+                                                     int is_list, int wraparound, int boundscheck);
+
+/* ObjectGetItem.proto */
+#if CYTHON_USE_TYPE_SLOTS
+static CYTHON_INLINE PyObject *__Pyx_PyObject_GetItem(PyObject *obj, PyObject* key);
 #else
-#define __Pyx_PyObject_AsDouble(obj)\
-((likely(PyFloat_CheckExact(obj))) ?\
- PyFloat_AS_DOUBLE(obj) : __Pyx__PyObject_AsDouble(obj))
+#define __Pyx_PyObject_GetItem(obj, key)  PyObject_GetItem(obj, key)
 #endif
 
 #define __Pyx_BufPtrStrided1d(type, buf, i0, s0) (type)((char*)buf + i0 * s0)
+/* PyCFunctionFastCall.proto */
+#if CYTHON_FAST_PYCCALL
+static CYTHON_INLINE PyObject *__Pyx_PyCFunction_FastCall(PyObject *func, PyObject **args, Py_ssize_t nargs);
+#else
+#define __Pyx_PyCFunction_FastCall(func, args, nargs)  (assert(0), NULL)
+#endif
+
+/* PyFunctionFastCall.proto */
+#if CYTHON_FAST_PYCALL
+#define __Pyx_PyFunction_FastCall(func, args, nargs)\
+    __Pyx_PyFunction_FastCallDict((func), (args), (nargs), NULL)
+#if 1 || PY_VERSION_HEX < 0x030600B1
+static PyObject *__Pyx_PyFunction_FastCallDict(PyObject *func, PyObject **args, int nargs, PyObject *kwargs);
+#else
+#define __Pyx_PyFunction_FastCallDict(func, args, nargs, kwargs) _PyFunction_FastCallDict(func, args, nargs, kwargs)
+#endif
+#endif
+
+/* PyObjectCall.proto */
+#if CYTHON_COMPILING_IN_CPYTHON
+static CYTHON_INLINE PyObject* __Pyx_PyObject_Call(PyObject *func, PyObject *arg, PyObject *kw);
+#else
+#define __Pyx_PyObject_Call(func, arg, kw) PyObject_Call(func, arg, kw)
+#endif
+
+/* PyObjectCallMethO.proto */
+#if CYTHON_COMPILING_IN_CPYTHON
+static CYTHON_INLINE PyObject* __Pyx_PyObject_CallMethO(PyObject *func, PyObject *arg);
+#endif
+
+/* PyObjectCallOneArg.proto */
+static CYTHON_INLINE PyObject* __Pyx_PyObject_CallOneArg(PyObject *func, PyObject *arg);
+
 #define __Pyx_BufPtrStrided2d(type, buf, i0, s0, i1, s1) (type)((char*)buf + i0 * s0 + i1 * s1)
 /* PyThreadStateGet.proto */
 #if CYTHON_FAST_THREAD_STATE
@@ -1293,41 +1339,8 @@ static int __Pyx_ParseOptionalKeywords(PyObject *kwds, PyObject **argnames[],\
         __Pyx__ArgTypeTest(obj, type, name, exact))
 static int __Pyx__ArgTypeTest(PyObject *obj, PyTypeObject *type, const char *name, int exact);
 
-/* PyObjectCall.proto */
-#if CYTHON_COMPILING_IN_CPYTHON
-static CYTHON_INLINE PyObject* __Pyx_PyObject_Call(PyObject *func, PyObject *arg, PyObject *kw);
-#else
-#define __Pyx_PyObject_Call(func, arg, kw) PyObject_Call(func, arg, kw)
-#endif
-
 /* RaiseException.proto */
 static void __Pyx_Raise(PyObject *type, PyObject *value, PyObject *tb, PyObject *cause);
-
-/* PyCFunctionFastCall.proto */
-#if CYTHON_FAST_PYCCALL
-static CYTHON_INLINE PyObject *__Pyx_PyCFunction_FastCall(PyObject *func, PyObject **args, Py_ssize_t nargs);
-#else
-#define __Pyx_PyCFunction_FastCall(func, args, nargs)  (assert(0), NULL)
-#endif
-
-/* PyFunctionFastCall.proto */
-#if CYTHON_FAST_PYCALL
-#define __Pyx_PyFunction_FastCall(func, args, nargs)\
-    __Pyx_PyFunction_FastCallDict((func), (args), (nargs), NULL)
-#if 1 || PY_VERSION_HEX < 0x030600B1
-static PyObject *__Pyx_PyFunction_FastCallDict(PyObject *func, PyObject **args, int nargs, PyObject *kwargs);
-#else
-#define __Pyx_PyFunction_FastCallDict(func, args, nargs, kwargs) _PyFunction_FastCallDict(func, args, nargs, kwargs)
-#endif
-#endif
-
-/* PyObjectCallMethO.proto */
-#if CYTHON_COMPILING_IN_CPYTHON
-static CYTHON_INLINE PyObject* __Pyx_PyObject_CallMethO(PyObject *func, PyObject *arg);
-#endif
-
-/* PyObjectCallOneArg.proto */
-static CYTHON_INLINE PyObject* __Pyx_PyObject_CallOneArg(PyObject *func, PyObject *arg);
 
 /* DictGetItem.proto */
 #if PY_MAJOR_VERSION >= 3 && !CYTHON_COMPILING_IN_PYPY
@@ -1440,16 +1453,6 @@ static CYTHON_INLINE PyObject* __Pyx_PyInt_From_npy_long(npy_long value);
 /* CIntToPy.proto */
 static CYTHON_INLINE PyObject* __Pyx_PyInt_From_npy_int16(npy_int16 value);
 
-/* CIntToPy.proto */
-static CYTHON_INLINE PyObject* __Pyx_PyInt_From_long(long value);
-
-/* Print.proto */
-static int __Pyx_Print(PyObject*, PyObject *, int);
-#if CYTHON_COMPILING_IN_PYPY || PY_MAJOR_VERSION >= 3
-static PyObject* __pyx_print = 0;
-static PyObject* __pyx_print_kwargs = 0;
-#endif
-
 /* RealImag.proto */
 #if CYTHON_CCOMPLEX
   #ifdef __cplusplus
@@ -1557,11 +1560,11 @@ static CYTHON_INLINE PyObject* __Pyx_PyInt_From_enum__NPY_TYPES(enum NPY_TYPES v
 /* CIntFromPy.proto */
 static CYTHON_INLINE npy_long __Pyx_PyInt_As_npy_long(PyObject *);
 
-/* PrintOne.proto */
-static int __Pyx_PrintOne(PyObject* stream, PyObject *o);
-
 /* CIntFromPy.proto */
 static CYTHON_INLINE int __Pyx_PyInt_As_int(PyObject *);
+
+/* CIntToPy.proto */
+static CYTHON_INLINE PyObject* __Pyx_PyInt_From_long(long value);
 
 /* CIntFromPy.proto */
 static CYTHON_INLINE long __Pyx_PyInt_As_long(PyObject *);
@@ -1633,7 +1636,8 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *, cha
 /* Module declarations from 'cython' */
 
 /* Module declarations from 'centroid' */
-static PyObject *__pyx_f_8centroid_compute_centroids(PyArrayObject *, PyArrayObject *, PyArrayObject *, PyArrayObject *, PyArrayObject *, PyArrayObject *, PyArrayObject *, PyArrayObject *, PyArrayObject *, PyArrayObject *, PyArrayObject *, int __pyx_skip_dispatch, struct __pyx_opt_args_8centroid_compute_centroids *__pyx_optional_args); /*proto*/
+static PyObject *__pyx_f_8centroid_compute_centroids(PyArrayObject *, PyArrayObject *, PyArrayObject *, PyArrayObject *, PyObject *, PyObject *, PyObject *, PyArrayObject *, PyArrayObject *, PyArrayObject *, PyArrayObject *, PyArrayObject *, int __pyx_skip_dispatch, struct __pyx_opt_args_8centroid_compute_centroids *__pyx_optional_args); /*proto*/
+static PyObject *__pyx_f_8centroid_estimate_backgrounds(PyArrayObject *, PyArrayObject *, PyArrayObject *, PyArrayObject *, PyObject *, int __pyx_skip_dispatch); /*proto*/
 static __Pyx_TypeInfo __Pyx_TypeInfo_nn___pyx_t_5numpy_int16_t = { "int16_t", NULL, sizeof(__pyx_t_5numpy_int16_t), { 0 }, 0, IS_UNSIGNED(__pyx_t_5numpy_int16_t) ? 'U' : 'I', IS_UNSIGNED(__pyx_t_5numpy_int16_t), 0 };
 static __Pyx_TypeInfo __Pyx_TypeInfo_nn___pyx_t_5numpy_float_t = { "float_t", NULL, sizeof(__pyx_t_5numpy_float_t), { 0 }, 0, 'R', 0, 0 };
 #define __Pyx_MODULE_NAME "centroid"
@@ -1642,46 +1646,44 @@ int __pyx_module_is_main_centroid = 0;
 
 /* Implementation of 'centroid' */
 static PyObject *__pyx_builtin_range;
+static PyObject *__pyx_builtin_round;
+static PyObject *__pyx_builtin_exit;
 static PyObject *__pyx_builtin_ValueError;
 static PyObject *__pyx_builtin_RuntimeError;
 static PyObject *__pyx_builtin_ImportError;
 static const char __pyx_k_np[] = "np";
-static const char __pyx_k_end[] = "end";
 static const char __pyx_k_plt[] = "plt";
-static const char __pyx_k_file[] = "file";
+static const char __pyx_k_exit[] = "exit";
 static const char __pyx_k_main[] = "__main__";
 static const char __pyx_k_test[] = "__test__";
 static const char __pyx_k_numpy[] = "numpy";
-static const char __pyx_k_print[] = "print";
 static const char __pyx_k_range[] = "range";
+static const char __pyx_k_round[] = "round";
 static const char __pyx_k_x_out[] = "x_out";
 static const char __pyx_k_y_out[] = "y_out";
 static const char __pyx_k_import[] = "__import__";
 static const char __pyx_k_pyplot[] = "pyplot";
-static const char __pyx_k_sb_x1_vec[] = "sb_x1_vec";
-static const char __pyx_k_sb_x2_vec[] = "sb_x2_vec";
-static const char __pyx_k_sb_y1_vec[] = "sb_y1_vec";
-static const char __pyx_k_sb_y2_vec[] = "sb_y2_vec";
+static const char __pyx_k_sb_x_vec[] = "sb_x_vec";
+static const char __pyx_k_sb_y_vec[] = "sb_y_vec";
+static const char __pyx_k_sb_bg_vec[] = "sb_bg_vec";
 static const char __pyx_k_ValueError[] = "ValueError";
 static const char __pyx_k_matplotlib[] = "matplotlib";
 static const char __pyx_k_ImportError[] = "ImportError";
-static const char __pyx_k_num_threads[] = "num_threads";
 static const char __pyx_k_spots_image[] = "spots_image";
 static const char __pyx_k_RuntimeError[] = "RuntimeError";
+static const char __pyx_k_iterations_p[] = "iterations_p";
+static const char __pyx_k_num_threads_p[] = "num_threads_p";
 static const char __pyx_k_mean_intensity[] = "mean_intensity";
+static const char __pyx_k_sb_half_width_p[] = "sb_half_width_p";
 static const char __pyx_k_maximum_intensity[] = "maximum_intensity";
 static const char __pyx_k_minimum_intensity[] = "minimum_intensity";
 static const char __pyx_k_cline_in_traceback[] = "cline_in_traceback";
-static const char __pyx_k_modify_spots_image[] = "modify_spots_image";
-static const char __pyx_k_estimate_background[] = "estimate_background";
-static const char __pyx_k_background_intensity[] = "background_intensity";
-static const char __pyx_k_background_correction[] = "background_correction";
+static const char __pyx_k_iteration_step_px_p[] = "iteration_step_px_p";
 static const char __pyx_k_ndarray_is_not_C_contiguous[] = "ndarray is not C contiguous";
 static const char __pyx_k_numpy_core_multiarray_failed_to[] = "numpy.core.multiarray failed to import";
 static const char __pyx_k_unknown_dtype_code_in_numpy_pxd[] = "unknown dtype code in numpy.pxd (%d)";
 static const char __pyx_k_Format_string_allocated_too_shor[] = "Format string allocated too short, see comment in numpy.pxd";
 static const char __pyx_k_Non_native_byte_order_not_suppor[] = "Non-native byte order not supported";
-static const char __pyx_k_Warning_search_box_intensity_low[] = "Warning: search box intensity low; skipping. Check background_correction.";
 static const char __pyx_k_ndarray_is_not_Fortran_contiguou[] = "ndarray is not Fortran contiguous";
 static const char __pyx_k_numpy_core_umath_failed_to_impor[] = "numpy.core.umath failed to import";
 static const char __pyx_k_Format_string_allocated_too_shor_2[] = "Format string allocated too short.";
@@ -1691,119 +1693,107 @@ static PyObject *__pyx_n_s_ImportError;
 static PyObject *__pyx_kp_u_Non_native_byte_order_not_suppor;
 static PyObject *__pyx_n_s_RuntimeError;
 static PyObject *__pyx_n_s_ValueError;
-static PyObject *__pyx_kp_s_Warning_search_box_intensity_low;
-static PyObject *__pyx_n_s_background_correction;
-static PyObject *__pyx_n_s_background_intensity;
 static PyObject *__pyx_n_s_cline_in_traceback;
-static PyObject *__pyx_n_s_end;
-static PyObject *__pyx_n_s_estimate_background;
-static PyObject *__pyx_n_s_file;
+static PyObject *__pyx_n_s_exit;
 static PyObject *__pyx_n_s_import;
+static PyObject *__pyx_n_s_iteration_step_px_p;
+static PyObject *__pyx_n_s_iterations_p;
 static PyObject *__pyx_n_s_main;
 static PyObject *__pyx_n_s_matplotlib;
 static PyObject *__pyx_n_s_maximum_intensity;
 static PyObject *__pyx_n_s_mean_intensity;
 static PyObject *__pyx_n_s_minimum_intensity;
-static PyObject *__pyx_n_s_modify_spots_image;
 static PyObject *__pyx_kp_u_ndarray_is_not_C_contiguous;
 static PyObject *__pyx_kp_u_ndarray_is_not_Fortran_contiguou;
 static PyObject *__pyx_n_s_np;
-static PyObject *__pyx_n_s_num_threads;
+static PyObject *__pyx_n_s_num_threads_p;
 static PyObject *__pyx_n_s_numpy;
 static PyObject *__pyx_kp_s_numpy_core_multiarray_failed_to;
 static PyObject *__pyx_kp_s_numpy_core_umath_failed_to_impor;
 static PyObject *__pyx_n_s_plt;
-static PyObject *__pyx_n_s_print;
 static PyObject *__pyx_n_s_pyplot;
 static PyObject *__pyx_n_s_range;
-static PyObject *__pyx_n_s_sb_x1_vec;
-static PyObject *__pyx_n_s_sb_x2_vec;
-static PyObject *__pyx_n_s_sb_y1_vec;
-static PyObject *__pyx_n_s_sb_y2_vec;
+static PyObject *__pyx_n_s_round;
+static PyObject *__pyx_n_s_sb_bg_vec;
+static PyObject *__pyx_n_s_sb_half_width_p;
+static PyObject *__pyx_n_s_sb_x_vec;
+static PyObject *__pyx_n_s_sb_y_vec;
 static PyObject *__pyx_n_s_spots_image;
 static PyObject *__pyx_n_s_test;
 static PyObject *__pyx_kp_u_unknown_dtype_code_in_numpy_pxd;
 static PyObject *__pyx_n_s_x_out;
 static PyObject *__pyx_n_s_y_out;
-static PyObject *__pyx_pf_8centroid_compute_centroids(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_spots_image, PyArrayObject *__pyx_v_sb_x1_vec, PyArrayObject *__pyx_v_sb_x2_vec, PyArrayObject *__pyx_v_sb_y1_vec, PyArrayObject *__pyx_v_sb_y2_vec, PyArrayObject *__pyx_v_x_out, PyArrayObject *__pyx_v_y_out, PyArrayObject *__pyx_v_mean_intensity, PyArrayObject *__pyx_v_maximum_intensity, PyArrayObject *__pyx_v_minimum_intensity, PyArrayObject *__pyx_v_background_intensity, PyObject *__pyx_v_estimate_background, PyObject *__pyx_v_background_correction, PyObject *__pyx_v_num_threads, PyObject *__pyx_v_modify_spots_image); /* proto */
+static PyObject *__pyx_pf_8centroid_compute_centroids(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_spots_image, PyArrayObject *__pyx_v_sb_x_vec, PyArrayObject *__pyx_v_sb_y_vec, PyArrayObject *__pyx_v_sb_bg_vec, PyObject *__pyx_v_sb_half_width_p, PyObject *__pyx_v_iterations_p, PyObject *__pyx_v_iteration_step_px_p, PyArrayObject *__pyx_v_x_out, PyArrayObject *__pyx_v_y_out, PyArrayObject *__pyx_v_mean_intensity, PyArrayObject *__pyx_v_maximum_intensity, PyArrayObject *__pyx_v_minimum_intensity, PyObject *__pyx_v_num_threads_p); /* proto */
+static PyObject *__pyx_pf_8centroid_2estimate_backgrounds(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_spots_image, PyArrayObject *__pyx_v_sb_x_vec, PyArrayObject *__pyx_v_sb_y_vec, PyArrayObject *__pyx_v_sb_bg_vec, PyObject *__pyx_v_sb_half_width_p); /* proto */
 static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, Py_buffer *__pyx_v_info, int __pyx_v_flags); /* proto */
 static void __pyx_pf_5numpy_7ndarray_2__releasebuffer__(PyArrayObject *__pyx_v_self, Py_buffer *__pyx_v_info); /* proto */
-static PyObject *__pyx_float_0_0;
-static PyObject *__pyx_int_4;
-static PyObject *__pyx_tuple_;
-static PyObject *__pyx_tuple__2;
-static PyObject *__pyx_tuple__3;
-static PyObject *__pyx_tuple__4;
+static PyObject *__pyx_int_0;
+static PyObject *__pyx_int_1;
+static PyObject *__pyx_slice_;
+static PyObject *__pyx_slice__2;
+static PyObject *__pyx_slice__3;
+static PyObject *__pyx_slice__4;
 static PyObject *__pyx_tuple__5;
 static PyObject *__pyx_tuple__6;
 static PyObject *__pyx_tuple__7;
 static PyObject *__pyx_tuple__8;
 static PyObject *__pyx_tuple__9;
+static PyObject *__pyx_tuple__10;
+static PyObject *__pyx_tuple__11;
+static PyObject *__pyx_tuple__12;
+static PyObject *__pyx_tuple__13;
+static PyObject *__pyx_tuple__14;
+static PyObject *__pyx_tuple__15;
+static PyObject *__pyx_tuple__16;
+static PyObject *__pyx_tuple__17;
 /* Late includes */
 
-/* "centroid.pyx":10
+/* "centroid.pyx":37
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * cpdef compute_centroids(np.ndarray[np.int16_t,ndim=2] spots_image,             # <<<<<<<<<<<<<<
- *                         np.ndarray[np.int16_t,ndim=1] sb_x1_vec,
- *                         np.ndarray[np.int16_t,ndim=1] sb_x2_vec,
+ *                         np.ndarray[np.float_t,ndim=1] sb_x_vec,
+ *                         np.ndarray[np.float_t,ndim=1] sb_y_vec,
  */
 
 static PyObject *__pyx_pw_8centroid_1compute_centroids(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static PyObject *__pyx_f_8centroid_compute_centroids(PyArrayObject *__pyx_v_spots_image, PyArrayObject *__pyx_v_sb_x1_vec, PyArrayObject *__pyx_v_sb_x2_vec, PyArrayObject *__pyx_v_sb_y1_vec, PyArrayObject *__pyx_v_sb_y2_vec, PyArrayObject *__pyx_v_x_out, PyArrayObject *__pyx_v_y_out, PyArrayObject *__pyx_v_mean_intensity, PyArrayObject *__pyx_v_maximum_intensity, PyArrayObject *__pyx_v_minimum_intensity, PyArrayObject *__pyx_v_background_intensity, CYTHON_UNUSED int __pyx_skip_dispatch, struct __pyx_opt_args_8centroid_compute_centroids *__pyx_optional_args) {
-
-  /* "centroid.pyx":21
- *                         np.ndarray[np.float_t,ndim=1] minimum_intensity,
- *                         np.ndarray[np.float_t,ndim=1] background_intensity,
- *                         estimate_background = True,             # <<<<<<<<<<<<<<
- *                         background_correction = 0.0,
- *                         num_threads = 4,
- */
-  PyObject *__pyx_v_estimate_background = ((PyObject *)Py_True);
-  PyObject *__pyx_v_background_correction = ((PyObject *)__pyx_float_0_0);
-  PyObject *__pyx_v_num_threads = ((PyObject *)__pyx_int_4);
-
-  /* "centroid.pyx":24
- *                         background_correction = 0.0,
- *                         num_threads = 4,
- *                         modify_spots_image = False):             # <<<<<<<<<<<<<<
- * 
- *     cdef np.int_t n_spots = len(sb_x1_vec)
- */
-  PyObject *__pyx_v_modify_spots_image = ((PyObject *)Py_False);
+static PyObject *__pyx_f_8centroid_compute_centroids(PyArrayObject *__pyx_v_spots_image, PyArrayObject *__pyx_v_sb_x_vec, PyArrayObject *__pyx_v_sb_y_vec, PyArrayObject *__pyx_v_sb_bg_vec, PyObject *__pyx_v_sb_half_width_p, PyObject *__pyx_v_iterations_p, PyObject *__pyx_v_iteration_step_px_p, PyArrayObject *__pyx_v_x_out, PyArrayObject *__pyx_v_y_out, PyArrayObject *__pyx_v_mean_intensity, PyArrayObject *__pyx_v_maximum_intensity, PyArrayObject *__pyx_v_minimum_intensity, CYTHON_UNUSED int __pyx_skip_dispatch, struct __pyx_opt_args_8centroid_compute_centroids *__pyx_optional_args) {
+  PyObject *__pyx_v_num_threads_p = ((PyObject *)__pyx_int_1);
   __pyx_t_5numpy_int_t __pyx_v_n_spots;
-  __pyx_t_5numpy_int_t __pyx_v_k;
-  CYTHON_UNUSED __pyx_t_5numpy_int_t __pyx_v_num_threads_t;
+  CYTHON_UNUSED __pyx_t_5numpy_int_t __pyx_v_num_threads;
+  __pyx_t_5numpy_int_t __pyx_v_iterations;
+  __pyx_t_5numpy_int_t __pyx_v_iteration_step_px;
+  __pyx_t_5numpy_int_t __pyx_v_sb_half_width;
   __pyx_t_5numpy_float_t __pyx_v_intensity;
   __pyx_t_5numpy_float_t __pyx_v_background;
   __pyx_t_5numpy_float_t __pyx_v_xprod;
   __pyx_t_5numpy_float_t __pyx_v_yprod;
   __pyx_t_5numpy_int_t __pyx_v_x;
+  __pyx_t_5numpy_int_t __pyx_v_x1;
+  __pyx_t_5numpy_int_t __pyx_v_x2;
   __pyx_t_5numpy_int_t __pyx_v_y;
+  __pyx_t_5numpy_int_t __pyx_v_y1;
+  __pyx_t_5numpy_int_t __pyx_v_y2;
+  __pyx_t_5numpy_int_t __pyx_v_sy;
+  __pyx_t_5numpy_int_t __pyx_v_sx;
   __pyx_t_5numpy_float_t __pyx_v_imax;
   __pyx_t_5numpy_float_t __pyx_v_imin;
   __pyx_t_5numpy_float_t __pyx_v_pixel;
-  __pyx_t_5numpy_float_t __pyx_v_edge_counter;
-  __pyx_t_5numpy_int_t __pyx_v_estimate_background_t;
-  __pyx_t_5numpy_int_t __pyx_v_modify_spots_image_t;
-  __pyx_t_5numpy_float_t __pyx_v_background_correction_t;
   __pyx_t_5numpy_float_t __pyx_v_counter;
-  __Pyx_LocalBuf_ND __pyx_pybuffernd_background_intensity;
-  __Pyx_Buffer __pyx_pybuffer_background_intensity;
+  __pyx_t_5numpy_int_t __pyx_v_k_iteration;
+  __pyx_t_5numpy_int_t __pyx_v_k_spot;
   __Pyx_LocalBuf_ND __pyx_pybuffernd_maximum_intensity;
   __Pyx_Buffer __pyx_pybuffer_maximum_intensity;
   __Pyx_LocalBuf_ND __pyx_pybuffernd_mean_intensity;
   __Pyx_Buffer __pyx_pybuffer_mean_intensity;
   __Pyx_LocalBuf_ND __pyx_pybuffernd_minimum_intensity;
   __Pyx_Buffer __pyx_pybuffer_minimum_intensity;
-  __Pyx_LocalBuf_ND __pyx_pybuffernd_sb_x1_vec;
-  __Pyx_Buffer __pyx_pybuffer_sb_x1_vec;
-  __Pyx_LocalBuf_ND __pyx_pybuffernd_sb_x2_vec;
-  __Pyx_Buffer __pyx_pybuffer_sb_x2_vec;
-  __Pyx_LocalBuf_ND __pyx_pybuffernd_sb_y1_vec;
-  __Pyx_Buffer __pyx_pybuffer_sb_y1_vec;
-  __Pyx_LocalBuf_ND __pyx_pybuffernd_sb_y2_vec;
-  __Pyx_Buffer __pyx_pybuffer_sb_y2_vec;
+  __Pyx_LocalBuf_ND __pyx_pybuffernd_sb_bg_vec;
+  __Pyx_Buffer __pyx_pybuffer_sb_bg_vec;
+  __Pyx_LocalBuf_ND __pyx_pybuffernd_sb_x_vec;
+  __Pyx_Buffer __pyx_pybuffer_sb_x_vec;
+  __Pyx_LocalBuf_ND __pyx_pybuffernd_sb_y_vec;
+  __Pyx_Buffer __pyx_pybuffer_sb_y_vec;
   __Pyx_LocalBuf_ND __pyx_pybuffernd_spots_image;
   __Pyx_Buffer __pyx_pybuffer_spots_image;
   __Pyx_LocalBuf_ND __pyx_pybuffernd_x_out;
@@ -1815,26 +1805,26 @@ static PyObject *__pyx_f_8centroid_compute_centroids(PyArrayObject *__pyx_v_spot
   Py_ssize_t __pyx_t_1;
   PyObject *__pyx_t_2 = NULL;
   __pyx_t_5numpy_int_t __pyx_t_3;
-  double __pyx_t_4;
+  __pyx_t_5numpy_int_t __pyx_t_4;
   __pyx_t_5numpy_int_t __pyx_t_5;
   __pyx_t_5numpy_int_t __pyx_t_6;
-  int __pyx_t_7;
-  Py_ssize_t __pyx_t_8;
-  long __pyx_t_9;
-  Py_ssize_t __pyx_t_10;
-  long __pyx_t_11;
+  __pyx_t_5numpy_int_t __pyx_t_7;
+  __pyx_t_5numpy_int_t __pyx_t_8;
+  Py_ssize_t __pyx_t_9;
+  PyObject *__pyx_t_10 = NULL;
+  PyObject *__pyx_t_11 = NULL;
   __pyx_t_5numpy_int_t __pyx_t_12;
   Py_ssize_t __pyx_t_13;
   Py_ssize_t __pyx_t_14;
   Py_ssize_t __pyx_t_15;
-  Py_ssize_t __pyx_t_16;
-  Py_ssize_t __pyx_t_17;
+  int __pyx_t_16;
+  int __pyx_t_17;
   Py_ssize_t __pyx_t_18;
-  Py_ssize_t __pyx_t_19;
-  __pyx_t_5numpy_int16_t __pyx_t_20;
-  Py_ssize_t __pyx_t_21;
-  __pyx_t_5numpy_int16_t __pyx_t_22;
-  Py_ssize_t __pyx_t_23;
+  __pyx_t_5numpy_int_t __pyx_t_19;
+  __pyx_t_5numpy_int_t __pyx_t_20;
+  __pyx_t_5numpy_int_t __pyx_t_21;
+  __pyx_t_5numpy_int_t __pyx_t_22;
+  __pyx_t_5numpy_int_t __pyx_t_23;
   Py_ssize_t __pyx_t_24;
   Py_ssize_t __pyx_t_25;
   Py_ssize_t __pyx_t_26;
@@ -1842,57 +1832,28 @@ static PyObject *__pyx_f_8centroid_compute_centroids(PyArrayObject *__pyx_v_spot
   Py_ssize_t __pyx_t_28;
   Py_ssize_t __pyx_t_29;
   Py_ssize_t __pyx_t_30;
-  Py_ssize_t __pyx_t_31;
-  long __pyx_t_32;
-  Py_ssize_t __pyx_t_33;
-  long __pyx_t_34;
-  __pyx_t_5numpy_int_t __pyx_t_35;
-  Py_ssize_t __pyx_t_36;
-  Py_ssize_t __pyx_t_37;
-  Py_ssize_t __pyx_t_38;
-  Py_ssize_t __pyx_t_39;
-  int __pyx_t_40;
-  Py_ssize_t __pyx_t_41;
-  Py_ssize_t __pyx_t_42;
-  Py_ssize_t __pyx_t_43;
-  Py_ssize_t __pyx_t_44;
-  Py_ssize_t __pyx_t_45;
-  Py_ssize_t __pyx_t_46;
   __Pyx_RefNannySetupContext("compute_centroids", 0);
   if (__pyx_optional_args) {
     if (__pyx_optional_args->__pyx_n > 0) {
-      __pyx_v_estimate_background = __pyx_optional_args->estimate_background;
-      if (__pyx_optional_args->__pyx_n > 1) {
-        __pyx_v_background_correction = __pyx_optional_args->background_correction;
-        if (__pyx_optional_args->__pyx_n > 2) {
-          __pyx_v_num_threads = __pyx_optional_args->num_threads;
-          if (__pyx_optional_args->__pyx_n > 3) {
-            __pyx_v_modify_spots_image = __pyx_optional_args->modify_spots_image;
-          }
-        }
-      }
+      __pyx_v_num_threads_p = __pyx_optional_args->num_threads_p;
     }
   }
   __pyx_pybuffer_spots_image.pybuffer.buf = NULL;
   __pyx_pybuffer_spots_image.refcount = 0;
   __pyx_pybuffernd_spots_image.data = NULL;
   __pyx_pybuffernd_spots_image.rcbuffer = &__pyx_pybuffer_spots_image;
-  __pyx_pybuffer_sb_x1_vec.pybuffer.buf = NULL;
-  __pyx_pybuffer_sb_x1_vec.refcount = 0;
-  __pyx_pybuffernd_sb_x1_vec.data = NULL;
-  __pyx_pybuffernd_sb_x1_vec.rcbuffer = &__pyx_pybuffer_sb_x1_vec;
-  __pyx_pybuffer_sb_x2_vec.pybuffer.buf = NULL;
-  __pyx_pybuffer_sb_x2_vec.refcount = 0;
-  __pyx_pybuffernd_sb_x2_vec.data = NULL;
-  __pyx_pybuffernd_sb_x2_vec.rcbuffer = &__pyx_pybuffer_sb_x2_vec;
-  __pyx_pybuffer_sb_y1_vec.pybuffer.buf = NULL;
-  __pyx_pybuffer_sb_y1_vec.refcount = 0;
-  __pyx_pybuffernd_sb_y1_vec.data = NULL;
-  __pyx_pybuffernd_sb_y1_vec.rcbuffer = &__pyx_pybuffer_sb_y1_vec;
-  __pyx_pybuffer_sb_y2_vec.pybuffer.buf = NULL;
-  __pyx_pybuffer_sb_y2_vec.refcount = 0;
-  __pyx_pybuffernd_sb_y2_vec.data = NULL;
-  __pyx_pybuffernd_sb_y2_vec.rcbuffer = &__pyx_pybuffer_sb_y2_vec;
+  __pyx_pybuffer_sb_x_vec.pybuffer.buf = NULL;
+  __pyx_pybuffer_sb_x_vec.refcount = 0;
+  __pyx_pybuffernd_sb_x_vec.data = NULL;
+  __pyx_pybuffernd_sb_x_vec.rcbuffer = &__pyx_pybuffer_sb_x_vec;
+  __pyx_pybuffer_sb_y_vec.pybuffer.buf = NULL;
+  __pyx_pybuffer_sb_y_vec.refcount = 0;
+  __pyx_pybuffernd_sb_y_vec.data = NULL;
+  __pyx_pybuffernd_sb_y_vec.rcbuffer = &__pyx_pybuffer_sb_y_vec;
+  __pyx_pybuffer_sb_bg_vec.pybuffer.buf = NULL;
+  __pyx_pybuffer_sb_bg_vec.refcount = 0;
+  __pyx_pybuffernd_sb_bg_vec.data = NULL;
+  __pyx_pybuffernd_sb_bg_vec.rcbuffer = &__pyx_pybuffer_sb_bg_vec;
   __pyx_pybuffer_x_out.pybuffer.buf = NULL;
   __pyx_pybuffer_x_out.refcount = 0;
   __pyx_pybuffernd_x_out.data = NULL;
@@ -1913,786 +1874,778 @@ static PyObject *__pyx_f_8centroid_compute_centroids(PyArrayObject *__pyx_v_spot
   __pyx_pybuffer_minimum_intensity.refcount = 0;
   __pyx_pybuffernd_minimum_intensity.data = NULL;
   __pyx_pybuffernd_minimum_intensity.rcbuffer = &__pyx_pybuffer_minimum_intensity;
-  __pyx_pybuffer_background_intensity.pybuffer.buf = NULL;
-  __pyx_pybuffer_background_intensity.refcount = 0;
-  __pyx_pybuffernd_background_intensity.data = NULL;
-  __pyx_pybuffernd_background_intensity.rcbuffer = &__pyx_pybuffer_background_intensity;
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_spots_image.rcbuffer->pybuffer, (PyObject*)__pyx_v_spots_image, &__Pyx_TypeInfo_nn___pyx_t_5numpy_int16_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 10, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_spots_image.rcbuffer->pybuffer, (PyObject*)__pyx_v_spots_image, &__Pyx_TypeInfo_nn___pyx_t_5numpy_int16_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 37, __pyx_L1_error)
   }
   __pyx_pybuffernd_spots_image.diminfo[0].strides = __pyx_pybuffernd_spots_image.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_spots_image.diminfo[0].shape = __pyx_pybuffernd_spots_image.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_spots_image.diminfo[1].strides = __pyx_pybuffernd_spots_image.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_spots_image.diminfo[1].shape = __pyx_pybuffernd_spots_image.rcbuffer->pybuffer.shape[1];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_sb_x1_vec.rcbuffer->pybuffer, (PyObject*)__pyx_v_sb_x1_vec, &__Pyx_TypeInfo_nn___pyx_t_5numpy_int16_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 10, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_sb_x_vec.rcbuffer->pybuffer, (PyObject*)__pyx_v_sb_x_vec, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 37, __pyx_L1_error)
   }
-  __pyx_pybuffernd_sb_x1_vec.diminfo[0].strides = __pyx_pybuffernd_sb_x1_vec.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_sb_x1_vec.diminfo[0].shape = __pyx_pybuffernd_sb_x1_vec.rcbuffer->pybuffer.shape[0];
+  __pyx_pybuffernd_sb_x_vec.diminfo[0].strides = __pyx_pybuffernd_sb_x_vec.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_sb_x_vec.diminfo[0].shape = __pyx_pybuffernd_sb_x_vec.rcbuffer->pybuffer.shape[0];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_sb_x2_vec.rcbuffer->pybuffer, (PyObject*)__pyx_v_sb_x2_vec, &__Pyx_TypeInfo_nn___pyx_t_5numpy_int16_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 10, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_sb_y_vec.rcbuffer->pybuffer, (PyObject*)__pyx_v_sb_y_vec, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 37, __pyx_L1_error)
   }
-  __pyx_pybuffernd_sb_x2_vec.diminfo[0].strides = __pyx_pybuffernd_sb_x2_vec.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_sb_x2_vec.diminfo[0].shape = __pyx_pybuffernd_sb_x2_vec.rcbuffer->pybuffer.shape[0];
+  __pyx_pybuffernd_sb_y_vec.diminfo[0].strides = __pyx_pybuffernd_sb_y_vec.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_sb_y_vec.diminfo[0].shape = __pyx_pybuffernd_sb_y_vec.rcbuffer->pybuffer.shape[0];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_sb_y1_vec.rcbuffer->pybuffer, (PyObject*)__pyx_v_sb_y1_vec, &__Pyx_TypeInfo_nn___pyx_t_5numpy_int16_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 10, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_sb_bg_vec.rcbuffer->pybuffer, (PyObject*)__pyx_v_sb_bg_vec, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 37, __pyx_L1_error)
   }
-  __pyx_pybuffernd_sb_y1_vec.diminfo[0].strides = __pyx_pybuffernd_sb_y1_vec.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_sb_y1_vec.diminfo[0].shape = __pyx_pybuffernd_sb_y1_vec.rcbuffer->pybuffer.shape[0];
+  __pyx_pybuffernd_sb_bg_vec.diminfo[0].strides = __pyx_pybuffernd_sb_bg_vec.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_sb_bg_vec.diminfo[0].shape = __pyx_pybuffernd_sb_bg_vec.rcbuffer->pybuffer.shape[0];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_sb_y2_vec.rcbuffer->pybuffer, (PyObject*)__pyx_v_sb_y2_vec, &__Pyx_TypeInfo_nn___pyx_t_5numpy_int16_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 10, __pyx_L1_error)
-  }
-  __pyx_pybuffernd_sb_y2_vec.diminfo[0].strides = __pyx_pybuffernd_sb_y2_vec.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_sb_y2_vec.diminfo[0].shape = __pyx_pybuffernd_sb_y2_vec.rcbuffer->pybuffer.shape[0];
-  {
-    __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_x_out.rcbuffer->pybuffer, (PyObject*)__pyx_v_x_out, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 10, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_x_out.rcbuffer->pybuffer, (PyObject*)__pyx_v_x_out, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 37, __pyx_L1_error)
   }
   __pyx_pybuffernd_x_out.diminfo[0].strides = __pyx_pybuffernd_x_out.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_x_out.diminfo[0].shape = __pyx_pybuffernd_x_out.rcbuffer->pybuffer.shape[0];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_y_out.rcbuffer->pybuffer, (PyObject*)__pyx_v_y_out, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 10, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_y_out.rcbuffer->pybuffer, (PyObject*)__pyx_v_y_out, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 37, __pyx_L1_error)
   }
   __pyx_pybuffernd_y_out.diminfo[0].strides = __pyx_pybuffernd_y_out.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_y_out.diminfo[0].shape = __pyx_pybuffernd_y_out.rcbuffer->pybuffer.shape[0];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_mean_intensity.rcbuffer->pybuffer, (PyObject*)__pyx_v_mean_intensity, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 10, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_mean_intensity.rcbuffer->pybuffer, (PyObject*)__pyx_v_mean_intensity, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 37, __pyx_L1_error)
   }
   __pyx_pybuffernd_mean_intensity.diminfo[0].strides = __pyx_pybuffernd_mean_intensity.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_mean_intensity.diminfo[0].shape = __pyx_pybuffernd_mean_intensity.rcbuffer->pybuffer.shape[0];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_maximum_intensity.rcbuffer->pybuffer, (PyObject*)__pyx_v_maximum_intensity, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 10, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_maximum_intensity.rcbuffer->pybuffer, (PyObject*)__pyx_v_maximum_intensity, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 37, __pyx_L1_error)
   }
   __pyx_pybuffernd_maximum_intensity.diminfo[0].strides = __pyx_pybuffernd_maximum_intensity.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_maximum_intensity.diminfo[0].shape = __pyx_pybuffernd_maximum_intensity.rcbuffer->pybuffer.shape[0];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_minimum_intensity.rcbuffer->pybuffer, (PyObject*)__pyx_v_minimum_intensity, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 10, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_minimum_intensity.rcbuffer->pybuffer, (PyObject*)__pyx_v_minimum_intensity, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 37, __pyx_L1_error)
   }
   __pyx_pybuffernd_minimum_intensity.diminfo[0].strides = __pyx_pybuffernd_minimum_intensity.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_minimum_intensity.diminfo[0].shape = __pyx_pybuffernd_minimum_intensity.rcbuffer->pybuffer.shape[0];
-  {
-    __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_background_intensity.rcbuffer->pybuffer, (PyObject*)__pyx_v_background_intensity, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 10, __pyx_L1_error)
-  }
-  __pyx_pybuffernd_background_intensity.diminfo[0].strides = __pyx_pybuffernd_background_intensity.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_background_intensity.diminfo[0].shape = __pyx_pybuffernd_background_intensity.rcbuffer->pybuffer.shape[0];
 
-  /* "centroid.pyx":26
- *                         modify_spots_image = False):
+  /* "centroid.pyx":52
  * 
- *     cdef np.int_t n_spots = len(sb_x1_vec)             # <<<<<<<<<<<<<<
- *     cdef np.int_t k
- *     cdef np.int_t num_threads_t = int(num_threads)
+ * 
+ *     cdef np.int_t n_spots = len(sb_x_vec)             # <<<<<<<<<<<<<<
+ *     cdef np.int_t num_threads = int(num_threads_p)
+ *     cdef np.int_t iterations = int(iterations_p)
  */
-  __pyx_t_1 = PyObject_Length(((PyObject *)__pyx_v_sb_x1_vec)); if (unlikely(__pyx_t_1 == ((Py_ssize_t)-1))) __PYX_ERR(0, 26, __pyx_L1_error)
+  __pyx_t_1 = PyObject_Length(((PyObject *)__pyx_v_sb_x_vec)); if (unlikely(__pyx_t_1 == ((Py_ssize_t)-1))) __PYX_ERR(0, 52, __pyx_L1_error)
   __pyx_v_n_spots = __pyx_t_1;
 
-  /* "centroid.pyx":28
- *     cdef np.int_t n_spots = len(sb_x1_vec)
- *     cdef np.int_t k
- *     cdef np.int_t num_threads_t = int(num_threads)             # <<<<<<<<<<<<<<
- *     cdef np.float_t intensity
- *     cdef np.float_t background
+  /* "centroid.pyx":53
+ * 
+ *     cdef np.int_t n_spots = len(sb_x_vec)
+ *     cdef np.int_t num_threads = int(num_threads_p)             # <<<<<<<<<<<<<<
+ *     cdef np.int_t iterations = int(iterations_p)
+ *     cdef np.int_t iteration_step_px = int(iteration_step_px_p)
  */
-  __pyx_t_2 = __Pyx_PyNumber_Int(__pyx_v_num_threads); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 28, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyNumber_Int(__pyx_v_num_threads_p); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 53, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = __Pyx_PyInt_As_npy_long(__pyx_t_2); if (unlikely((__pyx_t_3 == ((npy_long)-1)) && PyErr_Occurred())) __PYX_ERR(0, 28, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyInt_As_npy_long(__pyx_t_2); if (unlikely((__pyx_t_3 == ((npy_long)-1)) && PyErr_Occurred())) __PYX_ERR(0, 53, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_v_num_threads_t = __pyx_t_3;
+  __pyx_v_num_threads = __pyx_t_3;
 
   /* "centroid.pyx":54
- *     #     estimate_background_t = 0
- * 
- *     modify_spots_image_t = int(modify_spots_image)             # <<<<<<<<<<<<<<
- *     estimate_background_t = int(estimate_background)
- * 
+ *     cdef np.int_t n_spots = len(sb_x_vec)
+ *     cdef np.int_t num_threads = int(num_threads_p)
+ *     cdef np.int_t iterations = int(iterations_p)             # <<<<<<<<<<<<<<
+ *     cdef np.int_t iteration_step_px = int(iteration_step_px_p)
+ *     cdef np.int_t sb_half_width = int(sb_half_width_p)
  */
-  __pyx_t_2 = __Pyx_PyNumber_Int(__pyx_v_modify_spots_image); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 54, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyNumber_Int(__pyx_v_iterations_p); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 54, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_t_3 = __Pyx_PyInt_As_npy_long(__pyx_t_2); if (unlikely((__pyx_t_3 == ((npy_long)-1)) && PyErr_Occurred())) __PYX_ERR(0, 54, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_v_modify_spots_image_t = __pyx_t_3;
+  __pyx_v_iterations = __pyx_t_3;
 
   /* "centroid.pyx":55
+ *     cdef np.int_t num_threads = int(num_threads_p)
+ *     cdef np.int_t iterations = int(iterations_p)
+ *     cdef np.int_t iteration_step_px = int(iteration_step_px_p)             # <<<<<<<<<<<<<<
+ *     cdef np.int_t sb_half_width = int(sb_half_width_p)
  * 
- *     modify_spots_image_t = int(modify_spots_image)
- *     estimate_background_t = int(estimate_background)             # <<<<<<<<<<<<<<
- * 
- *     background_correction_t = float(background_correction)
  */
-  __pyx_t_2 = __Pyx_PyNumber_Int(__pyx_v_estimate_background); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 55, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyNumber_Int(__pyx_v_iteration_step_px_p); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 55, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
   __pyx_t_3 = __Pyx_PyInt_As_npy_long(__pyx_t_2); if (unlikely((__pyx_t_3 == ((npy_long)-1)) && PyErr_Occurred())) __PYX_ERR(0, 55, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_v_estimate_background_t = __pyx_t_3;
+  __pyx_v_iteration_step_px = __pyx_t_3;
 
-  /* "centroid.pyx":57
- *     estimate_background_t = int(estimate_background)
+  /* "centroid.pyx":56
+ *     cdef np.int_t iterations = int(iterations_p)
+ *     cdef np.int_t iteration_step_px = int(iteration_step_px_p)
+ *     cdef np.int_t sb_half_width = int(sb_half_width_p)             # <<<<<<<<<<<<<<
  * 
- *     background_correction_t = float(background_correction)             # <<<<<<<<<<<<<<
- *     num_threads_t = int(num_threads)
- * 
+ *     cdef np.float_t intensity
  */
-  __pyx_t_4 = __Pyx_PyObject_AsDouble(__pyx_v_background_correction); if (unlikely(__pyx_t_4 == ((double)((double)-1)) && PyErr_Occurred())) __PYX_ERR(0, 57, __pyx_L1_error)
-  __pyx_v_background_correction_t = __pyx_t_4;
-
-  /* "centroid.pyx":58
- * 
- *     background_correction_t = float(background_correction)
- *     num_threads_t = int(num_threads)             # <<<<<<<<<<<<<<
- * 
- *     #for k in prange(n_spots,nogil=True,num_threads=num_threads_t):
- */
-  __pyx_t_2 = __Pyx_PyNumber_Int(__pyx_v_num_threads); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 58, __pyx_L1_error)
+  __pyx_t_2 = __Pyx_PyNumber_Int(__pyx_v_sb_half_width_p); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 56, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = __Pyx_PyInt_As_npy_long(__pyx_t_2); if (unlikely((__pyx_t_3 == ((npy_long)-1)) && PyErr_Occurred())) __PYX_ERR(0, 58, __pyx_L1_error)
+  __pyx_t_3 = __Pyx_PyInt_As_npy_long(__pyx_t_2); if (unlikely((__pyx_t_3 == ((npy_long)-1)) && PyErr_Occurred())) __PYX_ERR(0, 56, __pyx_L1_error)
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_v_num_threads_t = __pyx_t_3;
+  __pyx_v_sb_half_width = __pyx_t_3;
 
-  /* "centroid.pyx":61
+  /* "centroid.pyx":78
+ *     cdef np.int_t k_spot
  * 
- *     #for k in prange(n_spots,nogil=True,num_threads=num_threads_t):
- *     for k in range(n_spots):             # <<<<<<<<<<<<<<
- *         if estimate_background_t:
- *             edge_counter = 0.0
- */
-  __pyx_t_3 = __pyx_v_n_spots;
-  __pyx_t_5 = __pyx_t_3;
-  for (__pyx_t_6 = 0; __pyx_t_6 < __pyx_t_5; __pyx_t_6+=1) {
-    __pyx_v_k = __pyx_t_6;
-
-    /* "centroid.pyx":62
- *     #for k in prange(n_spots,nogil=True,num_threads=num_threads_t):
- *     for k in range(n_spots):
- *         if estimate_background_t:             # <<<<<<<<<<<<<<
- *             edge_counter = 0.0
- *             background = 0.0
- */
-    __pyx_t_7 = (__pyx_v_estimate_background_t != 0);
-    if (__pyx_t_7) {
-
-      /* "centroid.pyx":63
- *     for k in range(n_spots):
- *         if estimate_background_t:
- *             edge_counter = 0.0             # <<<<<<<<<<<<<<
- *             background = 0.0
- *             for x in range(sb_x1_vec[k],sb_x2_vec[k]+1):
- */
-      __pyx_v_edge_counter = 0.0;
-
-      /* "centroid.pyx":64
- *         if estimate_background_t:
- *             edge_counter = 0.0
- *             background = 0.0             # <<<<<<<<<<<<<<
- *             for x in range(sb_x1_vec[k],sb_x2_vec[k]+1):
- *                 pixel = float(spots_image[sb_y1_vec[k],x])
- */
-      __pyx_v_background = 0.0;
-
-      /* "centroid.pyx":65
- *             edge_counter = 0.0
- *             background = 0.0
- *             for x in range(sb_x1_vec[k],sb_x2_vec[k]+1):             # <<<<<<<<<<<<<<
- *                 pixel = float(spots_image[sb_y1_vec[k],x])
- *                 background = background + pixel
- */
-      __pyx_t_8 = __pyx_v_k;
-      __pyx_t_9 = ((*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_int16_t *, __pyx_pybuffernd_sb_x2_vec.rcbuffer->pybuffer.buf, __pyx_t_8, __pyx_pybuffernd_sb_x2_vec.diminfo[0].strides)) + 1);
-      __pyx_t_10 = __pyx_v_k;
-      __pyx_t_11 = __pyx_t_9;
-      for (__pyx_t_12 = (*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_int16_t *, __pyx_pybuffernd_sb_x1_vec.rcbuffer->pybuffer.buf, __pyx_t_10, __pyx_pybuffernd_sb_x1_vec.diminfo[0].strides)); __pyx_t_12 < __pyx_t_11; __pyx_t_12+=1) {
-        __pyx_v_x = __pyx_t_12;
-
-        /* "centroid.pyx":66
- *             background = 0.0
- *             for x in range(sb_x1_vec[k],sb_x2_vec[k]+1):
- *                 pixel = float(spots_image[sb_y1_vec[k],x])             # <<<<<<<<<<<<<<
- *                 background = background + pixel
- *                 edge_counter = edge_counter + 1
- */
-        __pyx_t_13 = __pyx_v_k;
-        __pyx_t_14 = (*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_int16_t *, __pyx_pybuffernd_sb_y1_vec.rcbuffer->pybuffer.buf, __pyx_t_13, __pyx_pybuffernd_sb_y1_vec.diminfo[0].strides));
-        __pyx_t_15 = __pyx_v_x;
-        __pyx_v_pixel = ((double)(*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_int16_t *, __pyx_pybuffernd_spots_image.rcbuffer->pybuffer.buf, __pyx_t_14, __pyx_pybuffernd_spots_image.diminfo[0].strides, __pyx_t_15, __pyx_pybuffernd_spots_image.diminfo[1].strides)));
-
-        /* "centroid.pyx":67
- *             for x in range(sb_x1_vec[k],sb_x2_vec[k]+1):
- *                 pixel = float(spots_image[sb_y1_vec[k],x])
- *                 background = background + pixel             # <<<<<<<<<<<<<<
- *                 edge_counter = edge_counter + 1
- *                 pixel = float(spots_image[sb_y2_vec[k],x])
- */
-        __pyx_v_background = (__pyx_v_background + __pyx_v_pixel);
-
-        /* "centroid.pyx":68
- *                 pixel = float(spots_image[sb_y1_vec[k],x])
- *                 background = background + pixel
- *                 edge_counter = edge_counter + 1             # <<<<<<<<<<<<<<
- *                 pixel = float(spots_image[sb_y2_vec[k],x])
- *                 background = background + pixel
- */
-        __pyx_v_edge_counter = (__pyx_v_edge_counter + 1.0);
-
-        /* "centroid.pyx":69
- *                 background = background + pixel
- *                 edge_counter = edge_counter + 1
- *                 pixel = float(spots_image[sb_y2_vec[k],x])             # <<<<<<<<<<<<<<
- *                 background = background + pixel
- *                 edge_counter = edge_counter + 1
- */
-        __pyx_t_16 = __pyx_v_k;
-        __pyx_t_17 = (*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_int16_t *, __pyx_pybuffernd_sb_y2_vec.rcbuffer->pybuffer.buf, __pyx_t_16, __pyx_pybuffernd_sb_y2_vec.diminfo[0].strides));
-        __pyx_t_18 = __pyx_v_x;
-        __pyx_v_pixel = ((double)(*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_int16_t *, __pyx_pybuffernd_spots_image.rcbuffer->pybuffer.buf, __pyx_t_17, __pyx_pybuffernd_spots_image.diminfo[0].strides, __pyx_t_18, __pyx_pybuffernd_spots_image.diminfo[1].strides)));
-
-        /* "centroid.pyx":70
- *                 edge_counter = edge_counter + 1
- *                 pixel = float(spots_image[sb_y2_vec[k],x])
- *                 background = background + pixel             # <<<<<<<<<<<<<<
- *                 edge_counter = edge_counter + 1
- *             for y in range(sb_y1_vec[k]+1,sb_y2_vec[k]):
- */
-        __pyx_v_background = (__pyx_v_background + __pyx_v_pixel);
-
-        /* "centroid.pyx":71
- *                 pixel = float(spots_image[sb_y2_vec[k],x])
- *                 background = background + pixel
- *                 edge_counter = edge_counter + 1             # <<<<<<<<<<<<<<
- *             for y in range(sb_y1_vec[k]+1,sb_y2_vec[k]):
- *                 pixel = float(spots_image[y,sb_x1_vec[k]])
- */
-        __pyx_v_edge_counter = (__pyx_v_edge_counter + 1.0);
-      }
-
-      /* "centroid.pyx":72
- *                 background = background + pixel
- *                 edge_counter = edge_counter + 1
- *             for y in range(sb_y1_vec[k]+1,sb_y2_vec[k]):             # <<<<<<<<<<<<<<
- *                 pixel = float(spots_image[y,sb_x1_vec[k]])
- *                 background = background + pixel
- */
-      __pyx_t_19 = __pyx_v_k;
-      __pyx_t_20 = (*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_int16_t *, __pyx_pybuffernd_sb_y2_vec.rcbuffer->pybuffer.buf, __pyx_t_19, __pyx_pybuffernd_sb_y2_vec.diminfo[0].strides));
-      __pyx_t_21 = __pyx_v_k;
-      __pyx_t_22 = __pyx_t_20;
-      for (__pyx_t_12 = ((*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_int16_t *, __pyx_pybuffernd_sb_y1_vec.rcbuffer->pybuffer.buf, __pyx_t_21, __pyx_pybuffernd_sb_y1_vec.diminfo[0].strides)) + 1); __pyx_t_12 < __pyx_t_22; __pyx_t_12+=1) {
-        __pyx_v_y = __pyx_t_12;
-
-        /* "centroid.pyx":73
- *                 edge_counter = edge_counter + 1
- *             for y in range(sb_y1_vec[k]+1,sb_y2_vec[k]):
- *                 pixel = float(spots_image[y,sb_x1_vec[k]])             # <<<<<<<<<<<<<<
- *                 background = background + pixel
- *                 edge_counter = edge_counter + 1
- */
-        __pyx_t_23 = __pyx_v_k;
-        __pyx_t_24 = __pyx_v_y;
-        __pyx_t_25 = (*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_int16_t *, __pyx_pybuffernd_sb_x1_vec.rcbuffer->pybuffer.buf, __pyx_t_23, __pyx_pybuffernd_sb_x1_vec.diminfo[0].strides));
-        __pyx_v_pixel = ((double)(*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_int16_t *, __pyx_pybuffernd_spots_image.rcbuffer->pybuffer.buf, __pyx_t_24, __pyx_pybuffernd_spots_image.diminfo[0].strides, __pyx_t_25, __pyx_pybuffernd_spots_image.diminfo[1].strides)));
-
-        /* "centroid.pyx":74
- *             for y in range(sb_y1_vec[k]+1,sb_y2_vec[k]):
- *                 pixel = float(spots_image[y,sb_x1_vec[k]])
- *                 background = background + pixel             # <<<<<<<<<<<<<<
- *                 edge_counter = edge_counter + 1
- *                 pixel = float(spots_image[y,sb_x1_vec[k]])
- */
-        __pyx_v_background = (__pyx_v_background + __pyx_v_pixel);
-
-        /* "centroid.pyx":75
- *                 pixel = float(spots_image[y,sb_x1_vec[k]])
- *                 background = background + pixel
- *                 edge_counter = edge_counter + 1             # <<<<<<<<<<<<<<
- *                 pixel = float(spots_image[y,sb_x1_vec[k]])
- *                 background = background + pixel
- */
-        __pyx_v_edge_counter = (__pyx_v_edge_counter + 1.0);
-
-        /* "centroid.pyx":76
- *                 background = background + pixel
- *                 edge_counter = edge_counter + 1
- *                 pixel = float(spots_image[y,sb_x1_vec[k]])             # <<<<<<<<<<<<<<
- *                 background = background + pixel
- *                 edge_counter = edge_counter + 1
- */
-        __pyx_t_26 = __pyx_v_k;
-        __pyx_t_27 = __pyx_v_y;
-        __pyx_t_28 = (*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_int16_t *, __pyx_pybuffernd_sb_x1_vec.rcbuffer->pybuffer.buf, __pyx_t_26, __pyx_pybuffernd_sb_x1_vec.diminfo[0].strides));
-        __pyx_v_pixel = ((double)(*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_int16_t *, __pyx_pybuffernd_spots_image.rcbuffer->pybuffer.buf, __pyx_t_27, __pyx_pybuffernd_spots_image.diminfo[0].strides, __pyx_t_28, __pyx_pybuffernd_spots_image.diminfo[1].strides)));
-
-        /* "centroid.pyx":77
- *                 edge_counter = edge_counter + 1
- *                 pixel = float(spots_image[y,sb_x1_vec[k]])
- *                 background = background + pixel             # <<<<<<<<<<<<<<
- *                 edge_counter = edge_counter + 1
- *             background = background/edge_counter
- */
-        __pyx_v_background = (__pyx_v_background + __pyx_v_pixel);
-
-        /* "centroid.pyx":78
- *                 pixel = float(spots_image[y,sb_x1_vec[k]])
- *                 background = background + pixel
- *                 edge_counter = edge_counter + 1             # <<<<<<<<<<<<<<
- *             background = background/edge_counter
- *         else:
- */
-        __pyx_v_edge_counter = (__pyx_v_edge_counter + 1.0);
-      }
-
-      /* "centroid.pyx":79
- *                 background = background + pixel
- *                 edge_counter = edge_counter + 1
- *             background = background/edge_counter             # <<<<<<<<<<<<<<
- *         else:
- *             background = 0.0
- */
-      if (unlikely(__pyx_v_edge_counter == 0)) {
-        PyErr_SetString(PyExc_ZeroDivisionError, "float division");
-        __PYX_ERR(0, 79, __pyx_L1_error)
-      }
-      __pyx_v_background = (__pyx_v_background / __pyx_v_edge_counter);
-
-      /* "centroid.pyx":62
- *     #for k in prange(n_spots,nogil=True,num_threads=num_threads_t):
- *     for k in range(n_spots):
- *         if estimate_background_t:             # <<<<<<<<<<<<<<
- *             edge_counter = 0.0
- *             background = 0.0
- */
-      goto __pyx_L5;
-    }
-
-    /* "centroid.pyx":81
- *             background = background/edge_counter
- *         else:
- *             background = 0.0             # <<<<<<<<<<<<<<
- *         intensity = 0.0
- *         xprod = 0.0
- */
-    /*else*/ {
-      __pyx_v_background = 0.0;
-    }
-    __pyx_L5:;
-
-    /* "centroid.pyx":82
- *         else:
- *             background = 0.0
- *         intensity = 0.0             # <<<<<<<<<<<<<<
- *         xprod = 0.0
- *         yprod = 0.0
- */
-    __pyx_v_intensity = 0.0;
-
-    /* "centroid.pyx":83
- *             background = 0.0
- *         intensity = 0.0
- *         xprod = 0.0             # <<<<<<<<<<<<<<
- *         yprod = 0.0
- *         imin = 2**15
- */
-    __pyx_v_xprod = 0.0;
-
-    /* "centroid.pyx":84
- *         intensity = 0.0
- *         xprod = 0.0
- *         yprod = 0.0             # <<<<<<<<<<<<<<
- *         imin = 2**15
- *         imax = -2**15
- */
-    __pyx_v_yprod = 0.0;
-
-    /* "centroid.pyx":85
- *         xprod = 0.0
- *         yprod = 0.0
- *         imin = 2**15             # <<<<<<<<<<<<<<
- *         imax = -2**15
- *         for x in range(sb_x1_vec[k],sb_x2_vec[k]+1):
- */
-    __pyx_v_imin = 32768.0;
-
-    /* "centroid.pyx":86
- *         yprod = 0.0
- *         imin = 2**15
- *         imax = -2**15             # <<<<<<<<<<<<<<
- *         for x in range(sb_x1_vec[k],sb_x2_vec[k]+1):
- *             for y in range(sb_y1_vec[k],sb_y2_vec[k]+1):
- */
-    __pyx_v_imax = -32768.0;
-
-    /* "centroid.pyx":87
- *         imin = 2**15
- *         imax = -2**15
- *         for x in range(sb_x1_vec[k],sb_x2_vec[k]+1):             # <<<<<<<<<<<<<<
- *             for y in range(sb_y1_vec[k],sb_y2_vec[k]+1):
- *                 pixel = float(spots_image[y,x])-(background+background_correction_t)
- */
-    __pyx_t_29 = __pyx_v_k;
-    __pyx_t_9 = ((*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_int16_t *, __pyx_pybuffernd_sb_x2_vec.rcbuffer->pybuffer.buf, __pyx_t_29, __pyx_pybuffernd_sb_x2_vec.diminfo[0].strides)) + 1);
-    __pyx_t_30 = __pyx_v_k;
-    __pyx_t_11 = __pyx_t_9;
-    for (__pyx_t_12 = (*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_int16_t *, __pyx_pybuffernd_sb_x1_vec.rcbuffer->pybuffer.buf, __pyx_t_30, __pyx_pybuffernd_sb_x1_vec.diminfo[0].strides)); __pyx_t_12 < __pyx_t_11; __pyx_t_12+=1) {
-      __pyx_v_x = __pyx_t_12;
-
-      /* "centroid.pyx":88
- *         imax = -2**15
- *         for x in range(sb_x1_vec[k],sb_x2_vec[k]+1):
- *             for y in range(sb_y1_vec[k],sb_y2_vec[k]+1):             # <<<<<<<<<<<<<<
- *                 pixel = float(spots_image[y,x])-(background+background_correction_t)
- *                 if pixel<0.0:
- */
-      __pyx_t_31 = __pyx_v_k;
-      __pyx_t_32 = ((*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_int16_t *, __pyx_pybuffernd_sb_y2_vec.rcbuffer->pybuffer.buf, __pyx_t_31, __pyx_pybuffernd_sb_y2_vec.diminfo[0].strides)) + 1);
-      __pyx_t_33 = __pyx_v_k;
-      __pyx_t_34 = __pyx_t_32;
-      for (__pyx_t_35 = (*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_int16_t *, __pyx_pybuffernd_sb_y1_vec.rcbuffer->pybuffer.buf, __pyx_t_33, __pyx_pybuffernd_sb_y1_vec.diminfo[0].strides)); __pyx_t_35 < __pyx_t_34; __pyx_t_35+=1) {
-        __pyx_v_y = __pyx_t_35;
-
-        /* "centroid.pyx":89
- *         for x in range(sb_x1_vec[k],sb_x2_vec[k]+1):
- *             for y in range(sb_y1_vec[k],sb_y2_vec[k]+1):
- *                 pixel = float(spots_image[y,x])-(background+background_correction_t)             # <<<<<<<<<<<<<<
- *                 if pixel<0.0:
- *                     pixel = 0.0
- */
-        __pyx_t_36 = __pyx_v_y;
-        __pyx_t_37 = __pyx_v_x;
-        __pyx_v_pixel = (((double)(*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_int16_t *, __pyx_pybuffernd_spots_image.rcbuffer->pybuffer.buf, __pyx_t_36, __pyx_pybuffernd_spots_image.diminfo[0].strides, __pyx_t_37, __pyx_pybuffernd_spots_image.diminfo[1].strides))) - (__pyx_v_background + __pyx_v_background_correction_t));
-
-        /* "centroid.pyx":90
- *             for y in range(sb_y1_vec[k],sb_y2_vec[k]+1):
- *                 pixel = float(spots_image[y,x])-(background+background_correction_t)
- *                 if pixel<0.0:             # <<<<<<<<<<<<<<
- *                     pixel = 0.0
- *                 if modify_spots_image_t:
- */
-        __pyx_t_7 = ((__pyx_v_pixel < 0.0) != 0);
-        if (__pyx_t_7) {
-
-          /* "centroid.pyx":91
- *                 pixel = float(spots_image[y,x])-(background+background_correction_t)
- *                 if pixel<0.0:
- *                     pixel = 0.0             # <<<<<<<<<<<<<<
- *                 if modify_spots_image_t:
- *                     spots_image[y,x] = <np.int_t>pixel
- */
-          __pyx_v_pixel = 0.0;
-
-          /* "centroid.pyx":90
- *             for y in range(sb_y1_vec[k],sb_y2_vec[k]+1):
- *                 pixel = float(spots_image[y,x])-(background+background_correction_t)
- *                 if pixel<0.0:             # <<<<<<<<<<<<<<
- *                     pixel = 0.0
- *                 if modify_spots_image_t:
- */
-        }
-
-        /* "centroid.pyx":92
- *                 if pixel<0.0:
- *                     pixel = 0.0
- *                 if modify_spots_image_t:             # <<<<<<<<<<<<<<
- *                     spots_image[y,x] = <np.int_t>pixel
- *                 xprod = xprod + pixel*x
- */
-        __pyx_t_7 = (__pyx_v_modify_spots_image_t != 0);
-        if (__pyx_t_7) {
-
-          /* "centroid.pyx":93
- *                     pixel = 0.0
- *                 if modify_spots_image_t:
- *                     spots_image[y,x] = <np.int_t>pixel             # <<<<<<<<<<<<<<
- *                 xprod = xprod + pixel*x
- *                 yprod = yprod + pixel*y
- */
-          __pyx_t_38 = __pyx_v_y;
-          __pyx_t_39 = __pyx_v_x;
-          *__Pyx_BufPtrStrided2d(__pyx_t_5numpy_int16_t *, __pyx_pybuffernd_spots_image.rcbuffer->pybuffer.buf, __pyx_t_38, __pyx_pybuffernd_spots_image.diminfo[0].strides, __pyx_t_39, __pyx_pybuffernd_spots_image.diminfo[1].strides) = ((__pyx_t_5numpy_int_t)__pyx_v_pixel);
-
-          /* "centroid.pyx":92
- *                 if pixel<0.0:
- *                     pixel = 0.0
- *                 if modify_spots_image_t:             # <<<<<<<<<<<<<<
- *                     spots_image[y,x] = <np.int_t>pixel
- *                 xprod = xprod + pixel*x
- */
-        }
-
-        /* "centroid.pyx":94
- *                 if modify_spots_image_t:
- *                     spots_image[y,x] = <np.int_t>pixel
- *                 xprod = xprod + pixel*x             # <<<<<<<<<<<<<<
- *                 yprod = yprod + pixel*y
- *                 intensity = intensity + pixel
- */
-        __pyx_v_xprod = (__pyx_v_xprod + (__pyx_v_pixel * __pyx_v_x));
-
-        /* "centroid.pyx":95
- *                     spots_image[y,x] = <np.int_t>pixel
- *                 xprod = xprod + pixel*x
- *                 yprod = yprod + pixel*y             # <<<<<<<<<<<<<<
- *                 intensity = intensity + pixel
- *                 if pixel<imin:
- */
-        __pyx_v_yprod = (__pyx_v_yprod + (__pyx_v_pixel * __pyx_v_y));
-
-        /* "centroid.pyx":96
- *                 xprod = xprod + pixel*x
- *                 yprod = yprod + pixel*y
- *                 intensity = intensity + pixel             # <<<<<<<<<<<<<<
- *                 if pixel<imin:
- *                     imin=pixel
- */
-        __pyx_v_intensity = (__pyx_v_intensity + __pyx_v_pixel);
-
-        /* "centroid.pyx":97
- *                 yprod = yprod + pixel*y
- *                 intensity = intensity + pixel
- *                 if pixel<imin:             # <<<<<<<<<<<<<<
- *                     imin=pixel
- *                 if pixel>imax:
- */
-        __pyx_t_7 = ((__pyx_v_pixel < __pyx_v_imin) != 0);
-        if (__pyx_t_7) {
-
-          /* "centroid.pyx":98
- *                 intensity = intensity + pixel
- *                 if pixel<imin:
- *                     imin=pixel             # <<<<<<<<<<<<<<
- *                 if pixel>imax:
- *                     imax=pixel
- */
-          __pyx_v_imin = __pyx_v_pixel;
-
-          /* "centroid.pyx":97
- *                 yprod = yprod + pixel*y
- *                 intensity = intensity + pixel
- *                 if pixel<imin:             # <<<<<<<<<<<<<<
- *                     imin=pixel
- *                 if pixel>imax:
- */
-        }
-
-        /* "centroid.pyx":99
- *                 if pixel<imin:
- *                     imin=pixel
- *                 if pixel>imax:             # <<<<<<<<<<<<<<
- *                     imax=pixel
- *                 counter = counter + 1.0
- */
-        __pyx_t_7 = ((__pyx_v_pixel > __pyx_v_imax) != 0);
-        if (__pyx_t_7) {
-
-          /* "centroid.pyx":100
- *                     imin=pixel
- *                 if pixel>imax:
- *                     imax=pixel             # <<<<<<<<<<<<<<
- *                 counter = counter + 1.0
+ *     sy = spots_image.shape[0]             # <<<<<<<<<<<<<<
+ *     sx = spots_image.shape[1]
  * 
  */
-          __pyx_v_imax = __pyx_v_pixel;
+  __pyx_v_sy = (__pyx_v_spots_image->dimensions[0]);
 
-          /* "centroid.pyx":99
- *                 if pixel<imin:
- *                     imin=pixel
- *                 if pixel>imax:             # <<<<<<<<<<<<<<
- *                     imax=pixel
- *                 counter = counter + 1.0
- */
-        }
-
-        /* "centroid.pyx":101
- *                 if pixel>imax:
- *                     imax=pixel
- *                 counter = counter + 1.0             # <<<<<<<<<<<<<<
+  /* "centroid.pyx":79
  * 
- *         if xprod==0 or yprod==0:
- */
-        __pyx_v_counter = (__pyx_v_counter + 1.0);
-      }
-    }
-
-    /* "centroid.pyx":103
- *                 counter = counter + 1.0
+ *     sy = spots_image.shape[0]
+ *     sx = spots_image.shape[1]             # <<<<<<<<<<<<<<
  * 
- *         if xprod==0 or yprod==0:             # <<<<<<<<<<<<<<
- *             print 'Warning: search box intensity low; skipping. Check background_correction.'
- *             continue
+ *     # Populate x_out,y_out with the sb centers, for starters; this allows
  */
-    __pyx_t_40 = ((__pyx_v_xprod == 0.0) != 0);
-    if (!__pyx_t_40) {
-    } else {
-      __pyx_t_7 = __pyx_t_40;
-      goto __pyx_L19_bool_binop_done;
-    }
-    __pyx_t_40 = ((__pyx_v_yprod == 0.0) != 0);
-    __pyx_t_7 = __pyx_t_40;
-    __pyx_L19_bool_binop_done:;
-    if (__pyx_t_7) {
+  __pyx_v_sx = (__pyx_v_spots_image->dimensions[1]);
+
+  /* "centroid.pyx":88
+ *     # being altered; this is critical, as these represent the loop's search box
+ *     # centers and reference coordinates.
+ *     x_out[:] = sb_x_vec[:]             # <<<<<<<<<<<<<<
+ *     y_out[:] = sb_y_vec[:]
+ * 
+ */
+  __pyx_t_2 = __Pyx_PyObject_GetItem(((PyObject *)__pyx_v_sb_x_vec), __pyx_slice_); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 88, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (unlikely(PyObject_SetItem(((PyObject *)__pyx_v_x_out), __pyx_slice__2, __pyx_t_2) < 0)) __PYX_ERR(0, 88, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+
+  /* "centroid.pyx":89
+ *     # centers and reference coordinates.
+ *     x_out[:] = sb_x_vec[:]
+ *     y_out[:] = sb_y_vec[:]             # <<<<<<<<<<<<<<
+ * 
+ *     # first, we iterate through the number of iterations
+ */
+  __pyx_t_2 = __Pyx_PyObject_GetItem(((PyObject *)__pyx_v_sb_y_vec), __pyx_slice__3); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 89, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  if (unlikely(PyObject_SetItem(((PyObject *)__pyx_v_y_out), __pyx_slice__4, __pyx_t_2) < 0)) __PYX_ERR(0, 89, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+
+  /* "centroid.pyx":92
+ * 
+ *     # first, we iterate through the number of iterations
+ *     for k_iteration in range(0,iterations):             # <<<<<<<<<<<<<<
+ * 
+ *         for k_spot in range(n_spots):
+ */
+  __pyx_t_3 = __pyx_v_iterations;
+  __pyx_t_4 = __pyx_t_3;
+  for (__pyx_t_5 = 0; __pyx_t_5 < __pyx_t_4; __pyx_t_5+=1) {
+    __pyx_v_k_iteration = __pyx_t_5;
+
+    /* "centroid.pyx":94
+ *     for k_iteration in range(0,iterations):
+ * 
+ *         for k_spot in range(n_spots):             # <<<<<<<<<<<<<<
+ * 
+ *             imin = 2**15
+ */
+    __pyx_t_6 = __pyx_v_n_spots;
+    __pyx_t_7 = __pyx_t_6;
+    for (__pyx_t_8 = 0; __pyx_t_8 < __pyx_t_7; __pyx_t_8+=1) {
+      __pyx_v_k_spot = __pyx_t_8;
+
+      /* "centroid.pyx":96
+ *         for k_spot in range(n_spots):
+ * 
+ *             imin = 2**15             # <<<<<<<<<<<<<<
+ *             imax = -2**15
+ *             xprod = 0.0
+ */
+      __pyx_v_imin = 32768.0;
+
+      /* "centroid.pyx":97
+ * 
+ *             imin = 2**15
+ *             imax = -2**15             # <<<<<<<<<<<<<<
+ *             xprod = 0.0
+ *             yprod = 0.0
+ */
+      __pyx_v_imax = -32768.0;
+
+      /* "centroid.pyx":98
+ *             imin = 2**15
+ *             imax = -2**15
+ *             xprod = 0.0             # <<<<<<<<<<<<<<
+ *             yprod = 0.0
+ *             intensity = 0.0
+ */
+      __pyx_v_xprod = 0.0;
+
+      /* "centroid.pyx":99
+ *             imax = -2**15
+ *             xprod = 0.0
+ *             yprod = 0.0             # <<<<<<<<<<<<<<
+ *             intensity = 0.0
+ *             counter = 0.0
+ */
+      __pyx_v_yprod = 0.0;
+
+      /* "centroid.pyx":100
+ *             xprod = 0.0
+ *             yprod = 0.0
+ *             intensity = 0.0             # <<<<<<<<<<<<<<
+ *             counter = 0.0
+ * 
+ */
+      __pyx_v_intensity = 0.0;
+
+      /* "centroid.pyx":101
+ *             yprod = 0.0
+ *             intensity = 0.0
+ *             counter = 0.0             # <<<<<<<<<<<<<<
+ * 
+ *             x1 = int(round(x_out[k_spot]))-sb_half_width+k_iteration*iteration_step_px
+ */
+      __pyx_v_counter = 0.0;
+
+      /* "centroid.pyx":103
+ *             counter = 0.0
+ * 
+ *             x1 = int(round(x_out[k_spot]))-sb_half_width+k_iteration*iteration_step_px             # <<<<<<<<<<<<<<
+ *             x2 = int(round(x_out[k_spot]))+sb_half_width-k_iteration*iteration_step_px
+ *             y1 = int(round(y_out[k_spot]))-sb_half_width+k_iteration*iteration_step_px
+ */
+      __pyx_t_9 = __pyx_v_k_spot;
+      __pyx_t_2 = PyFloat_FromDouble((*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float_t *, __pyx_pybuffernd_x_out.rcbuffer->pybuffer.buf, __pyx_t_9, __pyx_pybuffernd_x_out.diminfo[0].strides))); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 103, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_2);
+      __pyx_t_10 = __Pyx_PyObject_CallOneArg(__pyx_builtin_round, __pyx_t_2); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 103, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_10);
+      __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+      __pyx_t_2 = __Pyx_PyNumber_Int(__pyx_t_10); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 103, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_2);
+      __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
+      __pyx_t_10 = __Pyx_PyInt_From_npy_long(__pyx_v_sb_half_width); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 103, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_10);
+      __pyx_t_11 = PyNumber_Subtract(__pyx_t_2, __pyx_t_10); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 103, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_11);
+      __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+      __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
+      __pyx_t_10 = __Pyx_PyInt_From_npy_long((__pyx_v_k_iteration * __pyx_v_iteration_step_px)); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 103, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_10);
+      __pyx_t_2 = PyNumber_Add(__pyx_t_11, __pyx_t_10); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 103, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_2);
+      __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
+      __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
+      __pyx_t_12 = __Pyx_PyInt_As_npy_long(__pyx_t_2); if (unlikely((__pyx_t_12 == ((npy_long)-1)) && PyErr_Occurred())) __PYX_ERR(0, 103, __pyx_L1_error)
+      __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+      __pyx_v_x1 = __pyx_t_12;
 
       /* "centroid.pyx":104
  * 
- *         if xprod==0 or yprod==0:
- *             print 'Warning: search box intensity low; skipping. Check background_correction.'             # <<<<<<<<<<<<<<
- *             continue
- *         mean_intensity[k] = intensity/counter
+ *             x1 = int(round(x_out[k_spot]))-sb_half_width+k_iteration*iteration_step_px
+ *             x2 = int(round(x_out[k_spot]))+sb_half_width-k_iteration*iteration_step_px             # <<<<<<<<<<<<<<
+ *             y1 = int(round(y_out[k_spot]))-sb_half_width+k_iteration*iteration_step_px
+ *             y2 = int(round(y_out[k_spot]))+sb_half_width-k_iteration*iteration_step_px
  */
-      if (__Pyx_PrintOne(0, __pyx_kp_s_Warning_search_box_intensity_low) < 0) __PYX_ERR(0, 104, __pyx_L1_error)
+      __pyx_t_13 = __pyx_v_k_spot;
+      __pyx_t_2 = PyFloat_FromDouble((*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float_t *, __pyx_pybuffernd_x_out.rcbuffer->pybuffer.buf, __pyx_t_13, __pyx_pybuffernd_x_out.diminfo[0].strides))); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 104, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_2);
+      __pyx_t_10 = __Pyx_PyObject_CallOneArg(__pyx_builtin_round, __pyx_t_2); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 104, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_10);
+      __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+      __pyx_t_2 = __Pyx_PyNumber_Int(__pyx_t_10); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 104, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_2);
+      __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
+      __pyx_t_10 = __Pyx_PyInt_From_npy_long(__pyx_v_sb_half_width); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 104, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_10);
+      __pyx_t_11 = PyNumber_Add(__pyx_t_2, __pyx_t_10); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 104, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_11);
+      __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+      __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
+      __pyx_t_10 = __Pyx_PyInt_From_npy_long((__pyx_v_k_iteration * __pyx_v_iteration_step_px)); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 104, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_10);
+      __pyx_t_2 = PyNumber_Subtract(__pyx_t_11, __pyx_t_10); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 104, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_2);
+      __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
+      __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
+      __pyx_t_12 = __Pyx_PyInt_As_npy_long(__pyx_t_2); if (unlikely((__pyx_t_12 == ((npy_long)-1)) && PyErr_Occurred())) __PYX_ERR(0, 104, __pyx_L1_error)
+      __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+      __pyx_v_x2 = __pyx_t_12;
 
       /* "centroid.pyx":105
- *         if xprod==0 or yprod==0:
- *             print 'Warning: search box intensity low; skipping. Check background_correction.'
- *             continue             # <<<<<<<<<<<<<<
- *         mean_intensity[k] = intensity/counter
- *         background_intensity[k] = background
- */
-      goto __pyx_L3_continue;
-
-      /* "centroid.pyx":103
- *                 counter = counter + 1.0
+ *             x1 = int(round(x_out[k_spot]))-sb_half_width+k_iteration*iteration_step_px
+ *             x2 = int(round(x_out[k_spot]))+sb_half_width-k_iteration*iteration_step_px
+ *             y1 = int(round(y_out[k_spot]))-sb_half_width+k_iteration*iteration_step_px             # <<<<<<<<<<<<<<
+ *             y2 = int(round(y_out[k_spot]))+sb_half_width-k_iteration*iteration_step_px
  * 
- *         if xprod==0 or yprod==0:             # <<<<<<<<<<<<<<
- *             print 'Warning: search box intensity low; skipping. Check background_correction.'
- *             continue
  */
+      __pyx_t_14 = __pyx_v_k_spot;
+      __pyx_t_2 = PyFloat_FromDouble((*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float_t *, __pyx_pybuffernd_y_out.rcbuffer->pybuffer.buf, __pyx_t_14, __pyx_pybuffernd_y_out.diminfo[0].strides))); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 105, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_2);
+      __pyx_t_10 = __Pyx_PyObject_CallOneArg(__pyx_builtin_round, __pyx_t_2); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 105, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_10);
+      __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+      __pyx_t_2 = __Pyx_PyNumber_Int(__pyx_t_10); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 105, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_2);
+      __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
+      __pyx_t_10 = __Pyx_PyInt_From_npy_long(__pyx_v_sb_half_width); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 105, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_10);
+      __pyx_t_11 = PyNumber_Subtract(__pyx_t_2, __pyx_t_10); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 105, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_11);
+      __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+      __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
+      __pyx_t_10 = __Pyx_PyInt_From_npy_long((__pyx_v_k_iteration * __pyx_v_iteration_step_px)); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 105, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_10);
+      __pyx_t_2 = PyNumber_Add(__pyx_t_11, __pyx_t_10); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 105, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_2);
+      __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
+      __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
+      __pyx_t_12 = __Pyx_PyInt_As_npy_long(__pyx_t_2); if (unlikely((__pyx_t_12 == ((npy_long)-1)) && PyErr_Occurred())) __PYX_ERR(0, 105, __pyx_L1_error)
+      __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+      __pyx_v_y1 = __pyx_t_12;
+
+      /* "centroid.pyx":106
+ *             x2 = int(round(x_out[k_spot]))+sb_half_width-k_iteration*iteration_step_px
+ *             y1 = int(round(y_out[k_spot]))-sb_half_width+k_iteration*iteration_step_px
+ *             y2 = int(round(y_out[k_spot]))+sb_half_width-k_iteration*iteration_step_px             # <<<<<<<<<<<<<<
+ * 
+ *             if x1<0 or x2>sx-1 or y1<0 or y2>sy-1:
+ */
+      __pyx_t_15 = __pyx_v_k_spot;
+      __pyx_t_2 = PyFloat_FromDouble((*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float_t *, __pyx_pybuffernd_y_out.rcbuffer->pybuffer.buf, __pyx_t_15, __pyx_pybuffernd_y_out.diminfo[0].strides))); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 106, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_2);
+      __pyx_t_10 = __Pyx_PyObject_CallOneArg(__pyx_builtin_round, __pyx_t_2); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 106, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_10);
+      __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+      __pyx_t_2 = __Pyx_PyNumber_Int(__pyx_t_10); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 106, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_2);
+      __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
+      __pyx_t_10 = __Pyx_PyInt_From_npy_long(__pyx_v_sb_half_width); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 106, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_10);
+      __pyx_t_11 = PyNumber_Add(__pyx_t_2, __pyx_t_10); if (unlikely(!__pyx_t_11)) __PYX_ERR(0, 106, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_11);
+      __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+      __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
+      __pyx_t_10 = __Pyx_PyInt_From_npy_long((__pyx_v_k_iteration * __pyx_v_iteration_step_px)); if (unlikely(!__pyx_t_10)) __PYX_ERR(0, 106, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_10);
+      __pyx_t_2 = PyNumber_Subtract(__pyx_t_11, __pyx_t_10); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 106, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_2);
+      __Pyx_DECREF(__pyx_t_11); __pyx_t_11 = 0;
+      __Pyx_DECREF(__pyx_t_10); __pyx_t_10 = 0;
+      __pyx_t_12 = __Pyx_PyInt_As_npy_long(__pyx_t_2); if (unlikely((__pyx_t_12 == ((npy_long)-1)) && PyErr_Occurred())) __PYX_ERR(0, 106, __pyx_L1_error)
+      __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+      __pyx_v_y2 = __pyx_t_12;
+
+      /* "centroid.pyx":108
+ *             y2 = int(round(y_out[k_spot]))+sb_half_width-k_iteration*iteration_step_px
+ * 
+ *             if x1<0 or x2>sx-1 or y1<0 or y2>sy-1:             # <<<<<<<<<<<<<<
+ *                 printf("Search box x=(%ld,%ld),y=(%ld,%ld) extends beyond image edge. Possibly search box width too large.\n",x1,x2,y1,y2)
+ *                 exit(0)
+ */
+      __pyx_t_17 = ((__pyx_v_x1 < 0) != 0);
+      if (!__pyx_t_17) {
+      } else {
+        __pyx_t_16 = __pyx_t_17;
+        goto __pyx_L8_bool_binop_done;
+      }
+      __pyx_t_17 = ((__pyx_v_x2 > (__pyx_v_sx - 1)) != 0);
+      if (!__pyx_t_17) {
+      } else {
+        __pyx_t_16 = __pyx_t_17;
+        goto __pyx_L8_bool_binop_done;
+      }
+      __pyx_t_17 = ((__pyx_v_y1 < 0) != 0);
+      if (!__pyx_t_17) {
+      } else {
+        __pyx_t_16 = __pyx_t_17;
+        goto __pyx_L8_bool_binop_done;
+      }
+      __pyx_t_17 = ((__pyx_v_y2 > (__pyx_v_sy - 1)) != 0);
+      __pyx_t_16 = __pyx_t_17;
+      __pyx_L8_bool_binop_done:;
+      if (__pyx_t_16) {
+
+        /* "centroid.pyx":109
+ * 
+ *             if x1<0 or x2>sx-1 or y1<0 or y2>sy-1:
+ *                 printf("Search box x=(%ld,%ld),y=(%ld,%ld) extends beyond image edge. Possibly search box width too large.\n",x1,x2,y1,y2)             # <<<<<<<<<<<<<<
+ *                 exit(0)
+ * 
+ */
+        (void)(printf(((char const *)"Search box x=(%ld,%ld),y=(%ld,%ld) extends beyond image edge. Possibly search box width too large.\n"), __pyx_v_x1, __pyx_v_x2, __pyx_v_y1, __pyx_v_y2));
+
+        /* "centroid.pyx":110
+ *             if x1<0 or x2>sx-1 or y1<0 or y2>sy-1:
+ *                 printf("Search box x=(%ld,%ld),y=(%ld,%ld) extends beyond image edge. Possibly search box width too large.\n",x1,x2,y1,y2)
+ *                 exit(0)             # <<<<<<<<<<<<<<
+ * 
+ *             if x1>=x2 or y1>=y2:
+ */
+        __pyx_t_2 = __Pyx_PyObject_Call(__pyx_builtin_exit, __pyx_tuple__5, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 110, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_2);
+        __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+
+        /* "centroid.pyx":108
+ *             y2 = int(round(y_out[k_spot]))+sb_half_width-k_iteration*iteration_step_px
+ * 
+ *             if x1<0 or x2>sx-1 or y1<0 or y2>sy-1:             # <<<<<<<<<<<<<<
+ *                 printf("Search box x=(%ld,%ld),y=(%ld,%ld) extends beyond image edge. Possibly search box width too large.\n",x1,x2,y1,y2)
+ *                 exit(0)
+ */
+      }
+
+      /* "centroid.pyx":112
+ *                 exit(0)
+ * 
+ *             if x1>=x2 or y1>=y2:             # <<<<<<<<<<<<<<
+ *                 printf("Search box x=(%ld,%ld),y=(%ld,%ld) too small. Possibly search box width too large, number of iterations too high, or iteration step size too high.\n",x1,x2,y1,y2)
+ *                 exit(0)
+ */
+      __pyx_t_17 = ((__pyx_v_x1 >= __pyx_v_x2) != 0);
+      if (!__pyx_t_17) {
+      } else {
+        __pyx_t_16 = __pyx_t_17;
+        goto __pyx_L13_bool_binop_done;
+      }
+      __pyx_t_17 = ((__pyx_v_y1 >= __pyx_v_y2) != 0);
+      __pyx_t_16 = __pyx_t_17;
+      __pyx_L13_bool_binop_done:;
+      if (__pyx_t_16) {
+
+        /* "centroid.pyx":113
+ * 
+ *             if x1>=x2 or y1>=y2:
+ *                 printf("Search box x=(%ld,%ld),y=(%ld,%ld) too small. Possibly search box width too large, number of iterations too high, or iteration step size too high.\n",x1,x2,y1,y2)             # <<<<<<<<<<<<<<
+ *                 exit(0)
+ * 
+ */
+        (void)(printf(((char const *)"Search box x=(%ld,%ld),y=(%ld,%ld) too small. Possibly search box width too large, number of iterations too high, or iteration step size too high.\n"), __pyx_v_x1, __pyx_v_x2, __pyx_v_y1, __pyx_v_y2));
+
+        /* "centroid.pyx":114
+ *             if x1>=x2 or y1>=y2:
+ *                 printf("Search box x=(%ld,%ld),y=(%ld,%ld) too small. Possibly search box width too large, number of iterations too high, or iteration step size too high.\n",x1,x2,y1,y2)
+ *                 exit(0)             # <<<<<<<<<<<<<<
+ * 
+ *             background = sb_bg_vec[k_spot]
+ */
+        __pyx_t_2 = __Pyx_PyObject_Call(__pyx_builtin_exit, __pyx_tuple__6, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 114, __pyx_L1_error)
+        __Pyx_GOTREF(__pyx_t_2);
+        __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+
+        /* "centroid.pyx":112
+ *                 exit(0)
+ * 
+ *             if x1>=x2 or y1>=y2:             # <<<<<<<<<<<<<<
+ *                 printf("Search box x=(%ld,%ld),y=(%ld,%ld) too small. Possibly search box width too large, number of iterations too high, or iteration step size too high.\n",x1,x2,y1,y2)
+ *                 exit(0)
+ */
+      }
+
+      /* "centroid.pyx":116
+ *                 exit(0)
+ * 
+ *             background = sb_bg_vec[k_spot]             # <<<<<<<<<<<<<<
+ * 
+ *             for x in range(x1,x2+1):
+ */
+      __pyx_t_18 = __pyx_v_k_spot;
+      __pyx_v_background = (*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float_t *, __pyx_pybuffernd_sb_bg_vec.rcbuffer->pybuffer.buf, __pyx_t_18, __pyx_pybuffernd_sb_bg_vec.diminfo[0].strides));
+
+      /* "centroid.pyx":118
+ *             background = sb_bg_vec[k_spot]
+ * 
+ *             for x in range(x1,x2+1):             # <<<<<<<<<<<<<<
+ *                 for y in range(y1,y2+1):
+ * 
+ */
+      __pyx_t_12 = (__pyx_v_x2 + 1);
+      __pyx_t_19 = __pyx_t_12;
+      for (__pyx_t_20 = __pyx_v_x1; __pyx_t_20 < __pyx_t_19; __pyx_t_20+=1) {
+        __pyx_v_x = __pyx_t_20;
+
+        /* "centroid.pyx":119
+ * 
+ *             for x in range(x1,x2+1):
+ *                 for y in range(y1,y2+1):             # <<<<<<<<<<<<<<
+ * 
+ *                     # not sure if it's better to cast with python's float()
+ */
+        __pyx_t_21 = (__pyx_v_y2 + 1);
+        __pyx_t_22 = __pyx_t_21;
+        for (__pyx_t_23 = __pyx_v_y1; __pyx_t_23 < __pyx_t_22; __pyx_t_23+=1) {
+          __pyx_v_y = __pyx_t_23;
+
+          /* "centroid.pyx":123
+ *                     # not sure if it's better to cast with python's float()
+ *                     # or c's <float>:
+ *                     pixel = float(spots_image[y,x])-background             # <<<<<<<<<<<<<<
+ *                     if pixel<0.0:
+ *                         pixel = 0.0
+ */
+          __pyx_t_24 = __pyx_v_y;
+          __pyx_t_25 = __pyx_v_x;
+          __pyx_v_pixel = (((double)(*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_int16_t *, __pyx_pybuffernd_spots_image.rcbuffer->pybuffer.buf, __pyx_t_24, __pyx_pybuffernd_spots_image.diminfo[0].strides, __pyx_t_25, __pyx_pybuffernd_spots_image.diminfo[1].strides))) - __pyx_v_background);
+
+          /* "centroid.pyx":124
+ *                     # or c's <float>:
+ *                     pixel = float(spots_image[y,x])-background
+ *                     if pixel<0.0:             # <<<<<<<<<<<<<<
+ *                         pixel = 0.0
+ *                     xprod = xprod + pixel*x
+ */
+          __pyx_t_16 = ((__pyx_v_pixel < 0.0) != 0);
+          if (__pyx_t_16) {
+
+            /* "centroid.pyx":125
+ *                     pixel = float(spots_image[y,x])-background
+ *                     if pixel<0.0:
+ *                         pixel = 0.0             # <<<<<<<<<<<<<<
+ *                     xprod = xprod + pixel*x
+ *                     yprod = yprod + pixel*y
+ */
+            __pyx_v_pixel = 0.0;
+
+            /* "centroid.pyx":124
+ *                     # or c's <float>:
+ *                     pixel = float(spots_image[y,x])-background
+ *                     if pixel<0.0:             # <<<<<<<<<<<<<<
+ *                         pixel = 0.0
+ *                     xprod = xprod + pixel*x
+ */
+          }
+
+          /* "centroid.pyx":126
+ *                     if pixel<0.0:
+ *                         pixel = 0.0
+ *                     xprod = xprod + pixel*x             # <<<<<<<<<<<<<<
+ *                     yprod = yprod + pixel*y
+ *                     intensity = intensity + pixel
+ */
+          __pyx_v_xprod = (__pyx_v_xprod + (__pyx_v_pixel * __pyx_v_x));
+
+          /* "centroid.pyx":127
+ *                         pixel = 0.0
+ *                     xprod = xprod + pixel*x
+ *                     yprod = yprod + pixel*y             # <<<<<<<<<<<<<<
+ *                     intensity = intensity + pixel
+ *                     if pixel<imin:
+ */
+          __pyx_v_yprod = (__pyx_v_yprod + (__pyx_v_pixel * __pyx_v_y));
+
+          /* "centroid.pyx":128
+ *                     xprod = xprod + pixel*x
+ *                     yprod = yprod + pixel*y
+ *                     intensity = intensity + pixel             # <<<<<<<<<<<<<<
+ *                     if pixel<imin:
+ *                         imin = pixel
+ */
+          __pyx_v_intensity = (__pyx_v_intensity + __pyx_v_pixel);
+
+          /* "centroid.pyx":129
+ *                     yprod = yprod + pixel*y
+ *                     intensity = intensity + pixel
+ *                     if pixel<imin:             # <<<<<<<<<<<<<<
+ *                         imin = pixel
+ *                     elif pixel>imax:
+ */
+          __pyx_t_16 = ((__pyx_v_pixel < __pyx_v_imin) != 0);
+          if (__pyx_t_16) {
+
+            /* "centroid.pyx":130
+ *                     intensity = intensity + pixel
+ *                     if pixel<imin:
+ *                         imin = pixel             # <<<<<<<<<<<<<<
+ *                     elif pixel>imax:
+ *                         imax = pixel
+ */
+            __pyx_v_imin = __pyx_v_pixel;
+
+            /* "centroid.pyx":129
+ *                     yprod = yprod + pixel*y
+ *                     intensity = intensity + pixel
+ *                     if pixel<imin:             # <<<<<<<<<<<<<<
+ *                         imin = pixel
+ *                     elif pixel>imax:
+ */
+            goto __pyx_L20;
+          }
+
+          /* "centroid.pyx":131
+ *                     if pixel<imin:
+ *                         imin = pixel
+ *                     elif pixel>imax:             # <<<<<<<<<<<<<<
+ *                         imax = pixel
+ *                     counter = counter + 1.0
+ */
+          __pyx_t_16 = ((__pyx_v_pixel > __pyx_v_imax) != 0);
+          if (__pyx_t_16) {
+
+            /* "centroid.pyx":132
+ *                         imin = pixel
+ *                     elif pixel>imax:
+ *                         imax = pixel             # <<<<<<<<<<<<<<
+ *                     counter = counter + 1.0
+ * 
+ */
+            __pyx_v_imax = __pyx_v_pixel;
+
+            /* "centroid.pyx":131
+ *                     if pixel<imin:
+ *                         imin = pixel
+ *                     elif pixel>imax:             # <<<<<<<<<<<<<<
+ *                         imax = pixel
+ *                     counter = counter + 1.0
+ */
+          }
+          __pyx_L20:;
+
+          /* "centroid.pyx":133
+ *                     elif pixel>imax:
+ *                         imax = pixel
+ *                     counter = counter + 1.0             # <<<<<<<<<<<<<<
+ * 
+ *             if intensity==0 or xprod==0 or yprod==0:
+ */
+          __pyx_v_counter = (__pyx_v_counter + 1.0);
+        }
+      }
+
+      /* "centroid.pyx":135
+ *                     counter = counter + 1.0
+ * 
+ *             if intensity==0 or xprod==0 or yprod==0:             # <<<<<<<<<<<<<<
+ *                 printf("Warning: search box intensity low; skipping.\n")
+ *                 continue
+ */
+      __pyx_t_17 = ((__pyx_v_intensity == 0.0) != 0);
+      if (!__pyx_t_17) {
+      } else {
+        __pyx_t_16 = __pyx_t_17;
+        goto __pyx_L22_bool_binop_done;
+      }
+      __pyx_t_17 = ((__pyx_v_xprod == 0.0) != 0);
+      if (!__pyx_t_17) {
+      } else {
+        __pyx_t_16 = __pyx_t_17;
+        goto __pyx_L22_bool_binop_done;
+      }
+      __pyx_t_17 = ((__pyx_v_yprod == 0.0) != 0);
+      __pyx_t_16 = __pyx_t_17;
+      __pyx_L22_bool_binop_done:;
+      if (__pyx_t_16) {
+
+        /* "centroid.pyx":136
+ * 
+ *             if intensity==0 or xprod==0 or yprod==0:
+ *                 printf("Warning: search box intensity low; skipping.\n")             # <<<<<<<<<<<<<<
+ *                 continue
+ * 
+ */
+        (void)(printf(((char const *)"Warning: search box intensity low; skipping.\n")));
+
+        /* "centroid.pyx":137
+ *             if intensity==0 or xprod==0 or yprod==0:
+ *                 printf("Warning: search box intensity low; skipping.\n")
+ *                 continue             # <<<<<<<<<<<<<<
+ * 
+ *             mean_intensity[k_spot] = intensity/counter
+ */
+        goto __pyx_L5_continue;
+
+        /* "centroid.pyx":135
+ *                     counter = counter + 1.0
+ * 
+ *             if intensity==0 or xprod==0 or yprod==0:             # <<<<<<<<<<<<<<
+ *                 printf("Warning: search box intensity low; skipping.\n")
+ *                 continue
+ */
+      }
+
+      /* "centroid.pyx":139
+ *                 continue
+ * 
+ *             mean_intensity[k_spot] = intensity/counter             # <<<<<<<<<<<<<<
+ *             maximum_intensity[k_spot] = imax
+ *             minimum_intensity[k_spot] = imin
+ */
+      if (unlikely(__pyx_v_counter == 0)) {
+        PyErr_SetString(PyExc_ZeroDivisionError, "float division");
+        __PYX_ERR(0, 139, __pyx_L1_error)
+      }
+      __pyx_t_26 = __pyx_v_k_spot;
+      *__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float_t *, __pyx_pybuffernd_mean_intensity.rcbuffer->pybuffer.buf, __pyx_t_26, __pyx_pybuffernd_mean_intensity.diminfo[0].strides) = (__pyx_v_intensity / __pyx_v_counter);
+
+      /* "centroid.pyx":140
+ * 
+ *             mean_intensity[k_spot] = intensity/counter
+ *             maximum_intensity[k_spot] = imax             # <<<<<<<<<<<<<<
+ *             minimum_intensity[k_spot] = imin
+ *             x_out[k_spot] = xprod/intensity
+ */
+      __pyx_t_27 = __pyx_v_k_spot;
+      *__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float_t *, __pyx_pybuffernd_maximum_intensity.rcbuffer->pybuffer.buf, __pyx_t_27, __pyx_pybuffernd_maximum_intensity.diminfo[0].strides) = __pyx_v_imax;
+
+      /* "centroid.pyx":141
+ *             mean_intensity[k_spot] = intensity/counter
+ *             maximum_intensity[k_spot] = imax
+ *             minimum_intensity[k_spot] = imin             # <<<<<<<<<<<<<<
+ *             x_out[k_spot] = xprod/intensity
+ *             y_out[k_spot] = yprod/intensity
+ */
+      __pyx_t_28 = __pyx_v_k_spot;
+      *__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float_t *, __pyx_pybuffernd_minimum_intensity.rcbuffer->pybuffer.buf, __pyx_t_28, __pyx_pybuffernd_minimum_intensity.diminfo[0].strides) = __pyx_v_imin;
+
+      /* "centroid.pyx":142
+ *             maximum_intensity[k_spot] = imax
+ *             minimum_intensity[k_spot] = imin
+ *             x_out[k_spot] = xprod/intensity             # <<<<<<<<<<<<<<
+ *             y_out[k_spot] = yprod/intensity
+ * 
+ */
+      if (unlikely(__pyx_v_intensity == 0)) {
+        PyErr_SetString(PyExc_ZeroDivisionError, "float division");
+        __PYX_ERR(0, 142, __pyx_L1_error)
+      }
+      __pyx_t_29 = __pyx_v_k_spot;
+      *__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float_t *, __pyx_pybuffernd_x_out.rcbuffer->pybuffer.buf, __pyx_t_29, __pyx_pybuffernd_x_out.diminfo[0].strides) = (__pyx_v_xprod / __pyx_v_intensity);
+
+      /* "centroid.pyx":143
+ *             minimum_intensity[k_spot] = imin
+ *             x_out[k_spot] = xprod/intensity
+ *             y_out[k_spot] = yprod/intensity             # <<<<<<<<<<<<<<
+ * 
+ * 
+ */
+      if (unlikely(__pyx_v_intensity == 0)) {
+        PyErr_SetString(PyExc_ZeroDivisionError, "float division");
+        __PYX_ERR(0, 143, __pyx_L1_error)
+      }
+      __pyx_t_30 = __pyx_v_k_spot;
+      *__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float_t *, __pyx_pybuffernd_y_out.rcbuffer->pybuffer.buf, __pyx_t_30, __pyx_pybuffernd_y_out.diminfo[0].strides) = (__pyx_v_yprod / __pyx_v_intensity);
+      __pyx_L5_continue:;
     }
-
-    /* "centroid.pyx":106
- *             print 'Warning: search box intensity low; skipping. Check background_correction.'
- *             continue
- *         mean_intensity[k] = intensity/counter             # <<<<<<<<<<<<<<
- *         background_intensity[k] = background
- *         maximum_intensity[k] = imax
- */
-    if (unlikely(__pyx_v_counter == 0)) {
-      PyErr_SetString(PyExc_ZeroDivisionError, "float division");
-      __PYX_ERR(0, 106, __pyx_L1_error)
-    }
-    __pyx_t_41 = __pyx_v_k;
-    *__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float_t *, __pyx_pybuffernd_mean_intensity.rcbuffer->pybuffer.buf, __pyx_t_41, __pyx_pybuffernd_mean_intensity.diminfo[0].strides) = (__pyx_v_intensity / __pyx_v_counter);
-
-    /* "centroid.pyx":107
- *             continue
- *         mean_intensity[k] = intensity/counter
- *         background_intensity[k] = background             # <<<<<<<<<<<<<<
- *         maximum_intensity[k] = imax
- *         minimum_intensity[k] = imin
- */
-    __pyx_t_42 = __pyx_v_k;
-    *__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float_t *, __pyx_pybuffernd_background_intensity.rcbuffer->pybuffer.buf, __pyx_t_42, __pyx_pybuffernd_background_intensity.diminfo[0].strides) = __pyx_v_background;
-
-    /* "centroid.pyx":108
- *         mean_intensity[k] = intensity/counter
- *         background_intensity[k] = background
- *         maximum_intensity[k] = imax             # <<<<<<<<<<<<<<
- *         minimum_intensity[k] = imin
- *         if intensity==0.0:
- */
-    __pyx_t_43 = __pyx_v_k;
-    *__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float_t *, __pyx_pybuffernd_maximum_intensity.rcbuffer->pybuffer.buf, __pyx_t_43, __pyx_pybuffernd_maximum_intensity.diminfo[0].strides) = __pyx_v_imax;
-
-    /* "centroid.pyx":109
- *         background_intensity[k] = background
- *         maximum_intensity[k] = imax
- *         minimum_intensity[k] = imin             # <<<<<<<<<<<<<<
- *         if intensity==0.0:
- *             intensity = 1.0
- */
-    __pyx_t_44 = __pyx_v_k;
-    *__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float_t *, __pyx_pybuffernd_minimum_intensity.rcbuffer->pybuffer.buf, __pyx_t_44, __pyx_pybuffernd_minimum_intensity.diminfo[0].strides) = __pyx_v_imin;
-
-    /* "centroid.pyx":110
- *         maximum_intensity[k] = imax
- *         minimum_intensity[k] = imin
- *         if intensity==0.0:             # <<<<<<<<<<<<<<
- *             intensity = 1.0
- *         x_out[k] = xprod/intensity
- */
-    __pyx_t_7 = ((__pyx_v_intensity == 0.0) != 0);
-    if (__pyx_t_7) {
-
-      /* "centroid.pyx":111
- *         minimum_intensity[k] = imin
- *         if intensity==0.0:
- *             intensity = 1.0             # <<<<<<<<<<<<<<
- *         x_out[k] = xprod/intensity
- *         y_out[k] = yprod/intensity
- */
-      __pyx_v_intensity = 1.0;
-
-      /* "centroid.pyx":110
- *         maximum_intensity[k] = imax
- *         minimum_intensity[k] = imin
- *         if intensity==0.0:             # <<<<<<<<<<<<<<
- *             intensity = 1.0
- *         x_out[k] = xprod/intensity
- */
-    }
-
-    /* "centroid.pyx":112
- *         if intensity==0.0:
- *             intensity = 1.0
- *         x_out[k] = xprod/intensity             # <<<<<<<<<<<<<<
- *         y_out[k] = yprod/intensity
- *     return x_out,y_out
- */
-    if (unlikely(__pyx_v_intensity == 0)) {
-      PyErr_SetString(PyExc_ZeroDivisionError, "float division");
-      __PYX_ERR(0, 112, __pyx_L1_error)
-    }
-    __pyx_t_45 = __pyx_v_k;
-    *__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float_t *, __pyx_pybuffernd_x_out.rcbuffer->pybuffer.buf, __pyx_t_45, __pyx_pybuffernd_x_out.diminfo[0].strides) = (__pyx_v_xprod / __pyx_v_intensity);
-
-    /* "centroid.pyx":113
- *             intensity = 1.0
- *         x_out[k] = xprod/intensity
- *         y_out[k] = yprod/intensity             # <<<<<<<<<<<<<<
- *     return x_out,y_out
- */
-    if (unlikely(__pyx_v_intensity == 0)) {
-      PyErr_SetString(PyExc_ZeroDivisionError, "float division");
-      __PYX_ERR(0, 113, __pyx_L1_error)
-    }
-    __pyx_t_46 = __pyx_v_k;
-    *__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float_t *, __pyx_pybuffernd_y_out.rcbuffer->pybuffer.buf, __pyx_t_46, __pyx_pybuffernd_y_out.diminfo[0].strides) = (__pyx_v_yprod / __pyx_v_intensity);
-    __pyx_L3_continue:;
   }
 
-  /* "centroid.pyx":114
- *         x_out[k] = xprod/intensity
- *         y_out[k] = yprod/intensity
- *     return x_out,y_out             # <<<<<<<<<<<<<<
- */
-  __Pyx_XDECREF(__pyx_r);
-  __pyx_t_2 = PyTuple_New(2); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 114, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_t_2);
-  __Pyx_INCREF(((PyObject *)__pyx_v_x_out));
-  __Pyx_GIVEREF(((PyObject *)__pyx_v_x_out));
-  PyTuple_SET_ITEM(__pyx_t_2, 0, ((PyObject *)__pyx_v_x_out));
-  __Pyx_INCREF(((PyObject *)__pyx_v_y_out));
-  __Pyx_GIVEREF(((PyObject *)__pyx_v_y_out));
-  PyTuple_SET_ITEM(__pyx_t_2, 1, ((PyObject *)__pyx_v_y_out));
-  __pyx_r = __pyx_t_2;
-  __pyx_t_2 = 0;
-  goto __pyx_L0;
-
-  /* "centroid.pyx":10
+  /* "centroid.pyx":37
  * @cython.boundscheck(False)
  * @cython.wraparound(False)
  * cpdef compute_centroids(np.ndarray[np.int16_t,ndim=2] spots_image,             # <<<<<<<<<<<<<<
- *                         np.ndarray[np.int16_t,ndim=1] sb_x1_vec,
- *                         np.ndarray[np.int16_t,ndim=1] sb_x2_vec,
+ *                         np.ndarray[np.float_t,ndim=1] sb_x_vec,
+ *                         np.ndarray[np.float_t,ndim=1] sb_y_vec,
  */
 
   /* function exit code */
+  __pyx_r = Py_None; __Pyx_INCREF(Py_None);
+  goto __pyx_L0;
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_2);
+  __Pyx_XDECREF(__pyx_t_10);
+  __Pyx_XDECREF(__pyx_t_11);
   { PyObject *__pyx_type, *__pyx_value, *__pyx_tb;
     __Pyx_PyThreadState_declare
     __Pyx_PyThreadState_assign
     __Pyx_ErrFetch(&__pyx_type, &__pyx_value, &__pyx_tb);
-    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_background_intensity.rcbuffer->pybuffer);
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_maximum_intensity.rcbuffer->pybuffer);
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_mean_intensity.rcbuffer->pybuffer);
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_minimum_intensity.rcbuffer->pybuffer);
-    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_sb_x1_vec.rcbuffer->pybuffer);
-    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_sb_x2_vec.rcbuffer->pybuffer);
-    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_sb_y1_vec.rcbuffer->pybuffer);
-    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_sb_y2_vec.rcbuffer->pybuffer);
+    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_sb_bg_vec.rcbuffer->pybuffer);
+    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_sb_x_vec.rcbuffer->pybuffer);
+    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_sb_y_vec.rcbuffer->pybuffer);
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_spots_image.rcbuffer->pybuffer);
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_x_out.rcbuffer->pybuffer);
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_y_out.rcbuffer->pybuffer);
@@ -2701,14 +2654,12 @@ static PyObject *__pyx_f_8centroid_compute_centroids(PyArrayObject *__pyx_v_spot
   __pyx_r = 0;
   goto __pyx_L2;
   __pyx_L0:;
-  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_background_intensity.rcbuffer->pybuffer);
   __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_maximum_intensity.rcbuffer->pybuffer);
   __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_mean_intensity.rcbuffer->pybuffer);
   __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_minimum_intensity.rcbuffer->pybuffer);
-  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_sb_x1_vec.rcbuffer->pybuffer);
-  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_sb_x2_vec.rcbuffer->pybuffer);
-  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_sb_y1_vec.rcbuffer->pybuffer);
-  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_sb_y2_vec.rcbuffer->pybuffer);
+  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_sb_bg_vec.rcbuffer->pybuffer);
+  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_sb_x_vec.rcbuffer->pybuffer);
+  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_sb_y_vec.rcbuffer->pybuffer);
   __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_spots_image.rcbuffer->pybuffer);
   __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_x_out.rcbuffer->pybuffer);
   __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_y_out.rcbuffer->pybuffer);
@@ -2722,54 +2673,29 @@ static PyObject *__pyx_f_8centroid_compute_centroids(PyArrayObject *__pyx_v_spot
 static PyObject *__pyx_pw_8centroid_1compute_centroids(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
 static PyObject *__pyx_pw_8centroid_1compute_centroids(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyArrayObject *__pyx_v_spots_image = 0;
-  PyArrayObject *__pyx_v_sb_x1_vec = 0;
-  PyArrayObject *__pyx_v_sb_x2_vec = 0;
-  PyArrayObject *__pyx_v_sb_y1_vec = 0;
-  PyArrayObject *__pyx_v_sb_y2_vec = 0;
+  PyArrayObject *__pyx_v_sb_x_vec = 0;
+  PyArrayObject *__pyx_v_sb_y_vec = 0;
+  PyArrayObject *__pyx_v_sb_bg_vec = 0;
+  PyObject *__pyx_v_sb_half_width_p = 0;
+  PyObject *__pyx_v_iterations_p = 0;
+  PyObject *__pyx_v_iteration_step_px_p = 0;
   PyArrayObject *__pyx_v_x_out = 0;
   PyArrayObject *__pyx_v_y_out = 0;
   PyArrayObject *__pyx_v_mean_intensity = 0;
   PyArrayObject *__pyx_v_maximum_intensity = 0;
   PyArrayObject *__pyx_v_minimum_intensity = 0;
-  PyArrayObject *__pyx_v_background_intensity = 0;
-  PyObject *__pyx_v_estimate_background = 0;
-  PyObject *__pyx_v_background_correction = 0;
-  PyObject *__pyx_v_num_threads = 0;
-  PyObject *__pyx_v_modify_spots_image = 0;
+  PyObject *__pyx_v_num_threads_p = 0;
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("compute_centroids (wrapper)", 0);
   {
-    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_spots_image,&__pyx_n_s_sb_x1_vec,&__pyx_n_s_sb_x2_vec,&__pyx_n_s_sb_y1_vec,&__pyx_n_s_sb_y2_vec,&__pyx_n_s_x_out,&__pyx_n_s_y_out,&__pyx_n_s_mean_intensity,&__pyx_n_s_maximum_intensity,&__pyx_n_s_minimum_intensity,&__pyx_n_s_background_intensity,&__pyx_n_s_estimate_background,&__pyx_n_s_background_correction,&__pyx_n_s_num_threads,&__pyx_n_s_modify_spots_image,0};
-    PyObject* values[15] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-
-    /* "centroid.pyx":21
- *                         np.ndarray[np.float_t,ndim=1] minimum_intensity,
- *                         np.ndarray[np.float_t,ndim=1] background_intensity,
- *                         estimate_background = True,             # <<<<<<<<<<<<<<
- *                         background_correction = 0.0,
- *                         num_threads = 4,
- */
-    values[11] = ((PyObject *)Py_True);
-    values[12] = ((PyObject *)__pyx_float_0_0);
-    values[13] = ((PyObject *)__pyx_int_4);
-
-    /* "centroid.pyx":24
- *                         background_correction = 0.0,
- *                         num_threads = 4,
- *                         modify_spots_image = False):             # <<<<<<<<<<<<<<
- * 
- *     cdef np.int_t n_spots = len(sb_x1_vec)
- */
-    values[14] = ((PyObject *)Py_False);
+    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_spots_image,&__pyx_n_s_sb_x_vec,&__pyx_n_s_sb_y_vec,&__pyx_n_s_sb_bg_vec,&__pyx_n_s_sb_half_width_p,&__pyx_n_s_iterations_p,&__pyx_n_s_iteration_step_px_p,&__pyx_n_s_x_out,&__pyx_n_s_y_out,&__pyx_n_s_mean_intensity,&__pyx_n_s_maximum_intensity,&__pyx_n_s_minimum_intensity,&__pyx_n_s_num_threads_p,0};
+    PyObject* values[13] = {0,0,0,0,0,0,0,0,0,0,0,0,0};
+    values[12] = ((PyObject *)__pyx_int_1);
     if (unlikely(__pyx_kwds)) {
       Py_ssize_t kw_args;
       const Py_ssize_t pos_args = PyTuple_GET_SIZE(__pyx_args);
       switch (pos_args) {
-        case 15: values[14] = PyTuple_GET_ITEM(__pyx_args, 14);
-        CYTHON_FALLTHROUGH;
-        case 14: values[13] = PyTuple_GET_ITEM(__pyx_args, 13);
-        CYTHON_FALLTHROUGH;
         case 13: values[12] = PyTuple_GET_ITEM(__pyx_args, 12);
         CYTHON_FALLTHROUGH;
         case 12: values[11] = PyTuple_GET_ITEM(__pyx_args, 11);
@@ -2806,103 +2732,86 @@ static PyObject *__pyx_pw_8centroid_1compute_centroids(PyObject *__pyx_self, PyO
         else goto __pyx_L5_argtuple_error;
         CYTHON_FALLTHROUGH;
         case  1:
-        if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_sb_x1_vec)) != 0)) kw_args--;
+        if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_sb_x_vec)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("compute_centroids", 0, 11, 15, 1); __PYX_ERR(0, 10, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("compute_centroids", 0, 12, 13, 1); __PYX_ERR(0, 37, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  2:
-        if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_sb_x2_vec)) != 0)) kw_args--;
+        if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_sb_y_vec)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("compute_centroids", 0, 11, 15, 2); __PYX_ERR(0, 10, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("compute_centroids", 0, 12, 13, 2); __PYX_ERR(0, 37, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  3:
-        if (likely((values[3] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_sb_y1_vec)) != 0)) kw_args--;
+        if (likely((values[3] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_sb_bg_vec)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("compute_centroids", 0, 11, 15, 3); __PYX_ERR(0, 10, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("compute_centroids", 0, 12, 13, 3); __PYX_ERR(0, 37, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  4:
-        if (likely((values[4] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_sb_y2_vec)) != 0)) kw_args--;
+        if (likely((values[4] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_sb_half_width_p)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("compute_centroids", 0, 11, 15, 4); __PYX_ERR(0, 10, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("compute_centroids", 0, 12, 13, 4); __PYX_ERR(0, 37, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  5:
-        if (likely((values[5] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_x_out)) != 0)) kw_args--;
+        if (likely((values[5] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_iterations_p)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("compute_centroids", 0, 11, 15, 5); __PYX_ERR(0, 10, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("compute_centroids", 0, 12, 13, 5); __PYX_ERR(0, 37, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  6:
-        if (likely((values[6] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_y_out)) != 0)) kw_args--;
+        if (likely((values[6] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_iteration_step_px_p)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("compute_centroids", 0, 11, 15, 6); __PYX_ERR(0, 10, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("compute_centroids", 0, 12, 13, 6); __PYX_ERR(0, 37, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  7:
-        if (likely((values[7] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_mean_intensity)) != 0)) kw_args--;
+        if (likely((values[7] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_x_out)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("compute_centroids", 0, 11, 15, 7); __PYX_ERR(0, 10, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("compute_centroids", 0, 12, 13, 7); __PYX_ERR(0, 37, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  8:
-        if (likely((values[8] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_maximum_intensity)) != 0)) kw_args--;
+        if (likely((values[8] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_y_out)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("compute_centroids", 0, 11, 15, 8); __PYX_ERR(0, 10, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("compute_centroids", 0, 12, 13, 8); __PYX_ERR(0, 37, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case  9:
-        if (likely((values[9] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_minimum_intensity)) != 0)) kw_args--;
+        if (likely((values[9] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_mean_intensity)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("compute_centroids", 0, 11, 15, 9); __PYX_ERR(0, 10, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("compute_centroids", 0, 12, 13, 9); __PYX_ERR(0, 37, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case 10:
-        if (likely((values[10] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_background_intensity)) != 0)) kw_args--;
+        if (likely((values[10] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_maximum_intensity)) != 0)) kw_args--;
         else {
-          __Pyx_RaiseArgtupleInvalid("compute_centroids", 0, 11, 15, 10); __PYX_ERR(0, 10, __pyx_L3_error)
+          __Pyx_RaiseArgtupleInvalid("compute_centroids", 0, 12, 13, 10); __PYX_ERR(0, 37, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case 11:
-        if (kw_args > 0) {
-          PyObject* value = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_estimate_background);
-          if (value) { values[11] = value; kw_args--; }
+        if (likely((values[11] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_minimum_intensity)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("compute_centroids", 0, 12, 13, 11); __PYX_ERR(0, 37, __pyx_L3_error)
         }
         CYTHON_FALLTHROUGH;
         case 12:
         if (kw_args > 0) {
-          PyObject* value = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_background_correction);
+          PyObject* value = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_num_threads_p);
           if (value) { values[12] = value; kw_args--; }
-        }
-        CYTHON_FALLTHROUGH;
-        case 13:
-        if (kw_args > 0) {
-          PyObject* value = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_num_threads);
-          if (value) { values[13] = value; kw_args--; }
-        }
-        CYTHON_FALLTHROUGH;
-        case 14:
-        if (kw_args > 0) {
-          PyObject* value = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_modify_spots_image);
-          if (value) { values[14] = value; kw_args--; }
         }
       }
       if (unlikely(kw_args > 0)) {
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "compute_centroids") < 0)) __PYX_ERR(0, 10, __pyx_L3_error)
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "compute_centroids") < 0)) __PYX_ERR(0, 37, __pyx_L3_error)
       }
     } else {
       switch (PyTuple_GET_SIZE(__pyx_args)) {
-        case 15: values[14] = PyTuple_GET_ITEM(__pyx_args, 14);
-        CYTHON_FALLTHROUGH;
-        case 14: values[13] = PyTuple_GET_ITEM(__pyx_args, 13);
-        CYTHON_FALLTHROUGH;
         case 13: values[12] = PyTuple_GET_ITEM(__pyx_args, 12);
         CYTHON_FALLTHROUGH;
         case 12: values[11] = PyTuple_GET_ITEM(__pyx_args, 11);
-        CYTHON_FALLTHROUGH;
-        case 11: values[10] = PyTuple_GET_ITEM(__pyx_args, 10);
+        values[10] = PyTuple_GET_ITEM(__pyx_args, 10);
         values[9] = PyTuple_GET_ITEM(__pyx_args, 9);
         values[8] = PyTuple_GET_ITEM(__pyx_args, 8);
         values[7] = PyTuple_GET_ITEM(__pyx_args, 7);
@@ -2918,49 +2827,37 @@ static PyObject *__pyx_pw_8centroid_1compute_centroids(PyObject *__pyx_self, PyO
       }
     }
     __pyx_v_spots_image = ((PyArrayObject *)values[0]);
-    __pyx_v_sb_x1_vec = ((PyArrayObject *)values[1]);
-    __pyx_v_sb_x2_vec = ((PyArrayObject *)values[2]);
-    __pyx_v_sb_y1_vec = ((PyArrayObject *)values[3]);
-    __pyx_v_sb_y2_vec = ((PyArrayObject *)values[4]);
-    __pyx_v_x_out = ((PyArrayObject *)values[5]);
-    __pyx_v_y_out = ((PyArrayObject *)values[6]);
-    __pyx_v_mean_intensity = ((PyArrayObject *)values[7]);
-    __pyx_v_maximum_intensity = ((PyArrayObject *)values[8]);
-    __pyx_v_minimum_intensity = ((PyArrayObject *)values[9]);
-    __pyx_v_background_intensity = ((PyArrayObject *)values[10]);
-    __pyx_v_estimate_background = values[11];
-    __pyx_v_background_correction = values[12];
-    __pyx_v_num_threads = values[13];
-    __pyx_v_modify_spots_image = values[14];
+    __pyx_v_sb_x_vec = ((PyArrayObject *)values[1]);
+    __pyx_v_sb_y_vec = ((PyArrayObject *)values[2]);
+    __pyx_v_sb_bg_vec = ((PyArrayObject *)values[3]);
+    __pyx_v_sb_half_width_p = values[4];
+    __pyx_v_iterations_p = values[5];
+    __pyx_v_iteration_step_px_p = values[6];
+    __pyx_v_x_out = ((PyArrayObject *)values[7]);
+    __pyx_v_y_out = ((PyArrayObject *)values[8]);
+    __pyx_v_mean_intensity = ((PyArrayObject *)values[9]);
+    __pyx_v_maximum_intensity = ((PyArrayObject *)values[10]);
+    __pyx_v_minimum_intensity = ((PyArrayObject *)values[11]);
+    __pyx_v_num_threads_p = values[12];
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("compute_centroids", 0, 11, 15, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 10, __pyx_L3_error)
+  __Pyx_RaiseArgtupleInvalid("compute_centroids", 0, 12, 13, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 37, __pyx_L3_error)
   __pyx_L3_error:;
   __Pyx_AddTraceback("centroid.compute_centroids", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_spots_image), __pyx_ptype_5numpy_ndarray, 1, "spots_image", 0))) __PYX_ERR(0, 10, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_sb_x1_vec), __pyx_ptype_5numpy_ndarray, 1, "sb_x1_vec", 0))) __PYX_ERR(0, 11, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_sb_x2_vec), __pyx_ptype_5numpy_ndarray, 1, "sb_x2_vec", 0))) __PYX_ERR(0, 12, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_sb_y1_vec), __pyx_ptype_5numpy_ndarray, 1, "sb_y1_vec", 0))) __PYX_ERR(0, 13, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_sb_y2_vec), __pyx_ptype_5numpy_ndarray, 1, "sb_y2_vec", 0))) __PYX_ERR(0, 14, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_x_out), __pyx_ptype_5numpy_ndarray, 1, "x_out", 0))) __PYX_ERR(0, 15, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_y_out), __pyx_ptype_5numpy_ndarray, 1, "y_out", 0))) __PYX_ERR(0, 16, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_mean_intensity), __pyx_ptype_5numpy_ndarray, 1, "mean_intensity", 0))) __PYX_ERR(0, 17, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_maximum_intensity), __pyx_ptype_5numpy_ndarray, 1, "maximum_intensity", 0))) __PYX_ERR(0, 18, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_minimum_intensity), __pyx_ptype_5numpy_ndarray, 1, "minimum_intensity", 0))) __PYX_ERR(0, 19, __pyx_L1_error)
-  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_background_intensity), __pyx_ptype_5numpy_ndarray, 1, "background_intensity", 0))) __PYX_ERR(0, 20, __pyx_L1_error)
-  __pyx_r = __pyx_pf_8centroid_compute_centroids(__pyx_self, __pyx_v_spots_image, __pyx_v_sb_x1_vec, __pyx_v_sb_x2_vec, __pyx_v_sb_y1_vec, __pyx_v_sb_y2_vec, __pyx_v_x_out, __pyx_v_y_out, __pyx_v_mean_intensity, __pyx_v_maximum_intensity, __pyx_v_minimum_intensity, __pyx_v_background_intensity, __pyx_v_estimate_background, __pyx_v_background_correction, __pyx_v_num_threads, __pyx_v_modify_spots_image);
-
-  /* "centroid.pyx":10
- * @cython.boundscheck(False)
- * @cython.wraparound(False)
- * cpdef compute_centroids(np.ndarray[np.int16_t,ndim=2] spots_image,             # <<<<<<<<<<<<<<
- *                         np.ndarray[np.int16_t,ndim=1] sb_x1_vec,
- *                         np.ndarray[np.int16_t,ndim=1] sb_x2_vec,
- */
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_spots_image), __pyx_ptype_5numpy_ndarray, 1, "spots_image", 0))) __PYX_ERR(0, 37, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_sb_x_vec), __pyx_ptype_5numpy_ndarray, 1, "sb_x_vec", 0))) __PYX_ERR(0, 38, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_sb_y_vec), __pyx_ptype_5numpy_ndarray, 1, "sb_y_vec", 0))) __PYX_ERR(0, 39, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_sb_bg_vec), __pyx_ptype_5numpy_ndarray, 1, "sb_bg_vec", 0))) __PYX_ERR(0, 40, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_x_out), __pyx_ptype_5numpy_ndarray, 1, "x_out", 0))) __PYX_ERR(0, 44, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_y_out), __pyx_ptype_5numpy_ndarray, 1, "y_out", 0))) __PYX_ERR(0, 45, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_mean_intensity), __pyx_ptype_5numpy_ndarray, 1, "mean_intensity", 0))) __PYX_ERR(0, 46, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_maximum_intensity), __pyx_ptype_5numpy_ndarray, 1, "maximum_intensity", 0))) __PYX_ERR(0, 47, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_minimum_intensity), __pyx_ptype_5numpy_ndarray, 1, "minimum_intensity", 0))) __PYX_ERR(0, 48, __pyx_L1_error)
+  __pyx_r = __pyx_pf_8centroid_compute_centroids(__pyx_self, __pyx_v_spots_image, __pyx_v_sb_x_vec, __pyx_v_sb_y_vec, __pyx_v_sb_bg_vec, __pyx_v_sb_half_width_p, __pyx_v_iterations_p, __pyx_v_iteration_step_px_p, __pyx_v_x_out, __pyx_v_y_out, __pyx_v_mean_intensity, __pyx_v_maximum_intensity, __pyx_v_minimum_intensity, __pyx_v_num_threads_p);
 
   /* function exit code */
   goto __pyx_L0;
@@ -2971,23 +2868,19 @@ static PyObject *__pyx_pw_8centroid_1compute_centroids(PyObject *__pyx_self, PyO
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_8centroid_compute_centroids(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_spots_image, PyArrayObject *__pyx_v_sb_x1_vec, PyArrayObject *__pyx_v_sb_x2_vec, PyArrayObject *__pyx_v_sb_y1_vec, PyArrayObject *__pyx_v_sb_y2_vec, PyArrayObject *__pyx_v_x_out, PyArrayObject *__pyx_v_y_out, PyArrayObject *__pyx_v_mean_intensity, PyArrayObject *__pyx_v_maximum_intensity, PyArrayObject *__pyx_v_minimum_intensity, PyArrayObject *__pyx_v_background_intensity, PyObject *__pyx_v_estimate_background, PyObject *__pyx_v_background_correction, PyObject *__pyx_v_num_threads, PyObject *__pyx_v_modify_spots_image) {
-  __Pyx_LocalBuf_ND __pyx_pybuffernd_background_intensity;
-  __Pyx_Buffer __pyx_pybuffer_background_intensity;
+static PyObject *__pyx_pf_8centroid_compute_centroids(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_spots_image, PyArrayObject *__pyx_v_sb_x_vec, PyArrayObject *__pyx_v_sb_y_vec, PyArrayObject *__pyx_v_sb_bg_vec, PyObject *__pyx_v_sb_half_width_p, PyObject *__pyx_v_iterations_p, PyObject *__pyx_v_iteration_step_px_p, PyArrayObject *__pyx_v_x_out, PyArrayObject *__pyx_v_y_out, PyArrayObject *__pyx_v_mean_intensity, PyArrayObject *__pyx_v_maximum_intensity, PyArrayObject *__pyx_v_minimum_intensity, PyObject *__pyx_v_num_threads_p) {
   __Pyx_LocalBuf_ND __pyx_pybuffernd_maximum_intensity;
   __Pyx_Buffer __pyx_pybuffer_maximum_intensity;
   __Pyx_LocalBuf_ND __pyx_pybuffernd_mean_intensity;
   __Pyx_Buffer __pyx_pybuffer_mean_intensity;
   __Pyx_LocalBuf_ND __pyx_pybuffernd_minimum_intensity;
   __Pyx_Buffer __pyx_pybuffer_minimum_intensity;
-  __Pyx_LocalBuf_ND __pyx_pybuffernd_sb_x1_vec;
-  __Pyx_Buffer __pyx_pybuffer_sb_x1_vec;
-  __Pyx_LocalBuf_ND __pyx_pybuffernd_sb_x2_vec;
-  __Pyx_Buffer __pyx_pybuffer_sb_x2_vec;
-  __Pyx_LocalBuf_ND __pyx_pybuffernd_sb_y1_vec;
-  __Pyx_Buffer __pyx_pybuffer_sb_y1_vec;
-  __Pyx_LocalBuf_ND __pyx_pybuffernd_sb_y2_vec;
-  __Pyx_Buffer __pyx_pybuffer_sb_y2_vec;
+  __Pyx_LocalBuf_ND __pyx_pybuffernd_sb_bg_vec;
+  __Pyx_Buffer __pyx_pybuffer_sb_bg_vec;
+  __Pyx_LocalBuf_ND __pyx_pybuffernd_sb_x_vec;
+  __Pyx_Buffer __pyx_pybuffer_sb_x_vec;
+  __Pyx_LocalBuf_ND __pyx_pybuffernd_sb_y_vec;
+  __Pyx_Buffer __pyx_pybuffer_sb_y_vec;
   __Pyx_LocalBuf_ND __pyx_pybuffernd_spots_image;
   __Pyx_Buffer __pyx_pybuffer_spots_image;
   __Pyx_LocalBuf_ND __pyx_pybuffernd_x_out;
@@ -3003,22 +2896,18 @@ static PyObject *__pyx_pf_8centroid_compute_centroids(CYTHON_UNUSED PyObject *__
   __pyx_pybuffer_spots_image.refcount = 0;
   __pyx_pybuffernd_spots_image.data = NULL;
   __pyx_pybuffernd_spots_image.rcbuffer = &__pyx_pybuffer_spots_image;
-  __pyx_pybuffer_sb_x1_vec.pybuffer.buf = NULL;
-  __pyx_pybuffer_sb_x1_vec.refcount = 0;
-  __pyx_pybuffernd_sb_x1_vec.data = NULL;
-  __pyx_pybuffernd_sb_x1_vec.rcbuffer = &__pyx_pybuffer_sb_x1_vec;
-  __pyx_pybuffer_sb_x2_vec.pybuffer.buf = NULL;
-  __pyx_pybuffer_sb_x2_vec.refcount = 0;
-  __pyx_pybuffernd_sb_x2_vec.data = NULL;
-  __pyx_pybuffernd_sb_x2_vec.rcbuffer = &__pyx_pybuffer_sb_x2_vec;
-  __pyx_pybuffer_sb_y1_vec.pybuffer.buf = NULL;
-  __pyx_pybuffer_sb_y1_vec.refcount = 0;
-  __pyx_pybuffernd_sb_y1_vec.data = NULL;
-  __pyx_pybuffernd_sb_y1_vec.rcbuffer = &__pyx_pybuffer_sb_y1_vec;
-  __pyx_pybuffer_sb_y2_vec.pybuffer.buf = NULL;
-  __pyx_pybuffer_sb_y2_vec.refcount = 0;
-  __pyx_pybuffernd_sb_y2_vec.data = NULL;
-  __pyx_pybuffernd_sb_y2_vec.rcbuffer = &__pyx_pybuffer_sb_y2_vec;
+  __pyx_pybuffer_sb_x_vec.pybuffer.buf = NULL;
+  __pyx_pybuffer_sb_x_vec.refcount = 0;
+  __pyx_pybuffernd_sb_x_vec.data = NULL;
+  __pyx_pybuffernd_sb_x_vec.rcbuffer = &__pyx_pybuffer_sb_x_vec;
+  __pyx_pybuffer_sb_y_vec.pybuffer.buf = NULL;
+  __pyx_pybuffer_sb_y_vec.refcount = 0;
+  __pyx_pybuffernd_sb_y_vec.data = NULL;
+  __pyx_pybuffernd_sb_y_vec.rcbuffer = &__pyx_pybuffer_sb_y_vec;
+  __pyx_pybuffer_sb_bg_vec.pybuffer.buf = NULL;
+  __pyx_pybuffer_sb_bg_vec.refcount = 0;
+  __pyx_pybuffernd_sb_bg_vec.data = NULL;
+  __pyx_pybuffernd_sb_bg_vec.rcbuffer = &__pyx_pybuffer_sb_bg_vec;
   __pyx_pybuffer_x_out.pybuffer.buf = NULL;
   __pyx_pybuffer_x_out.refcount = 0;
   __pyx_pybuffernd_x_out.data = NULL;
@@ -3039,72 +2928,55 @@ static PyObject *__pyx_pf_8centroid_compute_centroids(CYTHON_UNUSED PyObject *__
   __pyx_pybuffer_minimum_intensity.refcount = 0;
   __pyx_pybuffernd_minimum_intensity.data = NULL;
   __pyx_pybuffernd_minimum_intensity.rcbuffer = &__pyx_pybuffer_minimum_intensity;
-  __pyx_pybuffer_background_intensity.pybuffer.buf = NULL;
-  __pyx_pybuffer_background_intensity.refcount = 0;
-  __pyx_pybuffernd_background_intensity.data = NULL;
-  __pyx_pybuffernd_background_intensity.rcbuffer = &__pyx_pybuffer_background_intensity;
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_spots_image.rcbuffer->pybuffer, (PyObject*)__pyx_v_spots_image, &__Pyx_TypeInfo_nn___pyx_t_5numpy_int16_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 10, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_spots_image.rcbuffer->pybuffer, (PyObject*)__pyx_v_spots_image, &__Pyx_TypeInfo_nn___pyx_t_5numpy_int16_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 37, __pyx_L1_error)
   }
   __pyx_pybuffernd_spots_image.diminfo[0].strides = __pyx_pybuffernd_spots_image.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_spots_image.diminfo[0].shape = __pyx_pybuffernd_spots_image.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_spots_image.diminfo[1].strides = __pyx_pybuffernd_spots_image.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_spots_image.diminfo[1].shape = __pyx_pybuffernd_spots_image.rcbuffer->pybuffer.shape[1];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_sb_x1_vec.rcbuffer->pybuffer, (PyObject*)__pyx_v_sb_x1_vec, &__Pyx_TypeInfo_nn___pyx_t_5numpy_int16_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 10, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_sb_x_vec.rcbuffer->pybuffer, (PyObject*)__pyx_v_sb_x_vec, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 37, __pyx_L1_error)
   }
-  __pyx_pybuffernd_sb_x1_vec.diminfo[0].strides = __pyx_pybuffernd_sb_x1_vec.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_sb_x1_vec.diminfo[0].shape = __pyx_pybuffernd_sb_x1_vec.rcbuffer->pybuffer.shape[0];
+  __pyx_pybuffernd_sb_x_vec.diminfo[0].strides = __pyx_pybuffernd_sb_x_vec.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_sb_x_vec.diminfo[0].shape = __pyx_pybuffernd_sb_x_vec.rcbuffer->pybuffer.shape[0];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_sb_x2_vec.rcbuffer->pybuffer, (PyObject*)__pyx_v_sb_x2_vec, &__Pyx_TypeInfo_nn___pyx_t_5numpy_int16_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 10, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_sb_y_vec.rcbuffer->pybuffer, (PyObject*)__pyx_v_sb_y_vec, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 37, __pyx_L1_error)
   }
-  __pyx_pybuffernd_sb_x2_vec.diminfo[0].strides = __pyx_pybuffernd_sb_x2_vec.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_sb_x2_vec.diminfo[0].shape = __pyx_pybuffernd_sb_x2_vec.rcbuffer->pybuffer.shape[0];
+  __pyx_pybuffernd_sb_y_vec.diminfo[0].strides = __pyx_pybuffernd_sb_y_vec.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_sb_y_vec.diminfo[0].shape = __pyx_pybuffernd_sb_y_vec.rcbuffer->pybuffer.shape[0];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_sb_y1_vec.rcbuffer->pybuffer, (PyObject*)__pyx_v_sb_y1_vec, &__Pyx_TypeInfo_nn___pyx_t_5numpy_int16_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 10, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_sb_bg_vec.rcbuffer->pybuffer, (PyObject*)__pyx_v_sb_bg_vec, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 37, __pyx_L1_error)
   }
-  __pyx_pybuffernd_sb_y1_vec.diminfo[0].strides = __pyx_pybuffernd_sb_y1_vec.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_sb_y1_vec.diminfo[0].shape = __pyx_pybuffernd_sb_y1_vec.rcbuffer->pybuffer.shape[0];
+  __pyx_pybuffernd_sb_bg_vec.diminfo[0].strides = __pyx_pybuffernd_sb_bg_vec.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_sb_bg_vec.diminfo[0].shape = __pyx_pybuffernd_sb_bg_vec.rcbuffer->pybuffer.shape[0];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_sb_y2_vec.rcbuffer->pybuffer, (PyObject*)__pyx_v_sb_y2_vec, &__Pyx_TypeInfo_nn___pyx_t_5numpy_int16_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 10, __pyx_L1_error)
-  }
-  __pyx_pybuffernd_sb_y2_vec.diminfo[0].strides = __pyx_pybuffernd_sb_y2_vec.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_sb_y2_vec.diminfo[0].shape = __pyx_pybuffernd_sb_y2_vec.rcbuffer->pybuffer.shape[0];
-  {
-    __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_x_out.rcbuffer->pybuffer, (PyObject*)__pyx_v_x_out, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 10, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_x_out.rcbuffer->pybuffer, (PyObject*)__pyx_v_x_out, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 37, __pyx_L1_error)
   }
   __pyx_pybuffernd_x_out.diminfo[0].strides = __pyx_pybuffernd_x_out.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_x_out.diminfo[0].shape = __pyx_pybuffernd_x_out.rcbuffer->pybuffer.shape[0];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_y_out.rcbuffer->pybuffer, (PyObject*)__pyx_v_y_out, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 10, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_y_out.rcbuffer->pybuffer, (PyObject*)__pyx_v_y_out, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 37, __pyx_L1_error)
   }
   __pyx_pybuffernd_y_out.diminfo[0].strides = __pyx_pybuffernd_y_out.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_y_out.diminfo[0].shape = __pyx_pybuffernd_y_out.rcbuffer->pybuffer.shape[0];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_mean_intensity.rcbuffer->pybuffer, (PyObject*)__pyx_v_mean_intensity, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 10, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_mean_intensity.rcbuffer->pybuffer, (PyObject*)__pyx_v_mean_intensity, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 37, __pyx_L1_error)
   }
   __pyx_pybuffernd_mean_intensity.diminfo[0].strides = __pyx_pybuffernd_mean_intensity.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_mean_intensity.diminfo[0].shape = __pyx_pybuffernd_mean_intensity.rcbuffer->pybuffer.shape[0];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_maximum_intensity.rcbuffer->pybuffer, (PyObject*)__pyx_v_maximum_intensity, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 10, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_maximum_intensity.rcbuffer->pybuffer, (PyObject*)__pyx_v_maximum_intensity, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 37, __pyx_L1_error)
   }
   __pyx_pybuffernd_maximum_intensity.diminfo[0].strides = __pyx_pybuffernd_maximum_intensity.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_maximum_intensity.diminfo[0].shape = __pyx_pybuffernd_maximum_intensity.rcbuffer->pybuffer.shape[0];
   {
     __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_minimum_intensity.rcbuffer->pybuffer, (PyObject*)__pyx_v_minimum_intensity, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 10, __pyx_L1_error)
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_minimum_intensity.rcbuffer->pybuffer, (PyObject*)__pyx_v_minimum_intensity, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 37, __pyx_L1_error)
   }
   __pyx_pybuffernd_minimum_intensity.diminfo[0].strides = __pyx_pybuffernd_minimum_intensity.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_minimum_intensity.diminfo[0].shape = __pyx_pybuffernd_minimum_intensity.rcbuffer->pybuffer.shape[0];
-  {
-    __Pyx_BufFmt_StackElem __pyx_stack[1];
-    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_background_intensity.rcbuffer->pybuffer, (PyObject*)__pyx_v_background_intensity, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 10, __pyx_L1_error)
-  }
-  __pyx_pybuffernd_background_intensity.diminfo[0].strides = __pyx_pybuffernd_background_intensity.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_background_intensity.diminfo[0].shape = __pyx_pybuffernd_background_intensity.rcbuffer->pybuffer.shape[0];
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_2.__pyx_n = 4;
-  __pyx_t_2.estimate_background = __pyx_v_estimate_background;
-  __pyx_t_2.background_correction = __pyx_v_background_correction;
-  __pyx_t_2.num_threads = __pyx_v_num_threads;
-  __pyx_t_2.modify_spots_image = __pyx_v_modify_spots_image;
-  __pyx_t_1 = __pyx_f_8centroid_compute_centroids(__pyx_v_spots_image, __pyx_v_sb_x1_vec, __pyx_v_sb_x2_vec, __pyx_v_sb_y1_vec, __pyx_v_sb_y2_vec, __pyx_v_x_out, __pyx_v_y_out, __pyx_v_mean_intensity, __pyx_v_maximum_intensity, __pyx_v_minimum_intensity, __pyx_v_background_intensity, 0, &__pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 10, __pyx_L1_error)
+  __pyx_t_2.__pyx_n = 1;
+  __pyx_t_2.num_threads_p = __pyx_v_num_threads_p;
+  __pyx_t_1 = __pyx_f_8centroid_compute_centroids(__pyx_v_spots_image, __pyx_v_sb_x_vec, __pyx_v_sb_y_vec, __pyx_v_sb_bg_vec, __pyx_v_sb_half_width_p, __pyx_v_iterations_p, __pyx_v_iteration_step_px_p, __pyx_v_x_out, __pyx_v_y_out, __pyx_v_mean_intensity, __pyx_v_maximum_intensity, __pyx_v_minimum_intensity, 0, &__pyx_t_2); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 37, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_1);
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
@@ -3117,14 +2989,12 @@ static PyObject *__pyx_pf_8centroid_compute_centroids(CYTHON_UNUSED PyObject *__
     __Pyx_PyThreadState_declare
     __Pyx_PyThreadState_assign
     __Pyx_ErrFetch(&__pyx_type, &__pyx_value, &__pyx_tb);
-    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_background_intensity.rcbuffer->pybuffer);
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_maximum_intensity.rcbuffer->pybuffer);
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_mean_intensity.rcbuffer->pybuffer);
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_minimum_intensity.rcbuffer->pybuffer);
-    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_sb_x1_vec.rcbuffer->pybuffer);
-    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_sb_x2_vec.rcbuffer->pybuffer);
-    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_sb_y1_vec.rcbuffer->pybuffer);
-    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_sb_y2_vec.rcbuffer->pybuffer);
+    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_sb_bg_vec.rcbuffer->pybuffer);
+    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_sb_x_vec.rcbuffer->pybuffer);
+    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_sb_y_vec.rcbuffer->pybuffer);
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_spots_image.rcbuffer->pybuffer);
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_x_out.rcbuffer->pybuffer);
     __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_y_out.rcbuffer->pybuffer);
@@ -3133,17 +3003,697 @@ static PyObject *__pyx_pf_8centroid_compute_centroids(CYTHON_UNUSED PyObject *__
   __pyx_r = NULL;
   goto __pyx_L2;
   __pyx_L0:;
-  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_background_intensity.rcbuffer->pybuffer);
   __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_maximum_intensity.rcbuffer->pybuffer);
   __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_mean_intensity.rcbuffer->pybuffer);
   __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_minimum_intensity.rcbuffer->pybuffer);
-  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_sb_x1_vec.rcbuffer->pybuffer);
-  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_sb_x2_vec.rcbuffer->pybuffer);
-  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_sb_y1_vec.rcbuffer->pybuffer);
-  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_sb_y2_vec.rcbuffer->pybuffer);
+  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_sb_bg_vec.rcbuffer->pybuffer);
+  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_sb_x_vec.rcbuffer->pybuffer);
+  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_sb_y_vec.rcbuffer->pybuffer);
   __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_spots_image.rcbuffer->pybuffer);
   __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_x_out.rcbuffer->pybuffer);
   __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_y_out.rcbuffer->pybuffer);
+  __pyx_L2:;
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "centroid.pyx":157
+ * @cython.boundscheck(False)
+ * @cython.wraparound(False)
+ * cpdef estimate_backgrounds(np.ndarray[np.int16_t,ndim=2] spots_image,             # <<<<<<<<<<<<<<
+ *                            np.ndarray[np.float_t,ndim=1] sb_x_vec,
+ *                            np.ndarray[np.float_t,ndim=1] sb_y_vec,
+ */
+
+static PyObject *__pyx_pw_8centroid_3estimate_backgrounds(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyObject *__pyx_f_8centroid_estimate_backgrounds(PyArrayObject *__pyx_v_spots_image, PyArrayObject *__pyx_v_sb_x_vec, PyArrayObject *__pyx_v_sb_y_vec, PyArrayObject *__pyx_v_sb_bg_vec, PyObject *__pyx_v_sb_half_width_p, CYTHON_UNUSED int __pyx_skip_dispatch) {
+  __pyx_t_5numpy_int_t __pyx_v_n_spots;
+  __pyx_t_5numpy_int_t __pyx_v_sb_half_width;
+  __pyx_t_5numpy_float_t __pyx_v_intensity;
+  __pyx_t_5numpy_int_t __pyx_v_x;
+  __pyx_t_5numpy_int_t __pyx_v_x1;
+  __pyx_t_5numpy_int_t __pyx_v_x2;
+  __pyx_t_5numpy_int_t __pyx_v_y;
+  __pyx_t_5numpy_int_t __pyx_v_y1;
+  __pyx_t_5numpy_int_t __pyx_v_y2;
+  __pyx_t_5numpy_int_t __pyx_v_sy;
+  __pyx_t_5numpy_int_t __pyx_v_sx;
+  __pyx_t_5numpy_float_t __pyx_v_counter;
+  __pyx_t_5numpy_int_t __pyx_v_k_spot;
+  __Pyx_LocalBuf_ND __pyx_pybuffernd_sb_bg_vec;
+  __Pyx_Buffer __pyx_pybuffer_sb_bg_vec;
+  __Pyx_LocalBuf_ND __pyx_pybuffernd_sb_x_vec;
+  __Pyx_Buffer __pyx_pybuffer_sb_x_vec;
+  __Pyx_LocalBuf_ND __pyx_pybuffernd_sb_y_vec;
+  __Pyx_Buffer __pyx_pybuffer_sb_y_vec;
+  __Pyx_LocalBuf_ND __pyx_pybuffernd_spots_image;
+  __Pyx_Buffer __pyx_pybuffer_spots_image;
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  Py_ssize_t __pyx_t_1;
+  PyObject *__pyx_t_2 = NULL;
+  __pyx_t_5numpy_int_t __pyx_t_3;
+  __pyx_t_5numpy_int_t __pyx_t_4;
+  __pyx_t_5numpy_int_t __pyx_t_5;
+  Py_ssize_t __pyx_t_6;
+  PyObject *__pyx_t_7 = NULL;
+  PyObject *__pyx_t_8 = NULL;
+  __pyx_t_5numpy_int_t __pyx_t_9;
+  Py_ssize_t __pyx_t_10;
+  Py_ssize_t __pyx_t_11;
+  Py_ssize_t __pyx_t_12;
+  int __pyx_t_13;
+  int __pyx_t_14;
+  __pyx_t_5numpy_int_t __pyx_t_15;
+  __pyx_t_5numpy_int_t __pyx_t_16;
+  Py_ssize_t __pyx_t_17;
+  Py_ssize_t __pyx_t_18;
+  Py_ssize_t __pyx_t_19;
+  Py_ssize_t __pyx_t_20;
+  Py_ssize_t __pyx_t_21;
+  Py_ssize_t __pyx_t_22;
+  Py_ssize_t __pyx_t_23;
+  Py_ssize_t __pyx_t_24;
+  Py_ssize_t __pyx_t_25;
+  __Pyx_RefNannySetupContext("estimate_backgrounds", 0);
+  __pyx_pybuffer_spots_image.pybuffer.buf = NULL;
+  __pyx_pybuffer_spots_image.refcount = 0;
+  __pyx_pybuffernd_spots_image.data = NULL;
+  __pyx_pybuffernd_spots_image.rcbuffer = &__pyx_pybuffer_spots_image;
+  __pyx_pybuffer_sb_x_vec.pybuffer.buf = NULL;
+  __pyx_pybuffer_sb_x_vec.refcount = 0;
+  __pyx_pybuffernd_sb_x_vec.data = NULL;
+  __pyx_pybuffernd_sb_x_vec.rcbuffer = &__pyx_pybuffer_sb_x_vec;
+  __pyx_pybuffer_sb_y_vec.pybuffer.buf = NULL;
+  __pyx_pybuffer_sb_y_vec.refcount = 0;
+  __pyx_pybuffernd_sb_y_vec.data = NULL;
+  __pyx_pybuffernd_sb_y_vec.rcbuffer = &__pyx_pybuffer_sb_y_vec;
+  __pyx_pybuffer_sb_bg_vec.pybuffer.buf = NULL;
+  __pyx_pybuffer_sb_bg_vec.refcount = 0;
+  __pyx_pybuffernd_sb_bg_vec.data = NULL;
+  __pyx_pybuffernd_sb_bg_vec.rcbuffer = &__pyx_pybuffer_sb_bg_vec;
+  {
+    __Pyx_BufFmt_StackElem __pyx_stack[1];
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_spots_image.rcbuffer->pybuffer, (PyObject*)__pyx_v_spots_image, &__Pyx_TypeInfo_nn___pyx_t_5numpy_int16_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 157, __pyx_L1_error)
+  }
+  __pyx_pybuffernd_spots_image.diminfo[0].strides = __pyx_pybuffernd_spots_image.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_spots_image.diminfo[0].shape = __pyx_pybuffernd_spots_image.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_spots_image.diminfo[1].strides = __pyx_pybuffernd_spots_image.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_spots_image.diminfo[1].shape = __pyx_pybuffernd_spots_image.rcbuffer->pybuffer.shape[1];
+  {
+    __Pyx_BufFmt_StackElem __pyx_stack[1];
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_sb_x_vec.rcbuffer->pybuffer, (PyObject*)__pyx_v_sb_x_vec, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 157, __pyx_L1_error)
+  }
+  __pyx_pybuffernd_sb_x_vec.diminfo[0].strides = __pyx_pybuffernd_sb_x_vec.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_sb_x_vec.diminfo[0].shape = __pyx_pybuffernd_sb_x_vec.rcbuffer->pybuffer.shape[0];
+  {
+    __Pyx_BufFmt_StackElem __pyx_stack[1];
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_sb_y_vec.rcbuffer->pybuffer, (PyObject*)__pyx_v_sb_y_vec, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 157, __pyx_L1_error)
+  }
+  __pyx_pybuffernd_sb_y_vec.diminfo[0].strides = __pyx_pybuffernd_sb_y_vec.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_sb_y_vec.diminfo[0].shape = __pyx_pybuffernd_sb_y_vec.rcbuffer->pybuffer.shape[0];
+  {
+    __Pyx_BufFmt_StackElem __pyx_stack[1];
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_sb_bg_vec.rcbuffer->pybuffer, (PyObject*)__pyx_v_sb_bg_vec, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float_t, PyBUF_FORMAT| PyBUF_STRIDES| PyBUF_WRITABLE, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 157, __pyx_L1_error)
+  }
+  __pyx_pybuffernd_sb_bg_vec.diminfo[0].strides = __pyx_pybuffernd_sb_bg_vec.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_sb_bg_vec.diminfo[0].shape = __pyx_pybuffernd_sb_bg_vec.rcbuffer->pybuffer.shape[0];
+
+  /* "centroid.pyx":163
+ *                            sb_half_width_p):
+ * 
+ *     cdef np.int_t n_spots = len(sb_x_vec)             # <<<<<<<<<<<<<<
+ *     cdef np.int_t sb_half_width = int(sb_half_width_p)
+ * 
+ */
+  __pyx_t_1 = PyObject_Length(((PyObject *)__pyx_v_sb_x_vec)); if (unlikely(__pyx_t_1 == ((Py_ssize_t)-1))) __PYX_ERR(0, 163, __pyx_L1_error)
+  __pyx_v_n_spots = __pyx_t_1;
+
+  /* "centroid.pyx":164
+ * 
+ *     cdef np.int_t n_spots = len(sb_x_vec)
+ *     cdef np.int_t sb_half_width = int(sb_half_width_p)             # <<<<<<<<<<<<<<
+ * 
+ *     cdef np.float_t intensity
+ */
+  __pyx_t_2 = __Pyx_PyNumber_Int(__pyx_v_sb_half_width_p); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 164, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_2);
+  __pyx_t_3 = __Pyx_PyInt_As_npy_long(__pyx_t_2); if (unlikely((__pyx_t_3 == ((npy_long)-1)) && PyErr_Occurred())) __PYX_ERR(0, 164, __pyx_L1_error)
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+  __pyx_v_sb_half_width = __pyx_t_3;
+
+  /* "centroid.pyx":178
+ *     cdef np.int_t k_spot
+ * 
+ *     sy = spots_image.shape[0]             # <<<<<<<<<<<<<<
+ *     sx = spots_image.shape[1]
+ * 
+ */
+  __pyx_v_sy = (__pyx_v_spots_image->dimensions[0]);
+
+  /* "centroid.pyx":179
+ * 
+ *     sy = spots_image.shape[0]
+ *     sx = spots_image.shape[1]             # <<<<<<<<<<<<<<
+ * 
+ *     # first, we iterate through the number of iterations
+ */
+  __pyx_v_sx = (__pyx_v_spots_image->dimensions[1]);
+
+  /* "centroid.pyx":182
+ * 
+ *     # first, we iterate through the number of iterations
+ *     for k_spot in range(n_spots):             # <<<<<<<<<<<<<<
+ * 
+ *         intensity = 0.0
+ */
+  __pyx_t_3 = __pyx_v_n_spots;
+  __pyx_t_4 = __pyx_t_3;
+  for (__pyx_t_5 = 0; __pyx_t_5 < __pyx_t_4; __pyx_t_5+=1) {
+    __pyx_v_k_spot = __pyx_t_5;
+
+    /* "centroid.pyx":184
+ *     for k_spot in range(n_spots):
+ * 
+ *         intensity = 0.0             # <<<<<<<<<<<<<<
+ *         counter = 0.0
+ * 
+ */
+    __pyx_v_intensity = 0.0;
+
+    /* "centroid.pyx":185
+ * 
+ *         intensity = 0.0
+ *         counter = 0.0             # <<<<<<<<<<<<<<
+ * 
+ *         x1 = int(round(sb_x_vec[k_spot]))-sb_half_width
+ */
+    __pyx_v_counter = 0.0;
+
+    /* "centroid.pyx":187
+ *         counter = 0.0
+ * 
+ *         x1 = int(round(sb_x_vec[k_spot]))-sb_half_width             # <<<<<<<<<<<<<<
+ *         x2 = int(round(sb_x_vec[k_spot]))+sb_half_width
+ *         y1 = int(round(sb_y_vec[k_spot]))-sb_half_width
+ */
+    __pyx_t_6 = __pyx_v_k_spot;
+    __pyx_t_2 = PyFloat_FromDouble((*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float_t *, __pyx_pybuffernd_sb_x_vec.rcbuffer->pybuffer.buf, __pyx_t_6, __pyx_pybuffernd_sb_x_vec.diminfo[0].strides))); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 187, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __pyx_t_7 = __Pyx_PyObject_CallOneArg(__pyx_builtin_round, __pyx_t_2); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 187, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_7);
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+    __pyx_t_2 = __Pyx_PyNumber_Int(__pyx_t_7); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 187, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+    __pyx_t_7 = __Pyx_PyInt_From_npy_long(__pyx_v_sb_half_width); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 187, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_7);
+    __pyx_t_8 = PyNumber_Subtract(__pyx_t_2, __pyx_t_7); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 187, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_8);
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+    __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+    __pyx_t_9 = __Pyx_PyInt_As_npy_long(__pyx_t_8); if (unlikely((__pyx_t_9 == ((npy_long)-1)) && PyErr_Occurred())) __PYX_ERR(0, 187, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
+    __pyx_v_x1 = __pyx_t_9;
+
+    /* "centroid.pyx":188
+ * 
+ *         x1 = int(round(sb_x_vec[k_spot]))-sb_half_width
+ *         x2 = int(round(sb_x_vec[k_spot]))+sb_half_width             # <<<<<<<<<<<<<<
+ *         y1 = int(round(sb_y_vec[k_spot]))-sb_half_width
+ *         y2 = int(round(sb_y_vec[k_spot]))+sb_half_width
+ */
+    __pyx_t_10 = __pyx_v_k_spot;
+    __pyx_t_8 = PyFloat_FromDouble((*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float_t *, __pyx_pybuffernd_sb_x_vec.rcbuffer->pybuffer.buf, __pyx_t_10, __pyx_pybuffernd_sb_x_vec.diminfo[0].strides))); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 188, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_8);
+    __pyx_t_7 = __Pyx_PyObject_CallOneArg(__pyx_builtin_round, __pyx_t_8); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 188, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_7);
+    __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
+    __pyx_t_8 = __Pyx_PyNumber_Int(__pyx_t_7); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 188, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_8);
+    __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+    __pyx_t_7 = __Pyx_PyInt_From_npy_long(__pyx_v_sb_half_width); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 188, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_7);
+    __pyx_t_2 = PyNumber_Add(__pyx_t_8, __pyx_t_7); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 188, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
+    __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+    __pyx_t_9 = __Pyx_PyInt_As_npy_long(__pyx_t_2); if (unlikely((__pyx_t_9 == ((npy_long)-1)) && PyErr_Occurred())) __PYX_ERR(0, 188, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+    __pyx_v_x2 = __pyx_t_9;
+
+    /* "centroid.pyx":189
+ *         x1 = int(round(sb_x_vec[k_spot]))-sb_half_width
+ *         x2 = int(round(sb_x_vec[k_spot]))+sb_half_width
+ *         y1 = int(round(sb_y_vec[k_spot]))-sb_half_width             # <<<<<<<<<<<<<<
+ *         y2 = int(round(sb_y_vec[k_spot]))+sb_half_width
+ * 
+ */
+    __pyx_t_11 = __pyx_v_k_spot;
+    __pyx_t_2 = PyFloat_FromDouble((*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float_t *, __pyx_pybuffernd_sb_y_vec.rcbuffer->pybuffer.buf, __pyx_t_11, __pyx_pybuffernd_sb_y_vec.diminfo[0].strides))); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 189, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __pyx_t_7 = __Pyx_PyObject_CallOneArg(__pyx_builtin_round, __pyx_t_2); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 189, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_7);
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+    __pyx_t_2 = __Pyx_PyNumber_Int(__pyx_t_7); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 189, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+    __pyx_t_7 = __Pyx_PyInt_From_npy_long(__pyx_v_sb_half_width); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 189, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_7);
+    __pyx_t_8 = PyNumber_Subtract(__pyx_t_2, __pyx_t_7); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 189, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_8);
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+    __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+    __pyx_t_9 = __Pyx_PyInt_As_npy_long(__pyx_t_8); if (unlikely((__pyx_t_9 == ((npy_long)-1)) && PyErr_Occurred())) __PYX_ERR(0, 189, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
+    __pyx_v_y1 = __pyx_t_9;
+
+    /* "centroid.pyx":190
+ *         x2 = int(round(sb_x_vec[k_spot]))+sb_half_width
+ *         y1 = int(round(sb_y_vec[k_spot]))-sb_half_width
+ *         y2 = int(round(sb_y_vec[k_spot]))+sb_half_width             # <<<<<<<<<<<<<<
+ * 
+ *         if x1<0 or x2>sx-1 or y1<0 or y2>sy-1:
+ */
+    __pyx_t_12 = __pyx_v_k_spot;
+    __pyx_t_8 = PyFloat_FromDouble((*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float_t *, __pyx_pybuffernd_sb_y_vec.rcbuffer->pybuffer.buf, __pyx_t_12, __pyx_pybuffernd_sb_y_vec.diminfo[0].strides))); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 190, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_8);
+    __pyx_t_7 = __Pyx_PyObject_CallOneArg(__pyx_builtin_round, __pyx_t_8); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 190, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_7);
+    __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
+    __pyx_t_8 = __Pyx_PyNumber_Int(__pyx_t_7); if (unlikely(!__pyx_t_8)) __PYX_ERR(0, 190, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_8);
+    __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+    __pyx_t_7 = __Pyx_PyInt_From_npy_long(__pyx_v_sb_half_width); if (unlikely(!__pyx_t_7)) __PYX_ERR(0, 190, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_7);
+    __pyx_t_2 = PyNumber_Add(__pyx_t_8, __pyx_t_7); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 190, __pyx_L1_error)
+    __Pyx_GOTREF(__pyx_t_2);
+    __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
+    __Pyx_DECREF(__pyx_t_7); __pyx_t_7 = 0;
+    __pyx_t_9 = __Pyx_PyInt_As_npy_long(__pyx_t_2); if (unlikely((__pyx_t_9 == ((npy_long)-1)) && PyErr_Occurred())) __PYX_ERR(0, 190, __pyx_L1_error)
+    __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+    __pyx_v_y2 = __pyx_t_9;
+
+    /* "centroid.pyx":192
+ *         y2 = int(round(sb_y_vec[k_spot]))+sb_half_width
+ * 
+ *         if x1<0 or x2>sx-1 or y1<0 or y2>sy-1:             # <<<<<<<<<<<<<<
+ *             printf("Search box x=(%ld,%ld),y=(%ld,%ld) extends beyond image edge. Possibly search box width too large.\n",x1,x2,y1,y2)
+ *             exit(0)
+ */
+    __pyx_t_14 = ((__pyx_v_x1 < 0) != 0);
+    if (!__pyx_t_14) {
+    } else {
+      __pyx_t_13 = __pyx_t_14;
+      goto __pyx_L6_bool_binop_done;
+    }
+    __pyx_t_14 = ((__pyx_v_x2 > (__pyx_v_sx - 1)) != 0);
+    if (!__pyx_t_14) {
+    } else {
+      __pyx_t_13 = __pyx_t_14;
+      goto __pyx_L6_bool_binop_done;
+    }
+    __pyx_t_14 = ((__pyx_v_y1 < 0) != 0);
+    if (!__pyx_t_14) {
+    } else {
+      __pyx_t_13 = __pyx_t_14;
+      goto __pyx_L6_bool_binop_done;
+    }
+    __pyx_t_14 = ((__pyx_v_y2 > (__pyx_v_sy - 1)) != 0);
+    __pyx_t_13 = __pyx_t_14;
+    __pyx_L6_bool_binop_done:;
+    if (__pyx_t_13) {
+
+      /* "centroid.pyx":193
+ * 
+ *         if x1<0 or x2>sx-1 or y1<0 or y2>sy-1:
+ *             printf("Search box x=(%ld,%ld),y=(%ld,%ld) extends beyond image edge. Possibly search box width too large.\n",x1,x2,y1,y2)             # <<<<<<<<<<<<<<
+ *             exit(0)
+ * 
+ */
+      (void)(printf(((char const *)"Search box x=(%ld,%ld),y=(%ld,%ld) extends beyond image edge. Possibly search box width too large.\n"), __pyx_v_x1, __pyx_v_x2, __pyx_v_y1, __pyx_v_y2));
+
+      /* "centroid.pyx":194
+ *         if x1<0 or x2>sx-1 or y1<0 or y2>sy-1:
+ *             printf("Search box x=(%ld,%ld),y=(%ld,%ld) extends beyond image edge. Possibly search box width too large.\n",x1,x2,y1,y2)
+ *             exit(0)             # <<<<<<<<<<<<<<
+ * 
+ *         if x1>=x2 or y1>=y2:
+ */
+      __pyx_t_2 = __Pyx_PyObject_Call(__pyx_builtin_exit, __pyx_tuple__7, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 194, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_2);
+      __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+
+      /* "centroid.pyx":192
+ *         y2 = int(round(sb_y_vec[k_spot]))+sb_half_width
+ * 
+ *         if x1<0 or x2>sx-1 or y1<0 or y2>sy-1:             # <<<<<<<<<<<<<<
+ *             printf("Search box x=(%ld,%ld),y=(%ld,%ld) extends beyond image edge. Possibly search box width too large.\n",x1,x2,y1,y2)
+ *             exit(0)
+ */
+    }
+
+    /* "centroid.pyx":196
+ *             exit(0)
+ * 
+ *         if x1>=x2 or y1>=y2:             # <<<<<<<<<<<<<<
+ *             printf("Search box x=(%ld,%ld),y=(%ld,%ld) too small. Possibly search box width too large, number of iterations too high, or iteration step size too high.\n",x1,x2,y1,y2)
+ *             exit(0)
+ */
+    __pyx_t_14 = ((__pyx_v_x1 >= __pyx_v_x2) != 0);
+    if (!__pyx_t_14) {
+    } else {
+      __pyx_t_13 = __pyx_t_14;
+      goto __pyx_L11_bool_binop_done;
+    }
+    __pyx_t_14 = ((__pyx_v_y1 >= __pyx_v_y2) != 0);
+    __pyx_t_13 = __pyx_t_14;
+    __pyx_L11_bool_binop_done:;
+    if (__pyx_t_13) {
+
+      /* "centroid.pyx":197
+ * 
+ *         if x1>=x2 or y1>=y2:
+ *             printf("Search box x=(%ld,%ld),y=(%ld,%ld) too small. Possibly search box width too large, number of iterations too high, or iteration step size too high.\n",x1,x2,y1,y2)             # <<<<<<<<<<<<<<
+ *             exit(0)
+ * 
+ */
+      (void)(printf(((char const *)"Search box x=(%ld,%ld),y=(%ld,%ld) too small. Possibly search box width too large, number of iterations too high, or iteration step size too high.\n"), __pyx_v_x1, __pyx_v_x2, __pyx_v_y1, __pyx_v_y2));
+
+      /* "centroid.pyx":198
+ *         if x1>=x2 or y1>=y2:
+ *             printf("Search box x=(%ld,%ld),y=(%ld,%ld) too small. Possibly search box width too large, number of iterations too high, or iteration step size too high.\n",x1,x2,y1,y2)
+ *             exit(0)             # <<<<<<<<<<<<<<
+ * 
+ *         for x in range(x1,x2+1):
+ */
+      __pyx_t_2 = __Pyx_PyObject_Call(__pyx_builtin_exit, __pyx_tuple__8, NULL); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 198, __pyx_L1_error)
+      __Pyx_GOTREF(__pyx_t_2);
+      __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+
+      /* "centroid.pyx":196
+ *             exit(0)
+ * 
+ *         if x1>=x2 or y1>=y2:             # <<<<<<<<<<<<<<
+ *             printf("Search box x=(%ld,%ld),y=(%ld,%ld) too small. Possibly search box width too large, number of iterations too high, or iteration step size too high.\n",x1,x2,y1,y2)
+ *             exit(0)
+ */
+    }
+
+    /* "centroid.pyx":200
+ *             exit(0)
+ * 
+ *         for x in range(x1,x2+1):             # <<<<<<<<<<<<<<
+ *             intensity = intensity + float(spots_image[y1,x]) + float(spots_image[y2,x])
+ *             counter = counter + 2.0
+ */
+    __pyx_t_9 = (__pyx_v_x2 + 1);
+    __pyx_t_15 = __pyx_t_9;
+    for (__pyx_t_16 = __pyx_v_x1; __pyx_t_16 < __pyx_t_15; __pyx_t_16+=1) {
+      __pyx_v_x = __pyx_t_16;
+
+      /* "centroid.pyx":201
+ * 
+ *         for x in range(x1,x2+1):
+ *             intensity = intensity + float(spots_image[y1,x]) + float(spots_image[y2,x])             # <<<<<<<<<<<<<<
+ *             counter = counter + 2.0
+ *         for y in range(y1,y2+1):
+ */
+      __pyx_t_17 = __pyx_v_y1;
+      __pyx_t_18 = __pyx_v_x;
+      __pyx_t_19 = __pyx_v_y2;
+      __pyx_t_20 = __pyx_v_x;
+      __pyx_v_intensity = ((__pyx_v_intensity + ((double)(*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_int16_t *, __pyx_pybuffernd_spots_image.rcbuffer->pybuffer.buf, __pyx_t_17, __pyx_pybuffernd_spots_image.diminfo[0].strides, __pyx_t_18, __pyx_pybuffernd_spots_image.diminfo[1].strides)))) + ((double)(*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_int16_t *, __pyx_pybuffernd_spots_image.rcbuffer->pybuffer.buf, __pyx_t_19, __pyx_pybuffernd_spots_image.diminfo[0].strides, __pyx_t_20, __pyx_pybuffernd_spots_image.diminfo[1].strides))));
+
+      /* "centroid.pyx":202
+ *         for x in range(x1,x2+1):
+ *             intensity = intensity + float(spots_image[y1,x]) + float(spots_image[y2,x])
+ *             counter = counter + 2.0             # <<<<<<<<<<<<<<
+ *         for y in range(y1,y2+1):
+ *             intensity = intensity + float(spots_image[y,x1]) + float(spots_image[y,x2])
+ */
+      __pyx_v_counter = (__pyx_v_counter + 2.0);
+    }
+
+    /* "centroid.pyx":203
+ *             intensity = intensity + float(spots_image[y1,x]) + float(spots_image[y2,x])
+ *             counter = counter + 2.0
+ *         for y in range(y1,y2+1):             # <<<<<<<<<<<<<<
+ *             intensity = intensity + float(spots_image[y,x1]) + float(spots_image[y,x2])
+ *             counter = counter + 2.0
+ */
+    __pyx_t_9 = (__pyx_v_y2 + 1);
+    __pyx_t_15 = __pyx_t_9;
+    for (__pyx_t_16 = __pyx_v_y1; __pyx_t_16 < __pyx_t_15; __pyx_t_16+=1) {
+      __pyx_v_y = __pyx_t_16;
+
+      /* "centroid.pyx":204
+ *             counter = counter + 2.0
+ *         for y in range(y1,y2+1):
+ *             intensity = intensity + float(spots_image[y,x1]) + float(spots_image[y,x2])             # <<<<<<<<<<<<<<
+ *             counter = counter + 2.0
+ * 
+ */
+      __pyx_t_21 = __pyx_v_y;
+      __pyx_t_22 = __pyx_v_x1;
+      __pyx_t_23 = __pyx_v_y;
+      __pyx_t_24 = __pyx_v_x2;
+      __pyx_v_intensity = ((__pyx_v_intensity + ((double)(*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_int16_t *, __pyx_pybuffernd_spots_image.rcbuffer->pybuffer.buf, __pyx_t_21, __pyx_pybuffernd_spots_image.diminfo[0].strides, __pyx_t_22, __pyx_pybuffernd_spots_image.diminfo[1].strides)))) + ((double)(*__Pyx_BufPtrStrided2d(__pyx_t_5numpy_int16_t *, __pyx_pybuffernd_spots_image.rcbuffer->pybuffer.buf, __pyx_t_23, __pyx_pybuffernd_spots_image.diminfo[0].strides, __pyx_t_24, __pyx_pybuffernd_spots_image.diminfo[1].strides))));
+
+      /* "centroid.pyx":205
+ *         for y in range(y1,y2+1):
+ *             intensity = intensity + float(spots_image[y,x1]) + float(spots_image[y,x2])
+ *             counter = counter + 2.0             # <<<<<<<<<<<<<<
+ * 
+ *         sb_bg_vec[k_spot] = intensity/counter
+ */
+      __pyx_v_counter = (__pyx_v_counter + 2.0);
+    }
+
+    /* "centroid.pyx":207
+ *             counter = counter + 2.0
+ * 
+ *         sb_bg_vec[k_spot] = intensity/counter             # <<<<<<<<<<<<<<
+ */
+    if (unlikely(__pyx_v_counter == 0)) {
+      PyErr_SetString(PyExc_ZeroDivisionError, "float division");
+      __PYX_ERR(0, 207, __pyx_L1_error)
+    }
+    __pyx_t_25 = __pyx_v_k_spot;
+    *__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float_t *, __pyx_pybuffernd_sb_bg_vec.rcbuffer->pybuffer.buf, __pyx_t_25, __pyx_pybuffernd_sb_bg_vec.diminfo[0].strides) = (__pyx_v_intensity / __pyx_v_counter);
+  }
+
+  /* "centroid.pyx":157
+ * @cython.boundscheck(False)
+ * @cython.wraparound(False)
+ * cpdef estimate_backgrounds(np.ndarray[np.int16_t,ndim=2] spots_image,             # <<<<<<<<<<<<<<
+ *                            np.ndarray[np.float_t,ndim=1] sb_x_vec,
+ *                            np.ndarray[np.float_t,ndim=1] sb_y_vec,
+ */
+
+  /* function exit code */
+  __pyx_r = Py_None; __Pyx_INCREF(Py_None);
+  goto __pyx_L0;
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_2);
+  __Pyx_XDECREF(__pyx_t_7);
+  __Pyx_XDECREF(__pyx_t_8);
+  { PyObject *__pyx_type, *__pyx_value, *__pyx_tb;
+    __Pyx_PyThreadState_declare
+    __Pyx_PyThreadState_assign
+    __Pyx_ErrFetch(&__pyx_type, &__pyx_value, &__pyx_tb);
+    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_sb_bg_vec.rcbuffer->pybuffer);
+    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_sb_x_vec.rcbuffer->pybuffer);
+    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_sb_y_vec.rcbuffer->pybuffer);
+    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_spots_image.rcbuffer->pybuffer);
+  __Pyx_ErrRestore(__pyx_type, __pyx_value, __pyx_tb);}
+  __Pyx_AddTraceback("centroid.estimate_backgrounds", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = 0;
+  goto __pyx_L2;
+  __pyx_L0:;
+  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_sb_bg_vec.rcbuffer->pybuffer);
+  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_sb_x_vec.rcbuffer->pybuffer);
+  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_sb_y_vec.rcbuffer->pybuffer);
+  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_spots_image.rcbuffer->pybuffer);
+  __pyx_L2:;
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* Python wrapper */
+static PyObject *__pyx_pw_8centroid_3estimate_backgrounds(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static PyObject *__pyx_pw_8centroid_3estimate_backgrounds(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+  PyArrayObject *__pyx_v_spots_image = 0;
+  PyArrayObject *__pyx_v_sb_x_vec = 0;
+  PyArrayObject *__pyx_v_sb_y_vec = 0;
+  PyArrayObject *__pyx_v_sb_bg_vec = 0;
+  PyObject *__pyx_v_sb_half_width_p = 0;
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("estimate_backgrounds (wrapper)", 0);
+  {
+    static PyObject **__pyx_pyargnames[] = {&__pyx_n_s_spots_image,&__pyx_n_s_sb_x_vec,&__pyx_n_s_sb_y_vec,&__pyx_n_s_sb_bg_vec,&__pyx_n_s_sb_half_width_p,0};
+    PyObject* values[5] = {0,0,0,0,0};
+    if (unlikely(__pyx_kwds)) {
+      Py_ssize_t kw_args;
+      const Py_ssize_t pos_args = PyTuple_GET_SIZE(__pyx_args);
+      switch (pos_args) {
+        case  5: values[4] = PyTuple_GET_ITEM(__pyx_args, 4);
+        CYTHON_FALLTHROUGH;
+        case  4: values[3] = PyTuple_GET_ITEM(__pyx_args, 3);
+        CYTHON_FALLTHROUGH;
+        case  3: values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
+        CYTHON_FALLTHROUGH;
+        case  2: values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
+        CYTHON_FALLTHROUGH;
+        case  1: values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
+        CYTHON_FALLTHROUGH;
+        case  0: break;
+        default: goto __pyx_L5_argtuple_error;
+      }
+      kw_args = PyDict_Size(__pyx_kwds);
+      switch (pos_args) {
+        case  0:
+        if (likely((values[0] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_spots_image)) != 0)) kw_args--;
+        else goto __pyx_L5_argtuple_error;
+        CYTHON_FALLTHROUGH;
+        case  1:
+        if (likely((values[1] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_sb_x_vec)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("estimate_backgrounds", 1, 5, 5, 1); __PYX_ERR(0, 157, __pyx_L3_error)
+        }
+        CYTHON_FALLTHROUGH;
+        case  2:
+        if (likely((values[2] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_sb_y_vec)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("estimate_backgrounds", 1, 5, 5, 2); __PYX_ERR(0, 157, __pyx_L3_error)
+        }
+        CYTHON_FALLTHROUGH;
+        case  3:
+        if (likely((values[3] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_sb_bg_vec)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("estimate_backgrounds", 1, 5, 5, 3); __PYX_ERR(0, 157, __pyx_L3_error)
+        }
+        CYTHON_FALLTHROUGH;
+        case  4:
+        if (likely((values[4] = __Pyx_PyDict_GetItemStr(__pyx_kwds, __pyx_n_s_sb_half_width_p)) != 0)) kw_args--;
+        else {
+          __Pyx_RaiseArgtupleInvalid("estimate_backgrounds", 1, 5, 5, 4); __PYX_ERR(0, 157, __pyx_L3_error)
+        }
+      }
+      if (unlikely(kw_args > 0)) {
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, pos_args, "estimate_backgrounds") < 0)) __PYX_ERR(0, 157, __pyx_L3_error)
+      }
+    } else if (PyTuple_GET_SIZE(__pyx_args) != 5) {
+      goto __pyx_L5_argtuple_error;
+    } else {
+      values[0] = PyTuple_GET_ITEM(__pyx_args, 0);
+      values[1] = PyTuple_GET_ITEM(__pyx_args, 1);
+      values[2] = PyTuple_GET_ITEM(__pyx_args, 2);
+      values[3] = PyTuple_GET_ITEM(__pyx_args, 3);
+      values[4] = PyTuple_GET_ITEM(__pyx_args, 4);
+    }
+    __pyx_v_spots_image = ((PyArrayObject *)values[0]);
+    __pyx_v_sb_x_vec = ((PyArrayObject *)values[1]);
+    __pyx_v_sb_y_vec = ((PyArrayObject *)values[2]);
+    __pyx_v_sb_bg_vec = ((PyArrayObject *)values[3]);
+    __pyx_v_sb_half_width_p = values[4];
+  }
+  goto __pyx_L4_argument_unpacking_done;
+  __pyx_L5_argtuple_error:;
+  __Pyx_RaiseArgtupleInvalid("estimate_backgrounds", 1, 5, 5, PyTuple_GET_SIZE(__pyx_args)); __PYX_ERR(0, 157, __pyx_L3_error)
+  __pyx_L3_error:;
+  __Pyx_AddTraceback("centroid.estimate_backgrounds", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __Pyx_RefNannyFinishContext();
+  return NULL;
+  __pyx_L4_argument_unpacking_done:;
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_spots_image), __pyx_ptype_5numpy_ndarray, 1, "spots_image", 0))) __PYX_ERR(0, 157, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_sb_x_vec), __pyx_ptype_5numpy_ndarray, 1, "sb_x_vec", 0))) __PYX_ERR(0, 158, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_sb_y_vec), __pyx_ptype_5numpy_ndarray, 1, "sb_y_vec", 0))) __PYX_ERR(0, 159, __pyx_L1_error)
+  if (unlikely(!__Pyx_ArgTypeTest(((PyObject *)__pyx_v_sb_bg_vec), __pyx_ptype_5numpy_ndarray, 1, "sb_bg_vec", 0))) __PYX_ERR(0, 160, __pyx_L1_error)
+  __pyx_r = __pyx_pf_8centroid_2estimate_backgrounds(__pyx_self, __pyx_v_spots_image, __pyx_v_sb_x_vec, __pyx_v_sb_y_vec, __pyx_v_sb_bg_vec, __pyx_v_sb_half_width_p);
+
+  /* function exit code */
+  goto __pyx_L0;
+  __pyx_L1_error:;
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_8centroid_2estimate_backgrounds(CYTHON_UNUSED PyObject *__pyx_self, PyArrayObject *__pyx_v_spots_image, PyArrayObject *__pyx_v_sb_x_vec, PyArrayObject *__pyx_v_sb_y_vec, PyArrayObject *__pyx_v_sb_bg_vec, PyObject *__pyx_v_sb_half_width_p) {
+  __Pyx_LocalBuf_ND __pyx_pybuffernd_sb_bg_vec;
+  __Pyx_Buffer __pyx_pybuffer_sb_bg_vec;
+  __Pyx_LocalBuf_ND __pyx_pybuffernd_sb_x_vec;
+  __Pyx_Buffer __pyx_pybuffer_sb_x_vec;
+  __Pyx_LocalBuf_ND __pyx_pybuffernd_sb_y_vec;
+  __Pyx_Buffer __pyx_pybuffer_sb_y_vec;
+  __Pyx_LocalBuf_ND __pyx_pybuffernd_spots_image;
+  __Pyx_Buffer __pyx_pybuffer_spots_image;
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  PyObject *__pyx_t_1 = NULL;
+  __Pyx_RefNannySetupContext("estimate_backgrounds", 0);
+  __pyx_pybuffer_spots_image.pybuffer.buf = NULL;
+  __pyx_pybuffer_spots_image.refcount = 0;
+  __pyx_pybuffernd_spots_image.data = NULL;
+  __pyx_pybuffernd_spots_image.rcbuffer = &__pyx_pybuffer_spots_image;
+  __pyx_pybuffer_sb_x_vec.pybuffer.buf = NULL;
+  __pyx_pybuffer_sb_x_vec.refcount = 0;
+  __pyx_pybuffernd_sb_x_vec.data = NULL;
+  __pyx_pybuffernd_sb_x_vec.rcbuffer = &__pyx_pybuffer_sb_x_vec;
+  __pyx_pybuffer_sb_y_vec.pybuffer.buf = NULL;
+  __pyx_pybuffer_sb_y_vec.refcount = 0;
+  __pyx_pybuffernd_sb_y_vec.data = NULL;
+  __pyx_pybuffernd_sb_y_vec.rcbuffer = &__pyx_pybuffer_sb_y_vec;
+  __pyx_pybuffer_sb_bg_vec.pybuffer.buf = NULL;
+  __pyx_pybuffer_sb_bg_vec.refcount = 0;
+  __pyx_pybuffernd_sb_bg_vec.data = NULL;
+  __pyx_pybuffernd_sb_bg_vec.rcbuffer = &__pyx_pybuffer_sb_bg_vec;
+  {
+    __Pyx_BufFmt_StackElem __pyx_stack[1];
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_spots_image.rcbuffer->pybuffer, (PyObject*)__pyx_v_spots_image, &__Pyx_TypeInfo_nn___pyx_t_5numpy_int16_t, PyBUF_FORMAT| PyBUF_STRIDES, 2, 0, __pyx_stack) == -1)) __PYX_ERR(0, 157, __pyx_L1_error)
+  }
+  __pyx_pybuffernd_spots_image.diminfo[0].strides = __pyx_pybuffernd_spots_image.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_spots_image.diminfo[0].shape = __pyx_pybuffernd_spots_image.rcbuffer->pybuffer.shape[0]; __pyx_pybuffernd_spots_image.diminfo[1].strides = __pyx_pybuffernd_spots_image.rcbuffer->pybuffer.strides[1]; __pyx_pybuffernd_spots_image.diminfo[1].shape = __pyx_pybuffernd_spots_image.rcbuffer->pybuffer.shape[1];
+  {
+    __Pyx_BufFmt_StackElem __pyx_stack[1];
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_sb_x_vec.rcbuffer->pybuffer, (PyObject*)__pyx_v_sb_x_vec, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 157, __pyx_L1_error)
+  }
+  __pyx_pybuffernd_sb_x_vec.diminfo[0].strides = __pyx_pybuffernd_sb_x_vec.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_sb_x_vec.diminfo[0].shape = __pyx_pybuffernd_sb_x_vec.rcbuffer->pybuffer.shape[0];
+  {
+    __Pyx_BufFmt_StackElem __pyx_stack[1];
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_sb_y_vec.rcbuffer->pybuffer, (PyObject*)__pyx_v_sb_y_vec, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 157, __pyx_L1_error)
+  }
+  __pyx_pybuffernd_sb_y_vec.diminfo[0].strides = __pyx_pybuffernd_sb_y_vec.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_sb_y_vec.diminfo[0].shape = __pyx_pybuffernd_sb_y_vec.rcbuffer->pybuffer.shape[0];
+  {
+    __Pyx_BufFmt_StackElem __pyx_stack[1];
+    if (unlikely(__Pyx_GetBufferAndValidate(&__pyx_pybuffernd_sb_bg_vec.rcbuffer->pybuffer, (PyObject*)__pyx_v_sb_bg_vec, &__Pyx_TypeInfo_nn___pyx_t_5numpy_float_t, PyBUF_FORMAT| PyBUF_STRIDES, 1, 0, __pyx_stack) == -1)) __PYX_ERR(0, 157, __pyx_L1_error)
+  }
+  __pyx_pybuffernd_sb_bg_vec.diminfo[0].strides = __pyx_pybuffernd_sb_bg_vec.rcbuffer->pybuffer.strides[0]; __pyx_pybuffernd_sb_bg_vec.diminfo[0].shape = __pyx_pybuffernd_sb_bg_vec.rcbuffer->pybuffer.shape[0];
+  __Pyx_XDECREF(__pyx_r);
+  __pyx_t_1 = __pyx_f_8centroid_estimate_backgrounds(__pyx_v_spots_image, __pyx_v_sb_x_vec, __pyx_v_sb_y_vec, __pyx_v_sb_bg_vec, __pyx_v_sb_half_width_p, 0); if (unlikely(!__pyx_t_1)) __PYX_ERR(0, 157, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_r = __pyx_t_1;
+  __pyx_t_1 = 0;
+  goto __pyx_L0;
+
+  /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_1);
+  { PyObject *__pyx_type, *__pyx_value, *__pyx_tb;
+    __Pyx_PyThreadState_declare
+    __Pyx_PyThreadState_assign
+    __Pyx_ErrFetch(&__pyx_type, &__pyx_value, &__pyx_tb);
+    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_sb_bg_vec.rcbuffer->pybuffer);
+    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_sb_x_vec.rcbuffer->pybuffer);
+    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_sb_y_vec.rcbuffer->pybuffer);
+    __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_spots_image.rcbuffer->pybuffer);
+  __Pyx_ErrRestore(__pyx_type, __pyx_value, __pyx_tb);}
+  __Pyx_AddTraceback("centroid.estimate_backgrounds", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  goto __pyx_L2;
+  __pyx_L0:;
+  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_sb_bg_vec.rcbuffer->pybuffer);
+  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_sb_x_vec.rcbuffer->pybuffer);
+  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_sb_y_vec.rcbuffer->pybuffer);
+  __Pyx_SafeReleaseBuffer(&__pyx_pybuffernd_spots_image.rcbuffer->pybuffer);
   __pyx_L2:;
   __Pyx_XGIVEREF(__pyx_r);
   __Pyx_RefNannyFinishContext();
@@ -3266,7 +3816,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  * 
  *             if ((flags & pybuf.PyBUF_F_CONTIGUOUS == pybuf.PyBUF_F_CONTIGUOUS)
  */
-    __pyx_t_3 = __Pyx_PyObject_Call(__pyx_builtin_ValueError, __pyx_tuple_, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 229, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_Call(__pyx_builtin_ValueError, __pyx_tuple__9, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 229, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_Raise(__pyx_t_3, 0, 0, 0);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
@@ -3322,7 +3872,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  * 
  *             info.buf = PyArray_DATA(self)
  */
-    __pyx_t_3 = __Pyx_PyObject_Call(__pyx_builtin_ValueError, __pyx_tuple__2, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 233, __pyx_L1_error)
+    __pyx_t_3 = __Pyx_PyObject_Call(__pyx_builtin_ValueError, __pyx_tuple__10, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 233, __pyx_L1_error)
     __Pyx_GOTREF(__pyx_t_3);
     __Pyx_Raise(__pyx_t_3, 0, 0, 0);
     __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
@@ -3579,7 +4129,7 @@ static int __pyx_pf_5numpy_7ndarray___getbuffer__(PyArrayObject *__pyx_v_self, P
  *                 if   t == NPY_BYTE:        f = "b"
  *                 elif t == NPY_UBYTE:       f = "B"
  */
-      __pyx_t_3 = __Pyx_PyObject_Call(__pyx_builtin_ValueError, __pyx_tuple__3, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 263, __pyx_L1_error)
+      __pyx_t_3 = __Pyx_PyObject_Call(__pyx_builtin_ValueError, __pyx_tuple__11, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 263, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_3);
       __Pyx_Raise(__pyx_t_3, 0, 0, 0);
       __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
@@ -4459,7 +5009,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
  * 
  *         if ((child.byteorder == c'>' and little_endian) or
  */
-      __pyx_t_3 = __Pyx_PyObject_Call(__pyx_builtin_RuntimeError, __pyx_tuple__4, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 810, __pyx_L1_error)
+      __pyx_t_3 = __Pyx_PyObject_Call(__pyx_builtin_RuntimeError, __pyx_tuple__12, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 810, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_3);
       __Pyx_Raise(__pyx_t_3, 0, 0, 0);
       __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
@@ -4527,7 +5077,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
  *             # One could encode it in the format string and have Cython
  *             # complain instead, BUT: < and > in format strings also imply
  */
-      __pyx_t_3 = __Pyx_PyObject_Call(__pyx_builtin_ValueError, __pyx_tuple__5, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 814, __pyx_L1_error)
+      __pyx_t_3 = __Pyx_PyObject_Call(__pyx_builtin_ValueError, __pyx_tuple__13, NULL); if (unlikely(!__pyx_t_3)) __PYX_ERR(1, 814, __pyx_L1_error)
       __Pyx_GOTREF(__pyx_t_3);
       __Pyx_Raise(__pyx_t_3, 0, 0, 0);
       __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
@@ -4636,7 +5186,7 @@ static CYTHON_INLINE char *__pyx_f_5numpy__util_dtypestring(PyArray_Descr *__pyx
  * 
  *             # Until ticket #99 is fixed, use integers to avoid warnings
  */
-        __pyx_t_4 = __Pyx_PyObject_Call(__pyx_builtin_RuntimeError, __pyx_tuple__6, NULL); if (unlikely(!__pyx_t_4)) __PYX_ERR(1, 834, __pyx_L1_error)
+        __pyx_t_4 = __Pyx_PyObject_Call(__pyx_builtin_RuntimeError, __pyx_tuple__14, NULL); if (unlikely(!__pyx_t_4)) __PYX_ERR(1, 834, __pyx_L1_error)
         __Pyx_GOTREF(__pyx_t_4);
         __Pyx_Raise(__pyx_t_4, 0, 0, 0);
         __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
@@ -5310,7 +5860,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_array(void) {
  * 
  * cdef inline int import_umath() except -1:
  */
-      __pyx_t_8 = __Pyx_PyObject_Call(__pyx_builtin_ImportError, __pyx_tuple__7, NULL); if (unlikely(!__pyx_t_8)) __PYX_ERR(1, 1000, __pyx_L5_except_error)
+      __pyx_t_8 = __Pyx_PyObject_Call(__pyx_builtin_ImportError, __pyx_tuple__15, NULL); if (unlikely(!__pyx_t_8)) __PYX_ERR(1, 1000, __pyx_L5_except_error)
       __Pyx_GOTREF(__pyx_t_8);
       __Pyx_Raise(__pyx_t_8, 0, 0, 0);
       __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
@@ -5439,7 +5989,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_umath(void) {
  * 
  * cdef inline int import_ufunc() except -1:
  */
-      __pyx_t_8 = __Pyx_PyObject_Call(__pyx_builtin_ImportError, __pyx_tuple__8, NULL); if (unlikely(!__pyx_t_8)) __PYX_ERR(1, 1006, __pyx_L5_except_error)
+      __pyx_t_8 = __Pyx_PyObject_Call(__pyx_builtin_ImportError, __pyx_tuple__16, NULL); if (unlikely(!__pyx_t_8)) __PYX_ERR(1, 1006, __pyx_L5_except_error)
       __Pyx_GOTREF(__pyx_t_8);
       __Pyx_Raise(__pyx_t_8, 0, 0, 0);
       __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
@@ -5565,7 +6115,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_ufunc(void) {
  *     except Exception:
  *         raise ImportError("numpy.core.umath failed to import")             # <<<<<<<<<<<<<<
  */
-      __pyx_t_8 = __Pyx_PyObject_Call(__pyx_builtin_ImportError, __pyx_tuple__9, NULL); if (unlikely(!__pyx_t_8)) __PYX_ERR(1, 1012, __pyx_L5_except_error)
+      __pyx_t_8 = __Pyx_PyObject_Call(__pyx_builtin_ImportError, __pyx_tuple__17, NULL); if (unlikely(!__pyx_t_8)) __PYX_ERR(1, 1012, __pyx_L5_except_error)
       __Pyx_GOTREF(__pyx_t_8);
       __Pyx_Raise(__pyx_t_8, 0, 0, 0);
       __Pyx_DECREF(__pyx_t_8); __pyx_t_8 = 0;
@@ -5614,6 +6164,7 @@ static CYTHON_INLINE int __pyx_f_5numpy_import_ufunc(void) {
 
 static PyMethodDef __pyx_methods[] = {
   {"compute_centroids", (PyCFunction)__pyx_pw_8centroid_1compute_centroids, METH_VARARGS|METH_KEYWORDS, 0},
+  {"estimate_backgrounds", (PyCFunction)__pyx_pw_8centroid_3estimate_backgrounds, METH_VARARGS|METH_KEYWORDS, 0},
   {0, 0, 0, 0}
 };
 
@@ -5656,35 +6207,31 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_kp_u_Non_native_byte_order_not_suppor, __pyx_k_Non_native_byte_order_not_suppor, sizeof(__pyx_k_Non_native_byte_order_not_suppor), 0, 1, 0, 0},
   {&__pyx_n_s_RuntimeError, __pyx_k_RuntimeError, sizeof(__pyx_k_RuntimeError), 0, 0, 1, 1},
   {&__pyx_n_s_ValueError, __pyx_k_ValueError, sizeof(__pyx_k_ValueError), 0, 0, 1, 1},
-  {&__pyx_kp_s_Warning_search_box_intensity_low, __pyx_k_Warning_search_box_intensity_low, sizeof(__pyx_k_Warning_search_box_intensity_low), 0, 0, 1, 0},
-  {&__pyx_n_s_background_correction, __pyx_k_background_correction, sizeof(__pyx_k_background_correction), 0, 0, 1, 1},
-  {&__pyx_n_s_background_intensity, __pyx_k_background_intensity, sizeof(__pyx_k_background_intensity), 0, 0, 1, 1},
   {&__pyx_n_s_cline_in_traceback, __pyx_k_cline_in_traceback, sizeof(__pyx_k_cline_in_traceback), 0, 0, 1, 1},
-  {&__pyx_n_s_end, __pyx_k_end, sizeof(__pyx_k_end), 0, 0, 1, 1},
-  {&__pyx_n_s_estimate_background, __pyx_k_estimate_background, sizeof(__pyx_k_estimate_background), 0, 0, 1, 1},
-  {&__pyx_n_s_file, __pyx_k_file, sizeof(__pyx_k_file), 0, 0, 1, 1},
+  {&__pyx_n_s_exit, __pyx_k_exit, sizeof(__pyx_k_exit), 0, 0, 1, 1},
   {&__pyx_n_s_import, __pyx_k_import, sizeof(__pyx_k_import), 0, 0, 1, 1},
+  {&__pyx_n_s_iteration_step_px_p, __pyx_k_iteration_step_px_p, sizeof(__pyx_k_iteration_step_px_p), 0, 0, 1, 1},
+  {&__pyx_n_s_iterations_p, __pyx_k_iterations_p, sizeof(__pyx_k_iterations_p), 0, 0, 1, 1},
   {&__pyx_n_s_main, __pyx_k_main, sizeof(__pyx_k_main), 0, 0, 1, 1},
   {&__pyx_n_s_matplotlib, __pyx_k_matplotlib, sizeof(__pyx_k_matplotlib), 0, 0, 1, 1},
   {&__pyx_n_s_maximum_intensity, __pyx_k_maximum_intensity, sizeof(__pyx_k_maximum_intensity), 0, 0, 1, 1},
   {&__pyx_n_s_mean_intensity, __pyx_k_mean_intensity, sizeof(__pyx_k_mean_intensity), 0, 0, 1, 1},
   {&__pyx_n_s_minimum_intensity, __pyx_k_minimum_intensity, sizeof(__pyx_k_minimum_intensity), 0, 0, 1, 1},
-  {&__pyx_n_s_modify_spots_image, __pyx_k_modify_spots_image, sizeof(__pyx_k_modify_spots_image), 0, 0, 1, 1},
   {&__pyx_kp_u_ndarray_is_not_C_contiguous, __pyx_k_ndarray_is_not_C_contiguous, sizeof(__pyx_k_ndarray_is_not_C_contiguous), 0, 1, 0, 0},
   {&__pyx_kp_u_ndarray_is_not_Fortran_contiguou, __pyx_k_ndarray_is_not_Fortran_contiguou, sizeof(__pyx_k_ndarray_is_not_Fortran_contiguou), 0, 1, 0, 0},
   {&__pyx_n_s_np, __pyx_k_np, sizeof(__pyx_k_np), 0, 0, 1, 1},
-  {&__pyx_n_s_num_threads, __pyx_k_num_threads, sizeof(__pyx_k_num_threads), 0, 0, 1, 1},
+  {&__pyx_n_s_num_threads_p, __pyx_k_num_threads_p, sizeof(__pyx_k_num_threads_p), 0, 0, 1, 1},
   {&__pyx_n_s_numpy, __pyx_k_numpy, sizeof(__pyx_k_numpy), 0, 0, 1, 1},
   {&__pyx_kp_s_numpy_core_multiarray_failed_to, __pyx_k_numpy_core_multiarray_failed_to, sizeof(__pyx_k_numpy_core_multiarray_failed_to), 0, 0, 1, 0},
   {&__pyx_kp_s_numpy_core_umath_failed_to_impor, __pyx_k_numpy_core_umath_failed_to_impor, sizeof(__pyx_k_numpy_core_umath_failed_to_impor), 0, 0, 1, 0},
   {&__pyx_n_s_plt, __pyx_k_plt, sizeof(__pyx_k_plt), 0, 0, 1, 1},
-  {&__pyx_n_s_print, __pyx_k_print, sizeof(__pyx_k_print), 0, 0, 1, 1},
   {&__pyx_n_s_pyplot, __pyx_k_pyplot, sizeof(__pyx_k_pyplot), 0, 0, 1, 1},
   {&__pyx_n_s_range, __pyx_k_range, sizeof(__pyx_k_range), 0, 0, 1, 1},
-  {&__pyx_n_s_sb_x1_vec, __pyx_k_sb_x1_vec, sizeof(__pyx_k_sb_x1_vec), 0, 0, 1, 1},
-  {&__pyx_n_s_sb_x2_vec, __pyx_k_sb_x2_vec, sizeof(__pyx_k_sb_x2_vec), 0, 0, 1, 1},
-  {&__pyx_n_s_sb_y1_vec, __pyx_k_sb_y1_vec, sizeof(__pyx_k_sb_y1_vec), 0, 0, 1, 1},
-  {&__pyx_n_s_sb_y2_vec, __pyx_k_sb_y2_vec, sizeof(__pyx_k_sb_y2_vec), 0, 0, 1, 1},
+  {&__pyx_n_s_round, __pyx_k_round, sizeof(__pyx_k_round), 0, 0, 1, 1},
+  {&__pyx_n_s_sb_bg_vec, __pyx_k_sb_bg_vec, sizeof(__pyx_k_sb_bg_vec), 0, 0, 1, 1},
+  {&__pyx_n_s_sb_half_width_p, __pyx_k_sb_half_width_p, sizeof(__pyx_k_sb_half_width_p), 0, 0, 1, 1},
+  {&__pyx_n_s_sb_x_vec, __pyx_k_sb_x_vec, sizeof(__pyx_k_sb_x_vec), 0, 0, 1, 1},
+  {&__pyx_n_s_sb_y_vec, __pyx_k_sb_y_vec, sizeof(__pyx_k_sb_y_vec), 0, 0, 1, 1},
   {&__pyx_n_s_spots_image, __pyx_k_spots_image, sizeof(__pyx_k_spots_image), 0, 0, 1, 1},
   {&__pyx_n_s_test, __pyx_k_test, sizeof(__pyx_k_test), 0, 0, 1, 1},
   {&__pyx_kp_u_unknown_dtype_code_in_numpy_pxd, __pyx_k_unknown_dtype_code_in_numpy_pxd, sizeof(__pyx_k_unknown_dtype_code_in_numpy_pxd), 0, 1, 0, 0},
@@ -5693,7 +6240,9 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {0, 0, 0, 0, 0, 0, 0}
 };
 static int __Pyx_InitCachedBuiltins(void) {
-  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 61, __pyx_L1_error)
+  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) __PYX_ERR(0, 92, __pyx_L1_error)
+  __pyx_builtin_round = __Pyx_GetBuiltinName(__pyx_n_s_round); if (!__pyx_builtin_round) __PYX_ERR(0, 103, __pyx_L1_error)
+  __pyx_builtin_exit = __Pyx_GetBuiltinName(__pyx_n_s_exit); if (!__pyx_builtin_exit) __PYX_ERR(0, 110, __pyx_L1_error)
   __pyx_builtin_ValueError = __Pyx_GetBuiltinName(__pyx_n_s_ValueError); if (!__pyx_builtin_ValueError) __PYX_ERR(1, 229, __pyx_L1_error)
   __pyx_builtin_RuntimeError = __Pyx_GetBuiltinName(__pyx_n_s_RuntimeError); if (!__pyx_builtin_RuntimeError) __PYX_ERR(1, 810, __pyx_L1_error)
   __pyx_builtin_ImportError = __Pyx_GetBuiltinName(__pyx_n_s_ImportError); if (!__pyx_builtin_ImportError) __PYX_ERR(1, 1000, __pyx_L1_error)
@@ -5706,6 +6255,78 @@ static int __Pyx_InitCachedConstants(void) {
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("__Pyx_InitCachedConstants", 0);
 
+  /* "centroid.pyx":88
+ *     # being altered; this is critical, as these represent the loop's search box
+ *     # centers and reference coordinates.
+ *     x_out[:] = sb_x_vec[:]             # <<<<<<<<<<<<<<
+ *     y_out[:] = sb_y_vec[:]
+ * 
+ */
+  __pyx_slice_ = PySlice_New(Py_None, Py_None, Py_None); if (unlikely(!__pyx_slice_)) __PYX_ERR(0, 88, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_slice_);
+  __Pyx_GIVEREF(__pyx_slice_);
+  __pyx_slice__2 = PySlice_New(Py_None, Py_None, Py_None); if (unlikely(!__pyx_slice__2)) __PYX_ERR(0, 88, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_slice__2);
+  __Pyx_GIVEREF(__pyx_slice__2);
+
+  /* "centroid.pyx":89
+ *     # centers and reference coordinates.
+ *     x_out[:] = sb_x_vec[:]
+ *     y_out[:] = sb_y_vec[:]             # <<<<<<<<<<<<<<
+ * 
+ *     # first, we iterate through the number of iterations
+ */
+  __pyx_slice__3 = PySlice_New(Py_None, Py_None, Py_None); if (unlikely(!__pyx_slice__3)) __PYX_ERR(0, 89, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_slice__3);
+  __Pyx_GIVEREF(__pyx_slice__3);
+  __pyx_slice__4 = PySlice_New(Py_None, Py_None, Py_None); if (unlikely(!__pyx_slice__4)) __PYX_ERR(0, 89, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_slice__4);
+  __Pyx_GIVEREF(__pyx_slice__4);
+
+  /* "centroid.pyx":110
+ *             if x1<0 or x2>sx-1 or y1<0 or y2>sy-1:
+ *                 printf("Search box x=(%ld,%ld),y=(%ld,%ld) extends beyond image edge. Possibly search box width too large.\n",x1,x2,y1,y2)
+ *                 exit(0)             # <<<<<<<<<<<<<<
+ * 
+ *             if x1>=x2 or y1>=y2:
+ */
+  __pyx_tuple__5 = PyTuple_Pack(1, __pyx_int_0); if (unlikely(!__pyx_tuple__5)) __PYX_ERR(0, 110, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__5);
+  __Pyx_GIVEREF(__pyx_tuple__5);
+
+  /* "centroid.pyx":114
+ *             if x1>=x2 or y1>=y2:
+ *                 printf("Search box x=(%ld,%ld),y=(%ld,%ld) too small. Possibly search box width too large, number of iterations too high, or iteration step size too high.\n",x1,x2,y1,y2)
+ *                 exit(0)             # <<<<<<<<<<<<<<
+ * 
+ *             background = sb_bg_vec[k_spot]
+ */
+  __pyx_tuple__6 = PyTuple_Pack(1, __pyx_int_0); if (unlikely(!__pyx_tuple__6)) __PYX_ERR(0, 114, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__6);
+  __Pyx_GIVEREF(__pyx_tuple__6);
+
+  /* "centroid.pyx":194
+ *         if x1<0 or x2>sx-1 or y1<0 or y2>sy-1:
+ *             printf("Search box x=(%ld,%ld),y=(%ld,%ld) extends beyond image edge. Possibly search box width too large.\n",x1,x2,y1,y2)
+ *             exit(0)             # <<<<<<<<<<<<<<
+ * 
+ *         if x1>=x2 or y1>=y2:
+ */
+  __pyx_tuple__7 = PyTuple_Pack(1, __pyx_int_0); if (unlikely(!__pyx_tuple__7)) __PYX_ERR(0, 194, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__7);
+  __Pyx_GIVEREF(__pyx_tuple__7);
+
+  /* "centroid.pyx":198
+ *         if x1>=x2 or y1>=y2:
+ *             printf("Search box x=(%ld,%ld),y=(%ld,%ld) too small. Possibly search box width too large, number of iterations too high, or iteration step size too high.\n",x1,x2,y1,y2)
+ *             exit(0)             # <<<<<<<<<<<<<<
+ * 
+ *         for x in range(x1,x2+1):
+ */
+  __pyx_tuple__8 = PyTuple_Pack(1, __pyx_int_0); if (unlikely(!__pyx_tuple__8)) __PYX_ERR(0, 198, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__8);
+  __Pyx_GIVEREF(__pyx_tuple__8);
+
   /* "../../../../miniconda2/lib/python2.7/site-packages/Cython/Includes/numpy/__init__.pxd":229
  *             if ((flags & pybuf.PyBUF_C_CONTIGUOUS == pybuf.PyBUF_C_CONTIGUOUS)
  *                 and not PyArray_CHKFLAGS(self, NPY_C_CONTIGUOUS)):
@@ -5713,9 +6334,9 @@ static int __Pyx_InitCachedConstants(void) {
  * 
  *             if ((flags & pybuf.PyBUF_F_CONTIGUOUS == pybuf.PyBUF_F_CONTIGUOUS)
  */
-  __pyx_tuple_ = PyTuple_Pack(1, __pyx_kp_u_ndarray_is_not_C_contiguous); if (unlikely(!__pyx_tuple_)) __PYX_ERR(1, 229, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple_);
-  __Pyx_GIVEREF(__pyx_tuple_);
+  __pyx_tuple__9 = PyTuple_Pack(1, __pyx_kp_u_ndarray_is_not_C_contiguous); if (unlikely(!__pyx_tuple__9)) __PYX_ERR(1, 229, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__9);
+  __Pyx_GIVEREF(__pyx_tuple__9);
 
   /* "../../../../miniconda2/lib/python2.7/site-packages/Cython/Includes/numpy/__init__.pxd":233
  *             if ((flags & pybuf.PyBUF_F_CONTIGUOUS == pybuf.PyBUF_F_CONTIGUOUS)
@@ -5724,9 +6345,9 @@ static int __Pyx_InitCachedConstants(void) {
  * 
  *             info.buf = PyArray_DATA(self)
  */
-  __pyx_tuple__2 = PyTuple_Pack(1, __pyx_kp_u_ndarray_is_not_Fortran_contiguou); if (unlikely(!__pyx_tuple__2)) __PYX_ERR(1, 233, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__2);
-  __Pyx_GIVEREF(__pyx_tuple__2);
+  __pyx_tuple__10 = PyTuple_Pack(1, __pyx_kp_u_ndarray_is_not_Fortran_contiguou); if (unlikely(!__pyx_tuple__10)) __PYX_ERR(1, 233, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__10);
+  __Pyx_GIVEREF(__pyx_tuple__10);
 
   /* "../../../../miniconda2/lib/python2.7/site-packages/Cython/Includes/numpy/__init__.pxd":263
  *                 if ((descr.byteorder == c'>' and little_endian) or
@@ -5735,9 +6356,9 @@ static int __Pyx_InitCachedConstants(void) {
  *                 if   t == NPY_BYTE:        f = "b"
  *                 elif t == NPY_UBYTE:       f = "B"
  */
-  __pyx_tuple__3 = PyTuple_Pack(1, __pyx_kp_u_Non_native_byte_order_not_suppor); if (unlikely(!__pyx_tuple__3)) __PYX_ERR(1, 263, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__3);
-  __Pyx_GIVEREF(__pyx_tuple__3);
+  __pyx_tuple__11 = PyTuple_Pack(1, __pyx_kp_u_Non_native_byte_order_not_suppor); if (unlikely(!__pyx_tuple__11)) __PYX_ERR(1, 263, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__11);
+  __Pyx_GIVEREF(__pyx_tuple__11);
 
   /* "../../../../miniconda2/lib/python2.7/site-packages/Cython/Includes/numpy/__init__.pxd":810
  * 
@@ -5746,9 +6367,9 @@ static int __Pyx_InitCachedConstants(void) {
  * 
  *         if ((child.byteorder == c'>' and little_endian) or
  */
-  __pyx_tuple__4 = PyTuple_Pack(1, __pyx_kp_u_Format_string_allocated_too_shor); if (unlikely(!__pyx_tuple__4)) __PYX_ERR(1, 810, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__4);
-  __Pyx_GIVEREF(__pyx_tuple__4);
+  __pyx_tuple__12 = PyTuple_Pack(1, __pyx_kp_u_Format_string_allocated_too_shor); if (unlikely(!__pyx_tuple__12)) __PYX_ERR(1, 810, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__12);
+  __Pyx_GIVEREF(__pyx_tuple__12);
 
   /* "../../../../miniconda2/lib/python2.7/site-packages/Cython/Includes/numpy/__init__.pxd":814
  *         if ((child.byteorder == c'>' and little_endian) or
@@ -5757,9 +6378,9 @@ static int __Pyx_InitCachedConstants(void) {
  *             # One could encode it in the format string and have Cython
  *             # complain instead, BUT: < and > in format strings also imply
  */
-  __pyx_tuple__5 = PyTuple_Pack(1, __pyx_kp_u_Non_native_byte_order_not_suppor); if (unlikely(!__pyx_tuple__5)) __PYX_ERR(1, 814, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__5);
-  __Pyx_GIVEREF(__pyx_tuple__5);
+  __pyx_tuple__13 = PyTuple_Pack(1, __pyx_kp_u_Non_native_byte_order_not_suppor); if (unlikely(!__pyx_tuple__13)) __PYX_ERR(1, 814, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__13);
+  __Pyx_GIVEREF(__pyx_tuple__13);
 
   /* "../../../../miniconda2/lib/python2.7/site-packages/Cython/Includes/numpy/__init__.pxd":834
  *             t = child.type_num
@@ -5768,9 +6389,9 @@ static int __Pyx_InitCachedConstants(void) {
  * 
  *             # Until ticket #99 is fixed, use integers to avoid warnings
  */
-  __pyx_tuple__6 = PyTuple_Pack(1, __pyx_kp_u_Format_string_allocated_too_shor_2); if (unlikely(!__pyx_tuple__6)) __PYX_ERR(1, 834, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__6);
-  __Pyx_GIVEREF(__pyx_tuple__6);
+  __pyx_tuple__14 = PyTuple_Pack(1, __pyx_kp_u_Format_string_allocated_too_shor_2); if (unlikely(!__pyx_tuple__14)) __PYX_ERR(1, 834, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__14);
+  __Pyx_GIVEREF(__pyx_tuple__14);
 
   /* "../../../../miniconda2/lib/python2.7/site-packages/Cython/Includes/numpy/__init__.pxd":1000
  *         _import_array()
@@ -5779,9 +6400,9 @@ static int __Pyx_InitCachedConstants(void) {
  * 
  * cdef inline int import_umath() except -1:
  */
-  __pyx_tuple__7 = PyTuple_Pack(1, __pyx_kp_s_numpy_core_multiarray_failed_to); if (unlikely(!__pyx_tuple__7)) __PYX_ERR(1, 1000, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__7);
-  __Pyx_GIVEREF(__pyx_tuple__7);
+  __pyx_tuple__15 = PyTuple_Pack(1, __pyx_kp_s_numpy_core_multiarray_failed_to); if (unlikely(!__pyx_tuple__15)) __PYX_ERR(1, 1000, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__15);
+  __Pyx_GIVEREF(__pyx_tuple__15);
 
   /* "../../../../miniconda2/lib/python2.7/site-packages/Cython/Includes/numpy/__init__.pxd":1006
  *         _import_umath()
@@ -5790,18 +6411,18 @@ static int __Pyx_InitCachedConstants(void) {
  * 
  * cdef inline int import_ufunc() except -1:
  */
-  __pyx_tuple__8 = PyTuple_Pack(1, __pyx_kp_s_numpy_core_umath_failed_to_impor); if (unlikely(!__pyx_tuple__8)) __PYX_ERR(1, 1006, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__8);
-  __Pyx_GIVEREF(__pyx_tuple__8);
+  __pyx_tuple__16 = PyTuple_Pack(1, __pyx_kp_s_numpy_core_umath_failed_to_impor); if (unlikely(!__pyx_tuple__16)) __PYX_ERR(1, 1006, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__16);
+  __Pyx_GIVEREF(__pyx_tuple__16);
 
   /* "../../../../miniconda2/lib/python2.7/site-packages/Cython/Includes/numpy/__init__.pxd":1012
  *         _import_umath()
  *     except Exception:
  *         raise ImportError("numpy.core.umath failed to import")             # <<<<<<<<<<<<<<
  */
-  __pyx_tuple__9 = PyTuple_Pack(1, __pyx_kp_s_numpy_core_umath_failed_to_impor); if (unlikely(!__pyx_tuple__9)) __PYX_ERR(1, 1012, __pyx_L1_error)
-  __Pyx_GOTREF(__pyx_tuple__9);
-  __Pyx_GIVEREF(__pyx_tuple__9);
+  __pyx_tuple__17 = PyTuple_Pack(1, __pyx_kp_s_numpy_core_umath_failed_to_impor); if (unlikely(!__pyx_tuple__17)) __PYX_ERR(1, 1012, __pyx_L1_error)
+  __Pyx_GOTREF(__pyx_tuple__17);
+  __Pyx_GIVEREF(__pyx_tuple__17);
   __Pyx_RefNannyFinishContext();
   return 0;
   __pyx_L1_error:;
@@ -5818,8 +6439,8 @@ PyEval_InitThreads();
 if (unlikely(PyErr_Occurred())) __PYX_ERR(0, 1, __pyx_L1_error)
 
   if (__Pyx_InitStrings(__pyx_string_tab) < 0) __PYX_ERR(0, 1, __pyx_L1_error);
-  __pyx_float_0_0 = PyFloat_FromDouble(0.0); if (unlikely(!__pyx_float_0_0)) __PYX_ERR(0, 1, __pyx_L1_error)
-  __pyx_int_4 = PyInt_FromLong(4); if (unlikely(!__pyx_int_4)) __PYX_ERR(0, 1, __pyx_L1_error)
+  __pyx_int_0 = PyInt_FromLong(0); if (unlikely(!__pyx_int_0)) __PYX_ERR(0, 1, __pyx_L1_error)
+  __pyx_int_1 = PyInt_FromLong(1); if (unlikely(!__pyx_int_1)) __PYX_ERR(0, 1, __pyx_L1_error)
   return 0;
   __pyx_L1_error:;
   return -1;
@@ -6758,45 +7379,344 @@ fail:;
   return -1;
 }
 
-/* pyobject_as_double */
-  static double __Pyx__PyObject_AsDouble(PyObject* obj) {
-    PyObject* float_value;
-#if !CYTHON_USE_TYPE_SLOTS
-    float_value = PyNumber_Float(obj);  if (0) goto bad;
-#else
-    PyNumberMethods *nb = Py_TYPE(obj)->tp_as_number;
-    if (likely(nb) && likely(nb->nb_float)) {
-        float_value = nb->nb_float(obj);
-        if (likely(float_value) && unlikely(!PyFloat_Check(float_value))) {
-            PyErr_Format(PyExc_TypeError,
-                "__float__ returned non-float (type %.200s)",
-                Py_TYPE(float_value)->tp_name);
-            Py_DECREF(float_value);
-            goto bad;
-        }
-    } else if (PyUnicode_CheckExact(obj) || PyBytes_CheckExact(obj)) {
-#if PY_MAJOR_VERSION >= 3
-        float_value = PyFloat_FromString(obj);
-#else
-        float_value = PyFloat_FromString(obj, 0);
-#endif
-    } else {
-        PyObject* args = PyTuple_New(1);
-        if (unlikely(!args)) goto bad;
-        PyTuple_SET_ITEM(args, 0, obj);
-        float_value = PyObject_Call((PyObject*)&PyFloat_Type, args, 0);
-        PyTuple_SET_ITEM(args, 0, 0);
-        Py_DECREF(args);
-    }
-#endif
-    if (likely(float_value)) {
-        double value = PyFloat_AS_DOUBLE(float_value);
-        Py_DECREF(float_value);
-        return value;
-    }
-bad:
-    return (double)-1;
+/* GetItemInt */
+  static PyObject *__Pyx_GetItemInt_Generic(PyObject *o, PyObject* j) {
+    PyObject *r;
+    if (!j) return NULL;
+    r = PyObject_GetItem(o, j);
+    Py_DECREF(j);
+    return r;
 }
+static CYTHON_INLINE PyObject *__Pyx_GetItemInt_List_Fast(PyObject *o, Py_ssize_t i,
+                                                              CYTHON_NCP_UNUSED int wraparound,
+                                                              CYTHON_NCP_UNUSED int boundscheck) {
+#if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
+    Py_ssize_t wrapped_i = i;
+    if (wraparound & unlikely(i < 0)) {
+        wrapped_i += PyList_GET_SIZE(o);
+    }
+    if ((!boundscheck) || likely((0 <= wrapped_i) & (wrapped_i < PyList_GET_SIZE(o)))) {
+        PyObject *r = PyList_GET_ITEM(o, wrapped_i);
+        Py_INCREF(r);
+        return r;
+    }
+    return __Pyx_GetItemInt_Generic(o, PyInt_FromSsize_t(i));
+#else
+    return PySequence_GetItem(o, i);
+#endif
+}
+static CYTHON_INLINE PyObject *__Pyx_GetItemInt_Tuple_Fast(PyObject *o, Py_ssize_t i,
+                                                              CYTHON_NCP_UNUSED int wraparound,
+                                                              CYTHON_NCP_UNUSED int boundscheck) {
+#if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS
+    Py_ssize_t wrapped_i = i;
+    if (wraparound & unlikely(i < 0)) {
+        wrapped_i += PyTuple_GET_SIZE(o);
+    }
+    if ((!boundscheck) || likely((0 <= wrapped_i) & (wrapped_i < PyTuple_GET_SIZE(o)))) {
+        PyObject *r = PyTuple_GET_ITEM(o, wrapped_i);
+        Py_INCREF(r);
+        return r;
+    }
+    return __Pyx_GetItemInt_Generic(o, PyInt_FromSsize_t(i));
+#else
+    return PySequence_GetItem(o, i);
+#endif
+}
+static CYTHON_INLINE PyObject *__Pyx_GetItemInt_Fast(PyObject *o, Py_ssize_t i, int is_list,
+                                                     CYTHON_NCP_UNUSED int wraparound,
+                                                     CYTHON_NCP_UNUSED int boundscheck) {
+#if CYTHON_ASSUME_SAFE_MACROS && !CYTHON_AVOID_BORROWED_REFS && CYTHON_USE_TYPE_SLOTS
+    if (is_list || PyList_CheckExact(o)) {
+        Py_ssize_t n = ((!wraparound) | likely(i >= 0)) ? i : i + PyList_GET_SIZE(o);
+        if ((!boundscheck) || (likely((n >= 0) & (n < PyList_GET_SIZE(o))))) {
+            PyObject *r = PyList_GET_ITEM(o, n);
+            Py_INCREF(r);
+            return r;
+        }
+    }
+    else if (PyTuple_CheckExact(o)) {
+        Py_ssize_t n = ((!wraparound) | likely(i >= 0)) ? i : i + PyTuple_GET_SIZE(o);
+        if ((!boundscheck) || likely((n >= 0) & (n < PyTuple_GET_SIZE(o)))) {
+            PyObject *r = PyTuple_GET_ITEM(o, n);
+            Py_INCREF(r);
+            return r;
+        }
+    } else {
+        PySequenceMethods *m = Py_TYPE(o)->tp_as_sequence;
+        if (likely(m && m->sq_item)) {
+            if (wraparound && unlikely(i < 0) && likely(m->sq_length)) {
+                Py_ssize_t l = m->sq_length(o);
+                if (likely(l >= 0)) {
+                    i += l;
+                } else {
+                    if (!PyErr_ExceptionMatches(PyExc_OverflowError))
+                        return NULL;
+                    PyErr_Clear();
+                }
+            }
+            return m->sq_item(o, i);
+        }
+    }
+#else
+    if (is_list || PySequence_Check(o)) {
+        return PySequence_GetItem(o, i);
+    }
+#endif
+    return __Pyx_GetItemInt_Generic(o, PyInt_FromSsize_t(i));
+}
+
+/* ObjectGetItem */
+  #if CYTHON_USE_TYPE_SLOTS
+static PyObject *__Pyx_PyObject_GetIndex(PyObject *obj, PyObject* index) {
+    PyObject *runerr;
+    Py_ssize_t key_value;
+    PySequenceMethods *m = Py_TYPE(obj)->tp_as_sequence;
+    if (unlikely(!(m && m->sq_item))) {
+        PyErr_Format(PyExc_TypeError, "'%.200s' object is not subscriptable", Py_TYPE(obj)->tp_name);
+        return NULL;
+    }
+    key_value = __Pyx_PyIndex_AsSsize_t(index);
+    if (likely(key_value != -1 || !(runerr = PyErr_Occurred()))) {
+        return __Pyx_GetItemInt_Fast(obj, key_value, 0, 1, 1);
+    }
+    if (PyErr_GivenExceptionMatches(runerr, PyExc_OverflowError)) {
+        PyErr_Clear();
+        PyErr_Format(PyExc_IndexError, "cannot fit '%.200s' into an index-sized integer", Py_TYPE(index)->tp_name);
+    }
+    return NULL;
+}
+static PyObject *__Pyx_PyObject_GetItem(PyObject *obj, PyObject* key) {
+    PyMappingMethods *m = Py_TYPE(obj)->tp_as_mapping;
+    if (likely(m && m->mp_subscript)) {
+        return m->mp_subscript(obj, key);
+    }
+    return __Pyx_PyObject_GetIndex(obj, key);
+}
+#endif
+
+/* PyCFunctionFastCall */
+  #if CYTHON_FAST_PYCCALL
+static CYTHON_INLINE PyObject * __Pyx_PyCFunction_FastCall(PyObject *func_obj, PyObject **args, Py_ssize_t nargs) {
+    PyCFunctionObject *func = (PyCFunctionObject*)func_obj;
+    PyCFunction meth = PyCFunction_GET_FUNCTION(func);
+    PyObject *self = PyCFunction_GET_SELF(func);
+    int flags = PyCFunction_GET_FLAGS(func);
+    assert(PyCFunction_Check(func));
+    assert(METH_FASTCALL == (flags & ~(METH_CLASS | METH_STATIC | METH_COEXIST | METH_KEYWORDS)));
+    assert(nargs >= 0);
+    assert(nargs == 0 || args != NULL);
+    /* _PyCFunction_FastCallDict() must not be called with an exception set,
+       because it may clear it (directly or indirectly) and so the
+       caller loses its exception */
+    assert(!PyErr_Occurred());
+    if ((PY_VERSION_HEX < 0x030700A0) || unlikely(flags & METH_KEYWORDS)) {
+        return (*((__Pyx_PyCFunctionFastWithKeywords)meth)) (self, args, nargs, NULL);
+    } else {
+        return (*((__Pyx_PyCFunctionFast)meth)) (self, args, nargs);
+    }
+}
+#endif
+
+/* PyFunctionFastCall */
+  #if CYTHON_FAST_PYCALL
+#include "frameobject.h"
+static PyObject* __Pyx_PyFunction_FastCallNoKw(PyCodeObject *co, PyObject **args, Py_ssize_t na,
+                                               PyObject *globals) {
+    PyFrameObject *f;
+    PyThreadState *tstate = __Pyx_PyThreadState_Current;
+    PyObject **fastlocals;
+    Py_ssize_t i;
+    PyObject *result;
+    assert(globals != NULL);
+    /* XXX Perhaps we should create a specialized
+       PyFrame_New() that doesn't take locals, but does
+       take builtins without sanity checking them.
+       */
+    assert(tstate != NULL);
+    f = PyFrame_New(tstate, co, globals, NULL);
+    if (f == NULL) {
+        return NULL;
+    }
+    fastlocals = f->f_localsplus;
+    for (i = 0; i < na; i++) {
+        Py_INCREF(*args);
+        fastlocals[i] = *args++;
+    }
+    result = PyEval_EvalFrameEx(f,0);
+    ++tstate->recursion_depth;
+    Py_DECREF(f);
+    --tstate->recursion_depth;
+    return result;
+}
+#if 1 || PY_VERSION_HEX < 0x030600B1
+static PyObject *__Pyx_PyFunction_FastCallDict(PyObject *func, PyObject **args, int nargs, PyObject *kwargs) {
+    PyCodeObject *co = (PyCodeObject *)PyFunction_GET_CODE(func);
+    PyObject *globals = PyFunction_GET_GLOBALS(func);
+    PyObject *argdefs = PyFunction_GET_DEFAULTS(func);
+    PyObject *closure;
+#if PY_MAJOR_VERSION >= 3
+    PyObject *kwdefs;
+#endif
+    PyObject *kwtuple, **k;
+    PyObject **d;
+    Py_ssize_t nd;
+    Py_ssize_t nk;
+    PyObject *result;
+    assert(kwargs == NULL || PyDict_Check(kwargs));
+    nk = kwargs ? PyDict_Size(kwargs) : 0;
+    if (Py_EnterRecursiveCall((char*)" while calling a Python object")) {
+        return NULL;
+    }
+    if (
+#if PY_MAJOR_VERSION >= 3
+            co->co_kwonlyargcount == 0 &&
+#endif
+            likely(kwargs == NULL || nk == 0) &&
+            co->co_flags == (CO_OPTIMIZED | CO_NEWLOCALS | CO_NOFREE)) {
+        if (argdefs == NULL && co->co_argcount == nargs) {
+            result = __Pyx_PyFunction_FastCallNoKw(co, args, nargs, globals);
+            goto done;
+        }
+        else if (nargs == 0 && argdefs != NULL
+                 && co->co_argcount == Py_SIZE(argdefs)) {
+            /* function called with no arguments, but all parameters have
+               a default value: use default values as arguments .*/
+            args = &PyTuple_GET_ITEM(argdefs, 0);
+            result =__Pyx_PyFunction_FastCallNoKw(co, args, Py_SIZE(argdefs), globals);
+            goto done;
+        }
+    }
+    if (kwargs != NULL) {
+        Py_ssize_t pos, i;
+        kwtuple = PyTuple_New(2 * nk);
+        if (kwtuple == NULL) {
+            result = NULL;
+            goto done;
+        }
+        k = &PyTuple_GET_ITEM(kwtuple, 0);
+        pos = i = 0;
+        while (PyDict_Next(kwargs, &pos, &k[i], &k[i+1])) {
+            Py_INCREF(k[i]);
+            Py_INCREF(k[i+1]);
+            i += 2;
+        }
+        nk = i / 2;
+    }
+    else {
+        kwtuple = NULL;
+        k = NULL;
+    }
+    closure = PyFunction_GET_CLOSURE(func);
+#if PY_MAJOR_VERSION >= 3
+    kwdefs = PyFunction_GET_KW_DEFAULTS(func);
+#endif
+    if (argdefs != NULL) {
+        d = &PyTuple_GET_ITEM(argdefs, 0);
+        nd = Py_SIZE(argdefs);
+    }
+    else {
+        d = NULL;
+        nd = 0;
+    }
+#if PY_MAJOR_VERSION >= 3
+    result = PyEval_EvalCodeEx((PyObject*)co, globals, (PyObject *)NULL,
+                               args, nargs,
+                               k, (int)nk,
+                               d, (int)nd, kwdefs, closure);
+#else
+    result = PyEval_EvalCodeEx(co, globals, (PyObject *)NULL,
+                               args, nargs,
+                               k, (int)nk,
+                               d, (int)nd, closure);
+#endif
+    Py_XDECREF(kwtuple);
+done:
+    Py_LeaveRecursiveCall();
+    return result;
+}
+#endif
+#endif
+
+/* PyObjectCall */
+  #if CYTHON_COMPILING_IN_CPYTHON
+static CYTHON_INLINE PyObject* __Pyx_PyObject_Call(PyObject *func, PyObject *arg, PyObject *kw) {
+    PyObject *result;
+    ternaryfunc call = func->ob_type->tp_call;
+    if (unlikely(!call))
+        return PyObject_Call(func, arg, kw);
+    if (unlikely(Py_EnterRecursiveCall((char*)" while calling a Python object")))
+        return NULL;
+    result = (*call)(func, arg, kw);
+    Py_LeaveRecursiveCall();
+    if (unlikely(!result) && unlikely(!PyErr_Occurred())) {
+        PyErr_SetString(
+            PyExc_SystemError,
+            "NULL result without error in PyObject_Call");
+    }
+    return result;
+}
+#endif
+
+/* PyObjectCallMethO */
+  #if CYTHON_COMPILING_IN_CPYTHON
+static CYTHON_INLINE PyObject* __Pyx_PyObject_CallMethO(PyObject *func, PyObject *arg) {
+    PyObject *self, *result;
+    PyCFunction cfunc;
+    cfunc = PyCFunction_GET_FUNCTION(func);
+    self = PyCFunction_GET_SELF(func);
+    if (unlikely(Py_EnterRecursiveCall((char*)" while calling a Python object")))
+        return NULL;
+    result = cfunc(self, arg);
+    Py_LeaveRecursiveCall();
+    if (unlikely(!result) && unlikely(!PyErr_Occurred())) {
+        PyErr_SetString(
+            PyExc_SystemError,
+            "NULL result without error in PyObject_Call");
+    }
+    return result;
+}
+#endif
+
+/* PyObjectCallOneArg */
+  #if CYTHON_COMPILING_IN_CPYTHON
+static PyObject* __Pyx__PyObject_CallOneArg(PyObject *func, PyObject *arg) {
+    PyObject *result;
+    PyObject *args = PyTuple_New(1);
+    if (unlikely(!args)) return NULL;
+    Py_INCREF(arg);
+    PyTuple_SET_ITEM(args, 0, arg);
+    result = __Pyx_PyObject_Call(func, args, NULL);
+    Py_DECREF(args);
+    return result;
+}
+static CYTHON_INLINE PyObject* __Pyx_PyObject_CallOneArg(PyObject *func, PyObject *arg) {
+#if CYTHON_FAST_PYCALL
+    if (PyFunction_Check(func)) {
+        return __Pyx_PyFunction_FastCall(func, &arg, 1);
+    }
+#endif
+    if (likely(PyCFunction_Check(func))) {
+        if (likely(PyCFunction_GET_FLAGS(func) & METH_O)) {
+            return __Pyx_PyObject_CallMethO(func, arg);
+#if CYTHON_FAST_PYCCALL
+        } else if (PyCFunction_GET_FLAGS(func) & METH_FASTCALL) {
+            return __Pyx_PyCFunction_FastCall(func, &arg, 1);
+#endif
+        }
+    }
+    return __Pyx__PyObject_CallOneArg(func, arg);
+}
+#else
+static CYTHON_INLINE PyObject* __Pyx_PyObject_CallOneArg(PyObject *func, PyObject *arg) {
+    PyObject *result;
+    PyObject *args = PyTuple_Pack(1, arg);
+    if (unlikely(!args)) return NULL;
+    result = __Pyx_PyObject_Call(func, args, NULL);
+    Py_DECREF(args);
+    return result;
+}
+#endif
 
 /* PyErrFetchRestore */
   #if CYTHON_FAST_THREAD_STATE
@@ -6985,26 +7905,6 @@ bad:
     return 0;
 }
 
-/* PyObjectCall */
-  #if CYTHON_COMPILING_IN_CPYTHON
-static CYTHON_INLINE PyObject* __Pyx_PyObject_Call(PyObject *func, PyObject *arg, PyObject *kw) {
-    PyObject *result;
-    ternaryfunc call = func->ob_type->tp_call;
-    if (unlikely(!call))
-        return PyObject_Call(func, arg, kw);
-    if (unlikely(Py_EnterRecursiveCall((char*)" while calling a Python object")))
-        return NULL;
-    result = (*call)(func, arg, kw);
-    Py_LeaveRecursiveCall();
-    if (unlikely(!result) && unlikely(!PyErr_Occurred())) {
-        PyErr_SetString(
-            PyExc_SystemError,
-            "NULL result without error in PyObject_Call");
-    }
-    return result;
-}
-#endif
-
 /* RaiseException */
   #if PY_MAJOR_VERSION < 3
 static void __Pyx_Raise(PyObject *type, PyObject *value, PyObject *tb,
@@ -7161,209 +8061,6 @@ static void __Pyx_Raise(PyObject *type, PyObject *value, PyObject *tb, PyObject 
 bad:
     Py_XDECREF(owned_instance);
     return;
-}
-#endif
-
-/* PyCFunctionFastCall */
-  #if CYTHON_FAST_PYCCALL
-static CYTHON_INLINE PyObject * __Pyx_PyCFunction_FastCall(PyObject *func_obj, PyObject **args, Py_ssize_t nargs) {
-    PyCFunctionObject *func = (PyCFunctionObject*)func_obj;
-    PyCFunction meth = PyCFunction_GET_FUNCTION(func);
-    PyObject *self = PyCFunction_GET_SELF(func);
-    int flags = PyCFunction_GET_FLAGS(func);
-    assert(PyCFunction_Check(func));
-    assert(METH_FASTCALL == (flags & ~(METH_CLASS | METH_STATIC | METH_COEXIST | METH_KEYWORDS)));
-    assert(nargs >= 0);
-    assert(nargs == 0 || args != NULL);
-    /* _PyCFunction_FastCallDict() must not be called with an exception set,
-       because it may clear it (directly or indirectly) and so the
-       caller loses its exception */
-    assert(!PyErr_Occurred());
-    if ((PY_VERSION_HEX < 0x030700A0) || unlikely(flags & METH_KEYWORDS)) {
-        return (*((__Pyx_PyCFunctionFastWithKeywords)meth)) (self, args, nargs, NULL);
-    } else {
-        return (*((__Pyx_PyCFunctionFast)meth)) (self, args, nargs);
-    }
-}
-#endif
-
-/* PyFunctionFastCall */
-  #if CYTHON_FAST_PYCALL
-#include "frameobject.h"
-static PyObject* __Pyx_PyFunction_FastCallNoKw(PyCodeObject *co, PyObject **args, Py_ssize_t na,
-                                               PyObject *globals) {
-    PyFrameObject *f;
-    PyThreadState *tstate = __Pyx_PyThreadState_Current;
-    PyObject **fastlocals;
-    Py_ssize_t i;
-    PyObject *result;
-    assert(globals != NULL);
-    /* XXX Perhaps we should create a specialized
-       PyFrame_New() that doesn't take locals, but does
-       take builtins without sanity checking them.
-       */
-    assert(tstate != NULL);
-    f = PyFrame_New(tstate, co, globals, NULL);
-    if (f == NULL) {
-        return NULL;
-    }
-    fastlocals = f->f_localsplus;
-    for (i = 0; i < na; i++) {
-        Py_INCREF(*args);
-        fastlocals[i] = *args++;
-    }
-    result = PyEval_EvalFrameEx(f,0);
-    ++tstate->recursion_depth;
-    Py_DECREF(f);
-    --tstate->recursion_depth;
-    return result;
-}
-#if 1 || PY_VERSION_HEX < 0x030600B1
-static PyObject *__Pyx_PyFunction_FastCallDict(PyObject *func, PyObject **args, int nargs, PyObject *kwargs) {
-    PyCodeObject *co = (PyCodeObject *)PyFunction_GET_CODE(func);
-    PyObject *globals = PyFunction_GET_GLOBALS(func);
-    PyObject *argdefs = PyFunction_GET_DEFAULTS(func);
-    PyObject *closure;
-#if PY_MAJOR_VERSION >= 3
-    PyObject *kwdefs;
-#endif
-    PyObject *kwtuple, **k;
-    PyObject **d;
-    Py_ssize_t nd;
-    Py_ssize_t nk;
-    PyObject *result;
-    assert(kwargs == NULL || PyDict_Check(kwargs));
-    nk = kwargs ? PyDict_Size(kwargs) : 0;
-    if (Py_EnterRecursiveCall((char*)" while calling a Python object")) {
-        return NULL;
-    }
-    if (
-#if PY_MAJOR_VERSION >= 3
-            co->co_kwonlyargcount == 0 &&
-#endif
-            likely(kwargs == NULL || nk == 0) &&
-            co->co_flags == (CO_OPTIMIZED | CO_NEWLOCALS | CO_NOFREE)) {
-        if (argdefs == NULL && co->co_argcount == nargs) {
-            result = __Pyx_PyFunction_FastCallNoKw(co, args, nargs, globals);
-            goto done;
-        }
-        else if (nargs == 0 && argdefs != NULL
-                 && co->co_argcount == Py_SIZE(argdefs)) {
-            /* function called with no arguments, but all parameters have
-               a default value: use default values as arguments .*/
-            args = &PyTuple_GET_ITEM(argdefs, 0);
-            result =__Pyx_PyFunction_FastCallNoKw(co, args, Py_SIZE(argdefs), globals);
-            goto done;
-        }
-    }
-    if (kwargs != NULL) {
-        Py_ssize_t pos, i;
-        kwtuple = PyTuple_New(2 * nk);
-        if (kwtuple == NULL) {
-            result = NULL;
-            goto done;
-        }
-        k = &PyTuple_GET_ITEM(kwtuple, 0);
-        pos = i = 0;
-        while (PyDict_Next(kwargs, &pos, &k[i], &k[i+1])) {
-            Py_INCREF(k[i]);
-            Py_INCREF(k[i+1]);
-            i += 2;
-        }
-        nk = i / 2;
-    }
-    else {
-        kwtuple = NULL;
-        k = NULL;
-    }
-    closure = PyFunction_GET_CLOSURE(func);
-#if PY_MAJOR_VERSION >= 3
-    kwdefs = PyFunction_GET_KW_DEFAULTS(func);
-#endif
-    if (argdefs != NULL) {
-        d = &PyTuple_GET_ITEM(argdefs, 0);
-        nd = Py_SIZE(argdefs);
-    }
-    else {
-        d = NULL;
-        nd = 0;
-    }
-#if PY_MAJOR_VERSION >= 3
-    result = PyEval_EvalCodeEx((PyObject*)co, globals, (PyObject *)NULL,
-                               args, nargs,
-                               k, (int)nk,
-                               d, (int)nd, kwdefs, closure);
-#else
-    result = PyEval_EvalCodeEx(co, globals, (PyObject *)NULL,
-                               args, nargs,
-                               k, (int)nk,
-                               d, (int)nd, closure);
-#endif
-    Py_XDECREF(kwtuple);
-done:
-    Py_LeaveRecursiveCall();
-    return result;
-}
-#endif
-#endif
-
-/* PyObjectCallMethO */
-  #if CYTHON_COMPILING_IN_CPYTHON
-static CYTHON_INLINE PyObject* __Pyx_PyObject_CallMethO(PyObject *func, PyObject *arg) {
-    PyObject *self, *result;
-    PyCFunction cfunc;
-    cfunc = PyCFunction_GET_FUNCTION(func);
-    self = PyCFunction_GET_SELF(func);
-    if (unlikely(Py_EnterRecursiveCall((char*)" while calling a Python object")))
-        return NULL;
-    result = cfunc(self, arg);
-    Py_LeaveRecursiveCall();
-    if (unlikely(!result) && unlikely(!PyErr_Occurred())) {
-        PyErr_SetString(
-            PyExc_SystemError,
-            "NULL result without error in PyObject_Call");
-    }
-    return result;
-}
-#endif
-
-/* PyObjectCallOneArg */
-  #if CYTHON_COMPILING_IN_CPYTHON
-static PyObject* __Pyx__PyObject_CallOneArg(PyObject *func, PyObject *arg) {
-    PyObject *result;
-    PyObject *args = PyTuple_New(1);
-    if (unlikely(!args)) return NULL;
-    Py_INCREF(arg);
-    PyTuple_SET_ITEM(args, 0, arg);
-    result = __Pyx_PyObject_Call(func, args, NULL);
-    Py_DECREF(args);
-    return result;
-}
-static CYTHON_INLINE PyObject* __Pyx_PyObject_CallOneArg(PyObject *func, PyObject *arg) {
-#if CYTHON_FAST_PYCALL
-    if (PyFunction_Check(func)) {
-        return __Pyx_PyFunction_FastCall(func, &arg, 1);
-    }
-#endif
-    if (likely(PyCFunction_Check(func))) {
-        if (likely(PyCFunction_GET_FLAGS(func) & METH_O)) {
-            return __Pyx_PyObject_CallMethO(func, arg);
-#if CYTHON_FAST_PYCCALL
-        } else if (PyCFunction_GET_FLAGS(func) & METH_FASTCALL) {
-            return __Pyx_PyCFunction_FastCall(func, &arg, 1);
-#endif
-        }
-    }
-    return __Pyx__PyObject_CallOneArg(func, arg);
-}
-#else
-static CYTHON_INLINE PyObject* __Pyx_PyObject_CallOneArg(PyObject *func, PyObject *arg) {
-    PyObject *result;
-    PyObject *args = PyTuple_Pack(1, arg);
-    if (unlikely(!args)) return NULL;
-    result = __Pyx_PyObject_Call(func, args, NULL);
-    Py_DECREF(args);
-    return result;
 }
 #endif
 
@@ -7941,143 +8638,6 @@ static void __Pyx_ReleaseBuffer(Py_buffer *view) {
     }
 }
 
-/* CIntToPy */
-    static CYTHON_INLINE PyObject* __Pyx_PyInt_From_long(long value) {
-    const long neg_one = (long) -1, const_zero = (long) 0;
-    const int is_unsigned = neg_one > const_zero;
-    if (is_unsigned) {
-        if (sizeof(long) < sizeof(long)) {
-            return PyInt_FromLong((long) value);
-        } else if (sizeof(long) <= sizeof(unsigned long)) {
-            return PyLong_FromUnsignedLong((unsigned long) value);
-#ifdef HAVE_LONG_LONG
-        } else if (sizeof(long) <= sizeof(unsigned PY_LONG_LONG)) {
-            return PyLong_FromUnsignedLongLong((unsigned PY_LONG_LONG) value);
-#endif
-        }
-    } else {
-        if (sizeof(long) <= sizeof(long)) {
-            return PyInt_FromLong((long) value);
-#ifdef HAVE_LONG_LONG
-        } else if (sizeof(long) <= sizeof(PY_LONG_LONG)) {
-            return PyLong_FromLongLong((PY_LONG_LONG) value);
-#endif
-        }
-    }
-    {
-        int one = 1; int little = (int)*(unsigned char *)&one;
-        unsigned char *bytes = (unsigned char *)&value;
-        return _PyLong_FromByteArray(bytes, sizeof(long),
-                                     little, !is_unsigned);
-    }
-}
-
-/* Print */
-    #if !CYTHON_COMPILING_IN_PYPY && PY_MAJOR_VERSION < 3
-static PyObject *__Pyx_GetStdout(void) {
-    PyObject *f = PySys_GetObject((char *)"stdout");
-    if (!f) {
-        PyErr_SetString(PyExc_RuntimeError, "lost sys.stdout");
-    }
-    return f;
-}
-static int __Pyx_Print(PyObject* f, PyObject *arg_tuple, int newline) {
-    int i;
-    if (!f) {
-        if (!(f = __Pyx_GetStdout()))
-            return -1;
-    }
-    Py_INCREF(f);
-    for (i=0; i < PyTuple_GET_SIZE(arg_tuple); i++) {
-        PyObject* v;
-        if (PyFile_SoftSpace(f, 1)) {
-            if (PyFile_WriteString(" ", f) < 0)
-                goto error;
-        }
-        v = PyTuple_GET_ITEM(arg_tuple, i);
-        if (PyFile_WriteObject(v, f, Py_PRINT_RAW) < 0)
-            goto error;
-        if (PyString_Check(v)) {
-            char *s = PyString_AsString(v);
-            Py_ssize_t len = PyString_Size(v);
-            if (len > 0) {
-                switch (s[len-1]) {
-                    case ' ': break;
-                    case '\f': case '\r': case '\n': case '\t': case '\v':
-                        PyFile_SoftSpace(f, 0);
-                        break;
-                    default:  break;
-                }
-            }
-        }
-    }
-    if (newline) {
-        if (PyFile_WriteString("\n", f) < 0)
-            goto error;
-        PyFile_SoftSpace(f, 0);
-    }
-    Py_DECREF(f);
-    return 0;
-error:
-    Py_DECREF(f);
-    return -1;
-}
-#else
-static int __Pyx_Print(PyObject* stream, PyObject *arg_tuple, int newline) {
-    PyObject* kwargs = 0;
-    PyObject* result = 0;
-    PyObject* end_string;
-    if (unlikely(!__pyx_print)) {
-        __pyx_print = PyObject_GetAttr(__pyx_b, __pyx_n_s_print);
-        if (!__pyx_print)
-            return -1;
-    }
-    if (stream) {
-        kwargs = PyDict_New();
-        if (unlikely(!kwargs))
-            return -1;
-        if (unlikely(PyDict_SetItem(kwargs, __pyx_n_s_file, stream) < 0))
-            goto bad;
-        if (!newline) {
-            end_string = PyUnicode_FromStringAndSize(" ", 1);
-            if (unlikely(!end_string))
-                goto bad;
-            if (PyDict_SetItem(kwargs, __pyx_n_s_end, end_string) < 0) {
-                Py_DECREF(end_string);
-                goto bad;
-            }
-            Py_DECREF(end_string);
-        }
-    } else if (!newline) {
-        if (unlikely(!__pyx_print_kwargs)) {
-            __pyx_print_kwargs = PyDict_New();
-            if (unlikely(!__pyx_print_kwargs))
-                return -1;
-            end_string = PyUnicode_FromStringAndSize(" ", 1);
-            if (unlikely(!end_string))
-                return -1;
-            if (PyDict_SetItem(__pyx_print_kwargs, __pyx_n_s_end, end_string) < 0) {
-                Py_DECREF(end_string);
-                return -1;
-            }
-            Py_DECREF(end_string);
-        }
-        kwargs = __pyx_print_kwargs;
-    }
-    result = PyObject_Call(__pyx_print, arg_tuple, kwargs);
-    if (unlikely(kwargs) && (kwargs != __pyx_print_kwargs))
-        Py_DECREF(kwargs);
-    if (!result)
-        return -1;
-    Py_DECREF(result);
-    return 0;
-bad:
-    if (kwargs != __pyx_print_kwargs)
-        Py_XDECREF(kwargs);
-    return -1;
-}
-#endif
-
 /* Declarations */
     #if CYTHON_CCOMPLEX
   #ifdef __cplusplus
@@ -8639,43 +9199,6 @@ raise_neg_overflow:
     return (npy_long) -1;
 }
 
-/* PrintOne */
-    #if !CYTHON_COMPILING_IN_PYPY && PY_MAJOR_VERSION < 3
-static int __Pyx_PrintOne(PyObject* f, PyObject *o) {
-    if (!f) {
-        if (!(f = __Pyx_GetStdout()))
-            return -1;
-    }
-    Py_INCREF(f);
-    if (PyFile_SoftSpace(f, 0)) {
-        if (PyFile_WriteString(" ", f) < 0)
-            goto error;
-    }
-    if (PyFile_WriteObject(o, f, Py_PRINT_RAW) < 0)
-        goto error;
-    if (PyFile_WriteString("\n", f) < 0)
-        goto error;
-    Py_DECREF(f);
-    return 0;
-error:
-    Py_DECREF(f);
-    return -1;
-    /* the line below is just to avoid C compiler
-     * warnings about unused functions */
-    return __Pyx_Print(f, NULL, 0);
-}
-#else
-static int __Pyx_PrintOne(PyObject* stream, PyObject *o) {
-    int res;
-    PyObject* arg_tuple = PyTuple_Pack(1, o);
-    if (unlikely(!arg_tuple))
-        return -1;
-    res = __Pyx_Print(stream, arg_tuple, 1);
-    Py_DECREF(arg_tuple);
-    return res;
-}
-#endif
-
 /* CIntFromPy */
     static CYTHON_INLINE int __Pyx_PyInt_As_int(PyObject *x) {
     const int neg_one = (int) -1, const_zero = (int) 0;
@@ -8863,6 +9386,37 @@ raise_neg_overflow:
     PyErr_SetString(PyExc_OverflowError,
         "can't convert negative value to int");
     return (int) -1;
+}
+
+/* CIntToPy */
+    static CYTHON_INLINE PyObject* __Pyx_PyInt_From_long(long value) {
+    const long neg_one = (long) -1, const_zero = (long) 0;
+    const int is_unsigned = neg_one > const_zero;
+    if (is_unsigned) {
+        if (sizeof(long) < sizeof(long)) {
+            return PyInt_FromLong((long) value);
+        } else if (sizeof(long) <= sizeof(unsigned long)) {
+            return PyLong_FromUnsignedLong((unsigned long) value);
+#ifdef HAVE_LONG_LONG
+        } else if (sizeof(long) <= sizeof(unsigned PY_LONG_LONG)) {
+            return PyLong_FromUnsignedLongLong((unsigned PY_LONG_LONG) value);
+#endif
+        }
+    } else {
+        if (sizeof(long) <= sizeof(long)) {
+            return PyInt_FromLong((long) value);
+#ifdef HAVE_LONG_LONG
+        } else if (sizeof(long) <= sizeof(PY_LONG_LONG)) {
+            return PyLong_FromLongLong((PY_LONG_LONG) value);
+#endif
+        }
+    }
+    {
+        int one = 1; int little = (int)*(unsigned char *)&one;
+        unsigned char *bytes = (unsigned char *)&value;
+        return _PyLong_FromByteArray(bytes, sizeof(long),
+                                     little, !is_unsigned);
+    }
 }
 
 /* CIntFromPy */

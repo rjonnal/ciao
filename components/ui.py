@@ -243,7 +243,10 @@ class UI(QWidget):
         self.sensor_mutex = QMutex()#loop.sensor_mutex
         self.mirror_mutex = QMutex()#loop.mirror_mutex
         self.loop = loop
-        self.loop.finished.connect(self.update)
+        try:
+            self.loop.finished.connect(self.update)
+        except Exception as e:
+            pass
         self.draw_boxes = ccfg.show_search_boxes
         self.draw_lines = ccfg.show_slope_lines
         self.init_UI()

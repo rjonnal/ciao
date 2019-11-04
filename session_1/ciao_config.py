@@ -91,7 +91,7 @@ show_slope_lines = True
 
 slope_line_thickness = 0.2
 slope_line_color = (200,100,100,200)
-slope_line_magnification = 1000
+slope_line_magnification = 10
 spots_colormap = 'bone'
 wavefront_colormap = 'jet'
 wavefront_clim = (-1e-6,1e-6)

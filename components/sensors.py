@@ -152,6 +152,38 @@ class Sensor(QObject):
         self.unpause()
         
     def sense(self,debug=False):
+        self.image = self.cam.get_image()
+        
+        centroid.estimate_backgrounds(spots_image=self.image,
+                                      sb_x_vec = self.search_boxes.x,
+                                      sb_y_vec = self.search_boxes.y,
+                                      sb_bg_vec = self.box_backgrounds,
+                                      sb_half_width_p = self.search_boxes.half_width)
+        centroid.compute_centroids(spots_image=self.image,
+                                   sb_x_vec = self.search_boxes.x,
+                                   sb_y_vec = self.search_boxes.y,
+                                   sb_bg_vec = self.box_backgrounds,
+                                   sb_half_width_p = self.search_boxes.half_width,
+                                   iterations_p = self.centroiding_iterations,
+                                   iteration_step_px_p = self.iterative_centroiding_step,
+                                   x_out = self.x_centroids,
+                                   y_out = self.y_centroids,
+                                   mean_intensity = self.box_means,
+                                   maximum_intensity = self.box_maxes,
+                                   minimum_intensity = self.box_mins,
+                                   num_threads_p = 1)
+        
+        self.x_slopes = (self.x_centroids-self.search_boxes.x)*self.pixel_size_m/self.lenslet_focal_length_m
+        self.y_slopes = (self.y_centroids-self.search_boxes.y)*self.pixel_size_m/self.lenslet_focal_length_m
+        self.tilt = np.mean(self.x_slopes)
+        self.tip = np.mean(self.y_slopes)
+        if self.remove_tip_tilt:
+            self.x_slopes-=self.tilt
+            self.y_slopes-=self.tip
+        if self.reconstruct_wavefront:
+            self.zernikes,self.wavefront,self.error = self.reconstructor.get_wavefront(self.x_slopes,self.y_slopes)
+        
+    def sense0(self,debug=False):
         image = self.cam.get_image()
         sb = self.search_boxes
         xr = np.zeros(self.search_boxes.x.shape)
