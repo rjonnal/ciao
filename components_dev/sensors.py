@@ -26,9 +26,12 @@ from reference_generator import ReferenceGenerator
 import ciao_config as ccfg
 from frame_timer import FrameTimer
 
-class Sensor:
+class Sensor(QObject):
 
+    finished = pyqtSignal()
+    
     def __init__(self,camera):
+        super(Sensor,self).__init__()
         self.image_width_px = ccfg.image_width_px
         self.image_height_px = ccfg.image_height_px
         self.lenslet_pitch_m = ccfg.lenslet_pitch_m
@@ -83,6 +86,7 @@ class Sensor:
         self.logging = False
         self.paused = False
         
+    @pyqtSlot()
     def update(self):
         if not self.paused:
             try:
@@ -92,15 +96,19 @@ class Sensor:
             if self.logging:
                 self.log()
                 
+        self.finished.emit()
         self.frame_timer.tick()
     
+    @pyqtSlot()
     def pause(self):
         print 'sensor paused'
         self.paused = True
 
+    @pyqtSlot()
     def unpause(self):
         print 'sensor unpaused'
         self.paused = False
+        #self.sense()
 
     def log(self):
         outfn = os.path.join(ccfg.logging_directory,'sensor_%s.mat'%(now_string(True)))
@@ -175,7 +183,58 @@ class Sensor:
         if self.reconstruct_wavefront:
             self.zernikes,self.wavefront,self.error = self.reconstructor.get_wavefront(self.x_slopes,self.y_slopes)
         
+    def sense0(self,debug=False):
+        image = self.cam.get_image()
+        sb = self.search_boxes
+        xr = np.zeros(self.search_boxes.x.shape)
+        xr[:] = self.search_boxes.x[:]
+        yr = np.zeros(self.search_boxes.y.shape)
+        yr[:] = self.search_boxes.y[:]
+        half_width = sb.half_width
         
+        for iteration in range(self.centroiding_iterations):
+            #QApplication.processEvents()
+            msi = iteration==self.centroiding_iterations-1
+            if debug:
+                plt.figure()
+                plt.imshow(image)
+                plt.title('iteration %d'%iteration)
+            centroid.compute_centroids(spots_image=image,
+                                       sb_x1_vec=sb.x1,
+                                       sb_x2_vec=sb.x2,
+                                       sb_y1_vec=sb.y1,
+                                       sb_y2_vec=sb.y2,
+                                       x_out=xr,
+                                       y_out=yr,
+                                       mean_intensity = self.box_means,
+                                       maximum_intensity = self.box_maxes,
+                                       minimum_intensity = self.box_mins,
+                                       background_intensity = self.box_backgrounds,
+                                       estimate_background = self.estimate_background,
+                                       background_correction = self.background_correction,
+                                       num_threads = 1,
+                                       modify_spots_image = msi)
+            half_width-=self.iterative_centroiding_step
+            sb = SearchBoxes(xr,yr,half_width)
+        if debug:
+            plt.figure()
+            plt.imshow(image)
+            plt.show()
+            sys.exit()
+        self.x_centroids[:] = xr[:]
+        self.y_centroids[:] = yr[:]
+        self.x_slopes = (self.x_centroids-self.search_boxes.x)*self.pixel_size_m/self.lenslet_focal_length_m
+        self.y_slopes = (self.y_centroids-self.search_boxes.y)*self.pixel_size_m/self.lenslet_focal_length_m
+        self.tilt = np.mean(self.x_slopes)
+        self.tip = np.mean(self.y_slopes)
+        if self.remove_tip_tilt:
+            self.x_slopes-=self.tilt
+            self.y_slopes-=self.tip
+        self.image = image
+        if self.reconstruct_wavefront:
+            self.zernikes,self.wavefront,self.error = self.reconstructor.get_wavefront(self.x_slopes,self.y_slopes)
+        
+    
     def record_reference(self):
         print 'recording reference'
         self.pause()

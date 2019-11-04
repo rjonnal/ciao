@@ -111,8 +111,11 @@ class MirrorControllerPythonOld(MirrorController):
 
         
         
-class Mirror:
+class Mirror(QObject):
+    finished = pyqtSignal(QObject)
+    
     def __init__(self):
+        super(Mirror,self).__init__()
         
         try:
             self.controller = MirrorControllerPython()
@@ -140,10 +143,15 @@ class Mirror:
         self.settling_time = ccfg.mirror_settling_time_s
         self.update_rate = ccfg.mirror_update_rate
         self.flatten()
+        
+        self.timer = QTimer()
+        #self.timer.timeout.connect(self.update)
+        #self.timer.start(1.0/self.update_rate*1000.0)
         self.frame_timer = FrameTimer('Mirror',verbose=False)
         self.logging = False
         self.paused = False
         
+    @pyqtSlot()
     def update(self):
         if not self.paused:
             self.send()
@@ -151,10 +159,12 @@ class Mirror:
             self.log()
         self.frame_timer.tick()
 
+    @pyqtSlot()
     def pause(self):
         print 'mirror paused'
         self.paused = True
 
+    @pyqtSlot()
     def unpause(self):
         print 'mirror unpaused'
         self.paused = False

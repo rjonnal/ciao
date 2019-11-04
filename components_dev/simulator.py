@@ -31,6 +31,7 @@ class Simulator(QObject):
         super(Simulator,self).__init__()
 
         self.frame_timer = FrameTimer('simulator')
+        self.mutex = QMutex()
         
         # We need to define a meshes on which to build the simulated spots images
         # and the simulated wavefront:
@@ -73,7 +74,6 @@ class Simulator(QObject):
         self.Y = self.Y-self.Y.mean()
         
         self.XX,self.YY = np.meshgrid(self.X,self.Y)
-
 
         self.RR = np.sqrt(self.XX**2+self.YY**2)
         self.mask = np.zeros(self.RR.shape)
@@ -240,6 +240,7 @@ class Simulator(QObject):
         plt.show()
 
     def update(self):
+        self.mutex.lock()
         mirror = np.reshape(np.dot(self.command,self.actuator_basis),(self.sy,self.sx))
         
         err = self.get_new_error()
@@ -278,13 +279,16 @@ class Simulator(QObject):
         self.x_slopes = np.array(x_slope_vec)
         self.y_slopes = np.array(y_slope_vec)
         self.frame_timer.tick()
+        self.mutex.unlock()
         
     def get_image(self):
+        self.mutex.lock()
         spots = (self.spots-self.spots.min())/(self.spots.max()-self.spots.min())*self.spots_range+self.dc
         
         nspots = self.noise(spots)
         nspots = np.clip(nspots,0,4095)
         nspots = np.round(nspots).astype(np.int16)
+        self.mutex.unlock()
         return nspots
         
     def interpolate_dirac(self,x,y,frame):

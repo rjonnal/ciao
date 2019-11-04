@@ -3,18 +3,41 @@ Python tools for controlling, simulating, and characterizing adaptive optics (AO
 
 # Setup and installation
 
-## Prerequisites
+## Prerequisites for minimal installation
 
-These prerequisites assume you are using the default hardware (Alpao mirror and a SHWS based on a Basler Ace USB3 camera).
+These are the prerequisites for installing a version of the software which allows it to be run in simulation mode.
 
 1. Install [Notepad++](https://notepad-plus-plus.org/download) or another editor.
 2. Install [Git](https://git-scm.com/download/win)
 3. Install [Anaconda for Python 2.7](https://www.anaconda.com/distribution/#download-section)
-4. Install Alpao drivers
-5. Clone this repository
-6. Install the [Visual C++ compiler for Python 2.7](https://www.microsoft.com/en-us/download/details.aspx?id=44266)
-7. Install [Basler Pylon 5.2](https://www.baslerweb.com/en/sales-support/downloads/software-downloads/pylon-5-2-0-windows/)
-8. Install [pypylon](https://github.com/basler/pypylon/releases/download/1.4.0/pypylon-1.4.0-cp27-cp27m-win_amd64.whl). First download, then use 'pip install pypylon...amd64.whl'.
+4. Clone this repository
+5. Install the [Visual C++ compiler for Python 2.7](https://www.microsoft.com/en-us/download/details.aspx?id=44266)
+
+These prerequisites assume you are using the default hardware (Alpao mirror and a SHWS based on a Basler Ace USB3 camera).
+
+## Additional prerequisites for UC Davis hardware loop implementation
+
+1. Install Alpao drivers
+2. Install [Basler Pylon 5.2](https://www.baslerweb.com/en/sales-support/downloads/software-downloads/pylon-5-2-0-windows/)
+3. Install [pypylon](https://github.com/basler/pypylon/releases/download/1.4.0/pypylon-1.4.0-cp27-cp27m-win_amd64.whl). First download, then use 'pip install pypylon...amd64.whl'.
+
+## Anaconda prompt
+
+Anaconda comes with a terminal emulator called "Anaconda prompt", which permits you to call any system commands (i.e. commands availalbe using the built-in Windows prompt) as well as Anaconda-specific commands (e.g., ```conda```) without having to modify your system path. In Windows it is the simplest way to interact with CIAO. It is assumed that you have basic familiarity with the command-line interface (CLI) of your operating system. Thus, specific syntax for copying files or folders or executing commands is omitted from this guide, in favor of platform-neutral descriptive instructions.
+
+## Compiling C extensions for centroiding
+
+Almost everything in CIAO could be written in Python using the Numpy library, with adequate performance for typical AO loops (20-30 Hz). However, in the interest of speeding things up, the costliest operation--centroiding the spots in the Shack-Hartmann image--has been moved down into a C-extension written using Cython. Depending on your OS and hardware, the precompiled binaries (```centroid.so``` and ```centroid.pyd```) may work out of the box. However, the safest thing to do is recompile the Cython code. To do this, navigate to the ```ciao/components/centroid``` folder and issue the following command:
+
+    python setup.py build_ext --inplace
+    
+You may see some warnings
+
+
+## Quick start
+
+Following this recipe should allow you to get a simulator up and running quickly.
+
 
 ## CIAO sessions and ```ciao_config.py```
 
@@ -28,17 +51,88 @@ In short, every top level script must begin with the following two lines:
     sys.path.append(os.path.split(__file__)[0])
 
 
-# Creating mask files
+# ```session_template``` folder
 
-The reference mask is a two-dimensional arrays of zeros and ones which specifies which of the Shack-Hartmann lenslets to use. The mirror mask specifies, similarly, the logical locations of active mirror actuators. 
+The default installation contains a folder called ```session_template``` which should can be copied to create a new session. This contains at least the following files:
 
-The program ```ciao/calibration/make_mask.py``` can be used to generate both mask files. Premade masks can be found in ```ciao/calibration/example_masks/```.
+    ciao_config.py
+    script_initialize.py
+    script_make_mask.py
+    script_record_reference_coordinates.py
+    ui_ciao.py
+    
+1. ```ciao_config.py``` is the session's configuration file, containing all of the parameters of the session's system, either real or simulated.
+2. ```script_initialize.py``` is used to initialize a session--to create the required folders and assist in creating other calibration files.
+3. ```script_make_mask.py``` is used to generate mask files for the SHWS and DM (see "Creating mask files" below).
+4. ```script_record_initial_reference_coordinates.py``` is used to generate ballpark reference coordinates which can then be used to bootstrap precise reference coordinates. The problem is that we need search boxes before we can compute the centroids of reference beam spots, but we need centroids of the reference beam spots in order to position search boxes. This script attempts to guess the initial locations of search boxes based on the spots image, and permits a bit of interactive adjustment of those coordinates.
+5. ```ui_ciao.py``` launches the closed-loop GUI.
 
-After navigating into the ```calibration``` directory, the program is run at the command line using ```python make_mask.py N rad mask_filename.txt```, where ```N``` specifies the size of the (square) mask, ```rad``` specifies the radius of the inscribed active area, and ```mask_filename.txt``` is the file in which to store the output.
 
-Masks for the mirror and Shack-Hartmann lenslet array must be created, and copied into the ```etc/dm``` and ```etc/ref``` directories.
+## Creating a session
 
-# Creating a reference coordinate file
+The quickest way to create a session is to use ```script_initialize.py```. After creating a copy of ```session_template```, enter the directory and issue the following command:
+
+    python script_initialize.py
+    
+This will create the following directory structure in your session directory.
+
+    .
+    |-- ciao_config.py
+    |-- etc
+    |   |-- ctrl
+    |   |-- dm
+    |   `-- ref
+    |-- log
+    |-- script_initialize.py
+    |-- script_make_mask.py
+    |-- script_record_initial_reference_coordinates.py
+    `-- ui_ciao.py
+    
+It will also prompt you to create mask files, reference coordinates, etc.
+
+## Creating mask files
+
+The reference mask is a two-dimensional arrays of zeros and ones which specifies which of the Shack-Hartmann lenslets to use. The mirror mask specifies, similarly, the logical locations of active mirror actuators. For most deformable mirrors, there is no ambiguity about which locations should be ones and which should be zeros. For the ALPAO 97-actuator mirrors, for instance, the correct mask is generated by the command: 
+
+    python script_make_mask.py 11 5.5 mirror_mask.txt
+    
+This creates the following mask, with 97 1's and 24 0's, which accurately describes the logical positions of the DM's actuators.
+
+    0 0 0 1 1 1 1 1 0 0 0 
+    0 0 1 1 1 1 1 1 1 0 0 
+    0 1 1 1 1 1 1 1 1 1 0 
+    1 1 1 1 1 1 1 1 1 1 1 
+    1 1 1 1 1 1 1 1 1 1 1 
+    1 1 1 1 1 1 1 1 1 1 1 
+    1 1 1 1 1 1 1 1 1 1 1 
+    1 1 1 1 1 1 1 1 1 1 1 
+    0 1 1 1 1 1 1 1 1 1 0 
+    0 0 1 1 1 1 1 1 1 0 0 
+    0 0 0 1 1 1 1 1 0 0 0
+    
+However, without knowing that the DM has 97 actuators, this is an ill-defined problem. The following command:
+
+    python script_make_mask.py 11 5.0 mirror_mask.txt
+    
+generates the following mask, which has a diameter of 11 actuators but the incorrect number of total actuators:
+
+    0 0 0 0 0 1 0 0 0 0 0 
+    0 0 1 1 1 1 1 1 1 0 0 
+    0 1 1 1 1 1 1 1 1 1 0 
+    0 1 1 1 1 1 1 1 1 1 0 
+    0 1 1 1 1 1 1 1 1 1 0 
+    1 1 1 1 1 1 1 1 1 1 1 
+    0 1 1 1 1 1 1 1 1 1 0 
+    0 1 1 1 1 1 1 1 1 1 0 
+    0 1 1 1 1 1 1 1 1 1 0 
+    0 0 1 1 1 1 1 1 1 0 0 
+    0 0 0 0 0 1 0 0 0 0 0
+    
+The latter problem arises when defining a mask for the locations of active SHWS lenslets. In most cases, there will be some ambiguities about which lenslets should be used and which shouldn't--a problem without an obvious *a priori* solution. In this case, some experimentation may be called for.
+
+Masks for the mirror and Shack-Hartmann lenslet array must be created, and copied into the ```etc/dm``` and ```etc/ref``` directories. This step is covered above in **Creating a session**.
+
+## Creating a reference coordinate file
 
 The reference coordinates are the (x,y) locations on the sensor, in pixel units, where spots are expected to fall when a planar wavefront is incident on the sensor. These are the coordinates with which the boundaries of the search boxes are defined, and the coordinates with which the local slope of the wavefront is computed, used to drive the mirror in closed loop or to reconstruct the wavefront and measure wavefront error.
 
@@ -54,7 +148,7 @@ Several approaches have been used to generate these coordinates, but a common ap
 
 4. Click **```Record reference```**. This may need to be done more than once, because background noise in a search box that's not centered at the spot's center of mass causes a bias toward the reference coordinates, i.e. an underestimate of error. The residual wavefront error RMS may be used to verify that the coordinates have been recorded correctly, since apparent error due to shot noise will eventually reach a stable minimum. Typically this value should be $\leq 10\;nm$.
 
-# Design principles
+## Design principles
 
 0. **Balance exploratory/educational goals with real-time goals**. This software is intended to be neither the highest-performance AO software nor the most [literate](https://en.wikipedia.org/wiki/Literate_programming), but to balance both goals. This is hard to achieve, and requires judgement calls, but some examples:
 

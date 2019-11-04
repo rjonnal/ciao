@@ -30,24 +30,53 @@ from poke import Poke
 class Loop(QObject):
 
     finished = pyqtSignal()
+    pause_signal = pyqtSignal()
+    unpause_signal = pyqtSignal()
     
     def __init__(self,sensor,mirror,verbose=0):
         super(Loop,self).__init__()
 
+        self.sensor_mutex = QMutex()
+        self.mirror_mutex = QMutex()
+
         self.verbose = verbose
         
+        self.mirror_thread = QThread()
+        self.sensor_thread = QThread()
+
         self.sensor = sensor
         self.active_lenslets = np.ones(self.sensor.n_lenslets).astype(int)
         self.mirror = mirror
 
-        self.update_rate = ccfg.loop_update_rate
-
         n_lenslets = self.sensor.n_lenslets
         n_actuators = self.mirror.n_actuators
         
+        #DEBUG
+        self.sensor.moveToThread(self.sensor_thread)
+        self.mirror.moveToThread(self.mirror_thread)
+
+        # We have to connect the mirror timer's timeout signal
+        # to the mirror update slot, and then start the timer
+        # here. It's a little awkward, but the mirror timer
+        # cannot be started until it's in its own thread, and
+        # because we've used moveToThread (instead of
+        # making Mirror a QThread subclass).
+        self.mirror.timer.timeout.connect(self.mirror.update)
+        self.mirror.timer.start(1.0/self.mirror.update_rate*1000.0)
+
+        self.sensor_thread.started.connect(self.sensor.update)
+        self.finished.connect(self.sensor.update)
+        self.sensor.finished.connect(self.update)
+        
+        self.pause_signal.connect(self.sensor.pause)
+        self.pause_signal.connect(self.mirror.pause)
+        self.unpause_signal.connect(self.sensor.unpause)
+        self.unpause_signal.connect(self.mirror.unpause)
         self.poke = None
         self.closed = False
 
+
+        
         # try to load the poke file specified in
         # ciao_config.py; if it doesn't exist, create
         # a dummy poke with all 1's; this will result
@@ -63,24 +92,24 @@ class Loop(QObject):
         self.paused = False
 
         self.n = 0
-
-    def start(self):
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.update)
-        self.timer.start(1.0/self.update_rate*1000.0)
-
+        
     def has_poke(self):
         return self.poke is not None
 
+    def start(self):
+        if self.verbose>=5:
+            print 'Starting loop.'
+        self.sensor_thread.start()
+        self.mirror_thread.start()
+
     def pause(self):
-        self.mirror.pause()
-        self.sensor.pause()
+        self.pause_signal.emit()
         self.paused = True
 
     def unpause(self):
-        self.mirror.unpause()
-        self.sensor.unpause()
+        self.unpause_signal.emit()
         self.paused = False
+        self.finished.emit()
         print 'loop unpaused'
         
     @pyqtSlot()
@@ -88,8 +117,16 @@ class Loop(QObject):
         if not self.paused:
             if self.verbose>=5:
                 print 'Updating loop.'
+            self.sensor_mutex.lock()
+            self.mirror_mutex.lock()
+            # compute the mirror command here
 
-            self.sensor.update()
+            if False:
+                fn = '%09d_%0.1f_%0.1f.png'%(self.n,self.sensor.error*1e8,self.sensor.x_slopes.std()*1e5)
+                plt.cla()
+                plt.imshow(self.sensor.cam.spots,cmap='gray')
+                plt.savefig('tmp/%s'%fn)
+            
             
             if self.closed and self.has_poke():
 
@@ -123,12 +160,15 @@ class Loop(QObject):
                         print 'actuator saturated'
                     if command.min()<ccfg.mirror_command_min*.95:
                         print 'actuator saturated'
-
-            self.mirror.update()
-        self.n = self.n + 1
-        self.finished.emit()
-            
+                
+            self.finished.emit()
+            self.sensor_mutex.unlock()
+            self.mirror_mutex.unlock()
+            self.n = self.n + 1
+                
     def load_poke(self,poke_filename=None):
+        self.sensor_mutex.lock()
+        self.mirror_mutex.lock()
         try:
             poke = np.loadtxt(poke_filename)
         except Exception as e:
@@ -156,6 +196,8 @@ class Loop(QObject):
             
         self.poke = Poke(poke)
 
+        self.sensor_mutex.unlock()
+        self.mirror_mutex.unlock()
 
     def invert(self):
         if self.poke is not None:
@@ -210,12 +252,13 @@ class Loop(QObject):
                 cur = commands[k_command]
                 #print k_actuator,cur
                 self.mirror.set_actuator(k_actuator,cur)
-                #print k_actuator,k_command
                 QApplication.processEvents()
                 time.sleep(.01)
                 self.sensor.sense()
+                self.sensor_mutex.lock()
                 x_mat[:,k_actuator,k_command] = self.sensor.x_slopes
                 y_mat[:,k_actuator,k_command] = self.sensor.y_slopes
+                self.sensor_mutex.unlock()
                 self.finished.emit()
         # print 'done'
         self.mirror.flatten()

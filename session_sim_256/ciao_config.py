@@ -43,7 +43,8 @@ poke_filename = poke_directory + 'poke.txt'
 reference_n_measurements = 10
 lenslet_pitch_m = 400e-6
 lenslet_focal_length_m = 20.0e-3
-pixel_size_m = 5.5e-6*8
+pixel_size_m = 5.5e-6*(2048//image_width_px)
+
 beam_diameter_m = 10e-3
 interface_scale_factor = 0.5
 wavelength_m = 840e-9
@@ -51,7 +52,7 @@ estimate_background = True
 background_correction = -100
 search_box_half_width = 5 #9
 spots_threshold = 100.0
-sensor_update_rate = 1.0
+sensor_update_rate = 1.0 # deprecated in current version
 sensor_filter_lenslets = False
 sensor_reconstruct_wavefront = True
 sensor_remove_tip_tilt = True
@@ -59,8 +60,7 @@ centroiding_num_threads = 1
 iterative_centroiding_step = 2
 centroiding_iterations = 2
 
-mirror_update_rate = 1.0
-#mirror_n_actuators = 97
+mirror_update_rate = 1.0 # deprecated in current version
 mirror_flat_filename = dm_directory + 'flat.txt'
 mirror_mask_filename = dm_directory + 'mirror_mask.txt'
 mirror_command_max = 1.0
@@ -77,6 +77,7 @@ ctrl_dictionary_max_size = 10
 loop_n_control_modes = 30
 loop_gain = 0.2
 loop_loss = 0.01
+loop_update_rate = 50.0
 
 n_zernike_terms = 66
 zernike_dioptric_equivalent = 1.5
