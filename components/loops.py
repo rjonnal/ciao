@@ -61,7 +61,6 @@ class Loop(QObject):
         self.gain = ccfg.loop_gain
         self.loss = ccfg.loop_loss
         self.paused = False
-
         self.n = 0
 
     def start(self):
@@ -89,7 +88,9 @@ class Loop(QObject):
             if self.verbose>=5:
                 print 'Updating loop.'
 
+
             self.sensor.update()
+
             
             if self.closed and self.has_poke():
 
@@ -127,7 +128,7 @@ class Loop(QObject):
             self.mirror.update()
         self.n = self.n + 1
         self.finished.emit()
-            
+        
     def load_poke(self,poke_filename=None):
         try:
             poke = np.loadtxt(poke_filename)
@@ -155,7 +156,7 @@ class Loop(QObject):
             poke = dummy
             
         self.poke = Poke(poke)
-
+        self.condition_good = ccfg.loop_condition_llim<self.get_condition_number()<ccfg.loop_condition_ulim
 
     def invert(self):
         if self.poke is not None:
@@ -165,7 +166,8 @@ class Loop(QObject):
             time.sleep(1)
             QApplication.processEvents()
             self.unpause()
-            time.sleep(1)
+            time.sleep(.001)
+            self.condition_good = ccfg.loop_condition_llim<self.get_condition_number()<ccfg.loop_condition_ulim
 
     def set_n_modes(self,n):
         try:
@@ -187,6 +189,8 @@ class Loop(QObject):
             out = self.poke.cutoff_cond
         except Exception as e:
             print e
+        if out>2**32:
+            out = np.inf
         return out
             
     def run_poke(self):
@@ -248,7 +252,7 @@ class Loop(QObject):
         np.savetxt(archive_command_fn,commands)
         save_modes_chart(archive_chart_fn,poke,commands,self.mirror.mirror_mask)
         self.poke = Poke(poke)
-        
+        self.condition_good = ccfg.loop_condition_llim<self.get_condition_number()<ccfg.loop_condition_ulim
         time.sleep(1)
         self.unpause()
 

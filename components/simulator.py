@@ -20,15 +20,13 @@ from search_boxes import SearchBoxes
 from frame_timer import FrameTimer
 from reference_generator import ReferenceGenerator
 
-class Simulator(QObject):
+class Simulator:
 
     def __init__(self):
         """The Simulator object simulates the camera, mirror, and dynamic aberrations
         of the system. CIAO can be run in simulation mode by instantiating a simulator
         object, then a sensor object using the simulator as its camera, and then a
         loop object using that sensor and the simulator in place of the mirror."""
-
-        super(Simulator,self).__init__()
 
         self.frame_timer = FrameTimer('simulator')
         
@@ -180,9 +178,6 @@ class Simulator(QObject):
         self.new_error_sigma = 1.0/np.arange(self.n_zernike_terms)*0.0
         self.new_error_sigma[:3] = 0.0
         
-        self.timer = QTimer()
-        self.update_rate = ccfg.mirror_update_rate
-        self.update()
         self.paused = False
 
     def pause(self):
@@ -251,7 +246,6 @@ class Simulator(QObject):
         dx = np.hstack((col,dx))
         dy = np.vstack((row,dy))
         #err = err - dx - dy
-        
         self.wavefront = mirror+err
         y_slope_vec = []
         x_slope_vec = []
@@ -273,7 +267,7 @@ class Simulator(QObject):
             self.spots = self.interpolate_dirac(xcentroid,ycentroid,self.spots)
             x_slope_vec.append(xslope)
             y_slope_vec.append(yslope)
-            QApplication.processEvents()
+            #QApplication.processEvents()
         self.spots = np.abs(np.fft.ifft2(np.fft.fftshift(np.fft.fft2(self.spots))*self.disc))
         self.x_slopes = np.array(x_slope_vec)
         self.y_slopes = np.array(y_slope_vec)

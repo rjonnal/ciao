@@ -13,6 +13,7 @@ config.py
 *.so
 *.pyc
 *.pyd
+__pycache__/
 
 # Logs and databases #
 ######################

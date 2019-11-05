@@ -22,7 +22,6 @@ import scipy.io as sio
 from poke_analysis import save_modes_chart
 from ctypes import CDLL,c_void_p
 from search_boxes import SearchBoxes
-from reference_generator import ReferenceGenerator
 import ciao_config as ccfg
 from frame_timer import FrameTimer
 
@@ -145,7 +144,6 @@ class Sensor:
         
     def sense(self,debug=False):
         self.image = self.cam.get_image()
-        
         centroid.estimate_backgrounds(spots_image=self.image,
                                       sb_x_vec = self.search_boxes.x,
                                       sb_y_vec = self.search_boxes.y,
@@ -190,6 +188,7 @@ class Sensor:
 
         xcent = np.array(xcent)
         ycent = np.array(ycent)
+        
         x_ref = xcent.mean(0)
         y_ref = ycent.mean(0)
 

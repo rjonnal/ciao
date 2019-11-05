@@ -291,6 +291,9 @@ class UI(QWidget):
     def init_UI(self):
         self.setWindowIcon(QIcon('./icons/ciao.png'))
         self.setWindowTitle('CIAO')
+
+        self.setMinimumWidth(ccfg.ui_width_px)
+        self.setMinimumHeight(ccfg.ui_height_px)
         
         layout = QGridLayout()
         imax = 2**ccfg.bit_depth-1
@@ -469,7 +472,13 @@ class UI(QWidget):
         self.lbl_mirror_fps.setText(ccfg.mirror_fps_fmt%mirror.frame_timer.fps)
         self.lbl_ui_fps.setText(ccfg.ui_fps_fmt%self.frame_timer.fps)
 
-
+        if self.loop.condition_good:
+            self.cb_closed.setEnabled(True)
+        else:
+            self.cb_closed.setEnabled(False)
+            self.cb_closed.setChecked(False)
+            self.loop.closed = False
+            
         self.mirror_mutex.unlock()
         self.sensor_mutex.unlock()
             

@@ -10,8 +10,8 @@ These are the prerequisites for installing a version of the software which allow
 1. Install [Notepad++](https://notepad-plus-plus.org/download) or another editor.
 2. Install [Git](https://git-scm.com/download/win)
 3. Install [Anaconda for Python 2.7](https://www.anaconda.com/distribution/#download-section)
-4. Clone this repository
-5. Install the [Visual C++ compiler for Python 2.7](https://www.microsoft.com/en-us/download/details.aspx?id=44266)
+4. If you're using Windows, install the [Visual C++ compiler for Python 2.7](https://www.microsoft.com/en-us/download/details.aspx?id=44266). In Linux, gcc will be invoked instead; it's probably already installed on your system, but you can verify that it is with ```gcc --version```.
+5. Clone this repository
 
 These prerequisites assume you are using the default hardware (Alpao mirror and a SHWS based on a Basler Ace USB3 camera).
 
@@ -31,13 +31,42 @@ Almost everything in CIAO could be written in Python using the Numpy library, wi
 
     python setup.py build_ext --inplace
     
-You may see some warnings
+You may see some warnings (e.g. about deprecation of Numpy features), but no errors.
 
 
-## Quick start
+# Quick start
 
-Following this recipe should allow you to get a simulator up and running quickly.
+If you have succesfully completed the "Setup and installation" steps above, following this recipe should allow you to get a simulator up and running quickly.
 
+1. Navigate into the ```ciao``` directory and make a copy of ```session_template``` and name it something else, e.g. ```session_foo```.
+2. Navigate into ```session_foo``` and issue ```python script_initialize.py```.
+3. Create a mirror mask by issuing ```python script_make_mask.py 11 5.5 ./etc/dm/mirror_mask.txt```.
+4. Issue ```python script_initialize.py``` again, and type 'Y' and press enter, to create an all-zero flat file.
+5. Create a SHWS mask by issuing ```python script_make_mask.py 10 4.8 ./etc/ref/reference_mask.txt```.
+6. Edit ```session_foo/ciao_config.py```. Ensure that each of the following parameters are set as described below:
+
+        simulate = True
+        system_id = 'simulator'
+        mirror_id = 'simulator'
+        camera_id = 'simulator'
+        image_width_px = 128
+        image_height_px = 128
+        lenslet_pitch_m = 1e-3
+        lenslet_focal_length_m = 20.0e-3
+        pixel_size_m = 80e-6
+        beam_diameter_m = 10e-3
+        search_box_half_width = 5
+        iterative_centroiding_step = 2
+        centroiding_iterations = 2
+        mirror_n_actuators = 97
+
+7. Issue ```python script_record_initial_reference_coordinates.py etc/ref/reference_initial.txt``` to create bootstrapping reference coordinates. Follow the instructions in the terminal and use the resulting plots to refine these coordinates.
+8. Issue ```python ui_ciao.py```. The UI should appear.
+9. Click **Record reference** a few times.
+10. Click **Poke** and wait for the poke matrix to be measured.
+11. Click **Loop closed**.
+
+# Slow start
 
 ## CIAO sessions and ```ciao_config.py```
 
@@ -172,7 +201,7 @@ One probably common use case for CIAO is having multiple "installations" or "ver
 
 1. **Virtual environments**. These can be created using popular scientific Python distributions such as Anaconda or Enthought Python Distribution, or through the use of the ```virtualenv``` package. Advantages: the most *Pythonic* solution; enables multiple CIAOs; prevents other problems such as conflicts with pre-existing Python installations used for other purposes on the same computer. Disadvantages: requires moderate expertise on the topic of virtual environments; could cause major issues for novice developers.
 
-2. **Configure once**. In this approach, the config file would be loaded just once and, because imported modules are objects, passed as a required parameter for instantiating any subsequent CIAO objects. Advantages: this is the approach [advocated by Python Software Foundation Fellow, Alex Martelli](https://stackoverflow.com/questions/2348927/python-single-configuration-file/2348941); avoids potential collisions of conflicting ```ciao_config.py``` files--a problem that could be extremely difficult to debug. Disadvantages: requires the same object to be propagated through the entire instantiation hierarchy, leading to ugly/mystifying signatures for every class's constructor.
+2. **Configure once**. In this approach, the config file would be loaded just once and, because imported modules are objects, passed as a required parameter for instantiating any subsequent CIAO objects. Advantages: allows easy reconfiguration at runtime and, thus, a simple way to programatically explore parameter space; this is the approach [advocated by Python Software Foundation Fellow, Alex Martelli](https://stackoverflow.com/questions/2348927/python-single-configuration-file/2348941); avoids potential collisions of conflicting ```ciao_config.py``` files--a problem that could be extremely difficult to debug. Disadvantages: requires the same object to be propagated through the entire instantiation hierarchy, leading to ugly/mystifying signatures for every class's constructor.
 
 3. **Multiple copies of config file**. Here we would have one file called ```ciao_config.py``` in the Python path, and others called, for instance ```ciao_config_simulation_version.py``` and ```ciao_config_closed_loop_version.py```, and one of the latter would be copied over the former whenever necessary. Advantages: the code base is cleanest, as it doesn't have to know anything other than to load ```ciao_config.py``` at runtime. Disadvantages: it's easy to make a mistake and delete a config file; requires a lot of bookkeeping.
 
