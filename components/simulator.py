@@ -177,7 +177,7 @@ class Simulator:
 
         self.new_error_sigma = 1.0/np.arange(self.n_zernike_terms)*0.0
         self.new_error_sigma[:3] = 0.0
-        
+
         self.paused = False
 
     def pause(self):
@@ -271,11 +271,11 @@ class Simulator:
         self.spots = np.abs(np.fft.ifft2(np.fft.fftshift(np.fft.fft2(self.spots))*self.disc))
         self.x_slopes = np.array(x_slope_vec)
         self.y_slopes = np.array(y_slope_vec)
-        self.frame_timer.tick()
         
     def get_image(self):
+        self.update()
+        self.frame_timer.tick()
         spots = (self.spots-self.spots.min())/(self.spots.max()-self.spots.min())*self.spots_range+self.dc
-        
         nspots = self.noise(spots)
         nspots = np.clip(nspots,0,4095)
         nspots = np.round(nspots).astype(np.int16)

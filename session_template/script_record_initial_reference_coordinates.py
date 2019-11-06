@@ -6,26 +6,30 @@ from matplotlib import pyplot as plt
 import numpy as np
 from ciao import tools
 
-# Call this with 'python record_reference_coordinages.py N mode output_filename.txt'
+# Call this with 'python record_reference_coordinages.py output_filename.txt'
 
-if len(sys.argv)<4:
-    print "Call this with 'python record_reference_coordinages.py N mode output_filename.txt,"
-    print "  where N is the number of images to collect from the camera,"
-    print "  mode is either 'real' or 'simulated',"
-    print "  and output_filename.txt is the file in which the reference coordinates are saved."
+if len(sys.argv)<2:
+    print "Call this with 'python record_reference_coordinages.py output_filename.txt,"
+    print "  where output_filename.txt is the file in which the reference coordinates are saved."
     sys.exit()
     
-N = int(sys.argv[1])
+try:
+    N = int(ccfg.reference_n_measurements)
+except Exception as e:
+    print e
+    N = 1
 
-if sys.argv[2].lower()=='real':
-    try:
-        cam = cameras.PylonCamera()
-    except Exception as e:
-        cam = cameras.AOCameraAce()
-elif sys.argv[2].lower()=='simulated':
+if ccfg.simulate:
     cam = simulator.Simulator()
+else:
+    if ccfg.camera_id=='pylon':
+        cam = cameras.PylonCamera()
+    elif ccfg.camera_id=='ace':
+        cam = cameras.AOCameraAce()
+    else:
+        sys.exit('camera_id %s not recognized.'%ccfg.camera_id)
 
-output_filename = sys.argv[3]
+output_filename = sys.argv[1]
 
 # collect and average N images
 im = cam.get_image().astype(np.float)
@@ -130,4 +134,3 @@ while True:
 
 # And save the output
 np.savetxt(output_filename,ref_xy,fmt='%0.3f')
-print ref_xy

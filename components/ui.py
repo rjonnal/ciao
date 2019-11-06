@@ -41,6 +41,170 @@ except Exception as e:
     print e
 
 
+class StripChart(QWidget):
+    """Permits display of a numerical quantitiy as well
+    as a plot of its history."""
+
+    def __init__(self,ylim=[-1,1],buffer_length=ccfg.plot_buffer_length,color=ccfg.plot_line_color,line_width=ccfg.plot_line_width,ytick_interval=None,print_function=lambda val: '%0.1e'%val,hlines=[0.0]):
+        
+        super(StripChart,self).__init__()
+        self.layout = QVBoxLayout()
+        self.lbl = QLabel()
+        self.plot = QLabel()
+        self.pixmap = QPixmap()
+        self.buf = np.zeros(buffer_length)
+        self.buffer_length = buffer_length
+        self.buffer_current_index = 0
+        self.layout.addWidget(self.lbl)
+        self.layout.addWidget(self.plot)
+        self.setLayout(self.layout)
+        self.x = np.arange(buffer_length)
+        self.hlines = hlines
+        self.data_y_max = ylim[1]
+        self.data_y_min = ylim[0]
+
+        if ytick_interval is not None:
+            t0 = np.fix(float(self.data_y_min)/float(ytick_interval))*ytick_interval
+            t1 = np.fix(float(self.data_y_max)/float(ytick_interval))*ytick_interval
+            self.yticks = np.arange(t0,t1,ytick_interval)
+        else:
+            self.yticks = []
+        
+        
+        self.plot_width_px = ccfg.plot_width_px
+        self.plot_height_px = ccfg.plot_height_px
+
+        self.xtick0 = 0
+        self.xtick1 = ccfg.plot_xtick_length
+        
+        self.plot.setMinimumWidth(ccfg.plot_width_px)
+        self.lbl.setMinimumWidth(ccfg.plot_width_px)
+        self.xscale = float(ccfg.plot_width_px)/float(self.buffer_length-1)
+
+
+        # there's a slight penalty for drawing a 32 bit pixmap instead of an 8
+        # bit pixmap, but it dowsn't look like it really affects performance
+        # so it's probably safe to make this false
+        permit_only_gray_plots = False
+
+        if permit_only_gray_plots:
+            self.bmp = np.ones((ccfg.plot_height_px,ccfg.plot_width_px),dtype=np.uint8)*255
+            bpl = int(self.bmp.nbytes/ccfg.plot_height_px)
+            self.plot_background = QImage(self.bmp,ccfg.plot_width_px,ccfg.plot_height_px,
+                                          bpl,
+                                          QImage.Format_Indexed8)
+        else:
+            A = np.ones((ccfg.plot_height_px,ccfg.plot_width_px),dtype=np.uint32)*ccfg.plot_background_color[3]
+            R = np.ones((ccfg.plot_height_px,ccfg.plot_width_px),dtype=np.uint32)*ccfg.plot_background_color[0]
+            G = np.ones((ccfg.plot_height_px,ccfg.plot_width_px),dtype=np.uint32)*ccfg.plot_background_color[1]
+            B = np.ones((ccfg.plot_height_px,ccfg.plot_width_px),dtype=np.uint32)*ccfg.plot_background_color[2]
+            val = (A << 24 | R << 16 | G << 8 | B).flatten()
+            bpl = int(val.nbytes/ccfg.plot_height_px)
+            self.plot_background = QImage(val,ccfg.plot_width_px,ccfg.plot_height_px,
+                                          bpl,
+                                          QImage.Format_ARGB32)
+            
+        
+        self.pixmap.convertFromImage(self.plot_background)
+        
+        self.lbl.setFixedHeight(ccfg.caption_height_px*2)
+        
+        self.setMinimumWidth(ccfg.plot_width_px)
+        self.setMinimumHeight(ccfg.plot_height_px+ccfg.caption_height_px*2)
+        self.print_function = print_function
+        
+        self.plot.setFrameShape(QFrame.Box)
+        self.plot.setLineWidth(1)
+
+        self.pen = QPen()
+        self.pen.setColor(QColor(*color))
+        self.pen.setWidth(line_width)
+
+        self.ytick_pen = QPen()
+        self.ytick_pen.setColor(QColor(0,0,0,255))
+        self.ytick_pen.setWidth(0.5)
+        self.ytick_pen.setStyle(Qt.DotLine)
+
+        self.xtick_pen = QPen()
+        self.xtick_pen.setColor(QColor(0,0,0,255))
+        self.xtick_pen.setWidth(2.0)
+        self.xtick_pen.setStyle(Qt.SolidLine)
+
+        self.hline_pen = QPen()
+        self.hline_pen.setColor(QColor(0,0,0,255))
+        self.hline_pen.setWidth(1.0)
+        self.hline_pen.setStyle(Qt.SolidLine)
+
+        self.painter = QPainter()
+
+        
+    def setText(self,new_text):
+        self.lbl.setText(new_text)
+        
+
+    def setValue(self,new_value):
+        self.buf[self.buffer_current_index] = new_value
+        self.buffer_current_index = (self.buffer_current_index+1)%self.buffer_length
+        self.setText('%s\nsmoothed:%s'%(self.print_function(new_value),
+                               self.print_function(self.buf.mean())))
+        
+    def scale_y(self,vec):
+        h = self.plot.height()
+        out = (h - (vec-self.data_y_min)/(self.data_y_max-self.data_y_min)*h)
+        return out
+        
+    def setAlignment(self,new_alignment):
+        self.lbl.setAlignment(new_alignment)
+
+    def paintEvent(self,ev):
+
+        pixmap = QPixmap()
+        pixmap.convertFromImage(self.plot_background)
+        
+        self.painter.begin(pixmap)
+        self.painter.setPen(self.ytick_pen)
+
+        temp = self.scale_y(np.array(list(self.buf[self.buffer_current_index:])+list(self.buf[:self.buffer_current_index])))
+
+        for yt in self.yticks:
+            self.painter.drawLine(QLine(0,self.scale_y(yt),self.buffer_length*self.xscale,self.scale_y(yt)))
+
+
+        self.painter.setPen(self.hline_pen)
+        for hline in self.hlines:
+            self.painter.drawLine(QLine(0,self.scale_y(hline),self.buffer_length*self.xscale,self.scale_y(hline)))
+
+
+        self.painter.setPen(self.pen)
+            
+        for idx in range(self.buffer_length-1):
+            x1 = (idx)*self.xscale
+            x2 = (idx+1)*self.xscale
+
+            y1 = temp[idx]
+            y2 = temp[idx+1]
+            
+            self.painter.drawLine(QLine(x1,y1,x2,y2))
+
+            interval = self.buffer_length//10
+            interval = ccfg.plot_xtick_interval
+            
+            if idx%interval==0:
+                self.painter.setPen(self.xtick_pen)
+                self.painter.drawLine(QLine(
+                    (x1-self.buffer_current_index*self.xscale)%(self.buffer_length*self.xscale),
+                    self.xtick0,
+                    (x1-self.buffer_current_index*self.xscale)%(self.buffer_length*self.xscale),
+                    self.xtick1))
+                self.painter.setPen(self.pen)
+            
+            #if True:#20<self.buffer_current_index<80:
+            #    painter.drawEllipse(x1,y1,x2,y2)
+        
+        self.painter.end()
+        self.plot.setPixmap(pixmap)
+
+            
 class Overlay(QWidget):
     """Stores a list of 4-tuples (x1,x2,y1,y2), and can draw
     these over its pixmap as either lines between (x1,y1) and (x2,y2),
@@ -75,8 +239,6 @@ class Overlay(QWidget):
                 painter.drawRect(x1/d,y1/d,width/d,height/d)
             painter.end()
             
-#class StripChart(self):
-    
 class ZoomDisplay(QWidget):
     def __init__(self,name,clim=(0,255),colormap='gray',zoom=1.0,overlays=[],downsample=1,n_contrast_steps=20):
         super(ZoomDisplay,self).__init__()
@@ -85,6 +247,7 @@ class ZoomDisplay(QWidget):
         self.zoom = zoom
         self.pixmap = QPixmap()
         self.label = QLabel()
+        self.caption = QLabel()
         self.overlays = overlays
         self.colormap = colormap
         self.colortable = colortable(self.colormap)
@@ -94,10 +257,19 @@ class ZoomDisplay(QWidget):
         
         self.mouse_coords = (ccfg.zoom_width/2.0,ccfg.zoom_height/2.0)
         self.sy,self.sx = 256,256 #initialize to something random
-        
-        layout = QHBoxLayout()
-        layout.addWidget(self.label)
 
+        layout = QHBoxLayout()
+        subpanel = QWidget()
+        sublayout = QVBoxLayout()
+        sublayout.addWidget(self.caption)
+        sublayout.addWidget(self.label)
+        subpanel.setLayout(sublayout)
+        layout.addWidget(subpanel)
+        self.caption.setFixedHeight(ccfg.caption_height_px)
+        self.caption.setText(name)
+        self.label.setAlignment(Qt.AlignTop)
+
+        
         # set up contrast sliders:
         slider_button_layout = QVBoxLayout()
         slider_layout = QHBoxLayout()
@@ -118,8 +290,8 @@ class ZoomDisplay(QWidget):
         self.cmin_slider.setMaximum(self.n_steps)
         self.cmax_slider.setMaximum(self.n_steps)
 
-        self.creset_button = QPushButton('R')
-        self.cauto_button = QPushButton('A')
+        self.creset_button = QPushButton('Reset')
+        self.cauto_button = QPushButton('Auto')
         self.creset_button.setFixedWidth(ccfg.contrast_button_width)
         self.cauto_button.setFixedWidth(ccfg.contrast_button_width)
         self.creset_button.clicked.connect(self.contrast_reset)
@@ -162,7 +334,8 @@ class ZoomDisplay(QWidget):
         self.cmax_slider.setValue(self.real2slider(self.display_clim[1]))
             
     def contrast_reset(self):
-        self.set_display_clim()
+        self.display_clim = [limit for limit in self.clim]
+        #self.set_display_clim()
         self.set_sliders()
         
     def set_display_clim(self):
@@ -225,7 +398,7 @@ class ZoomDisplay(QWidget):
             self.sy,self.sx = bmp.shape
             n_bytes = bmp.nbytes
             bytes_per_line = int(n_bytes/self.sy)
-            image = QImage(bmp,self.sy,self.sx,bytes_per_line,QImage.Format_Indexed8)
+            image = QImage(bmp,self.sx,self.sy,bytes_per_line,QImage.Format_Indexed8)
             image.setColorTable(self.colortable)
             self.pixmap.convertFromImage(image)
             for o in self.overlays:
@@ -310,14 +483,14 @@ class UI(QWidget):
 
         self.overlay_slopes = Overlay(coords=[],mode='lines',color=ccfg.slope_line_color,thickness=ccfg.slope_line_thickness)
         
-        self.id_spots = ZoomDisplay('spots',clim=(0,4095),colormap=ccfg.spots_colormap,zoom=0.25,overlays=[self.overlay_boxes,self.overlay_slopes],downsample=ccfg.spots_image_downsampling)
+        self.id_spots = ZoomDisplay('Spots',clim=ccfg.spots_contrast_limits,colormap=ccfg.spots_colormap,zoom=0.25,overlays=[self.overlay_boxes,self.overlay_slopes],downsample=ccfg.spots_image_downsampling)
         
         layout.addWidget(self.id_spots,0,0,3,3)
 
-        self.id_mirror = ZoomDisplay('mirror',clim=ccfg.mirror_clim,colormap=ccfg.mirror_colormap,zoom=1.0)
-        self.id_wavefront = ZoomDisplay('wavefront',clim=ccfg.wavefront_clim,colormap=ccfg.wavefront_colormap,zoom=1.0)
+        self.id_mirror = ZoomDisplay('Mirror',clim=ccfg.mirror_contrast_limits,colormap=ccfg.mirror_colormap,zoom=1.0)
+        self.id_wavefront = ZoomDisplay('Wavefront',clim=ccfg.wavefront_contrast_limits,colormap=ccfg.wavefront_colormap,zoom=1.0)
 
-        self.id_zoomed_spots = ZoomDisplay('zoomed_spots',clim=(0,4095),colormap=ccfg.spots_colormap,zoom=5.0)
+        self.id_zoomed_spots = ZoomDisplay('Zoomed spots',clim=ccfg.spots_contrast_limits,colormap=ccfg.spots_colormap,zoom=5.0)
         
         layout.addWidget(self.id_mirror,0,3,1,1)
         layout.addWidget(self.id_wavefront,1,3,1,1)
@@ -342,13 +515,12 @@ class UI(QWidget):
         self.cb_logging.stateChanged.connect(self.loop.sensor.set_logging)
         self.cb_logging.stateChanged.connect(self.loop.mirror.set_logging)
         
-        self.pb_poke = QPushButton('Poke')
+        self.pb_poke = QPushButton('Measure poke matrix')
         self.pb_poke.clicked.connect(self.loop.run_poke)
         self.pb_record_reference = QPushButton('Record reference')
         self.pb_record_reference.clicked.connect(self.loop.sensor.record_reference)
         self.pb_flatten = QPushButton('&Flatten')
         self.pb_flatten.clicked.connect(self.flatten)
-
         
         self.pb_quit = QPushButton('&Quit')
         self.pb_quit.clicked.connect(self.quit)
@@ -386,18 +558,27 @@ class UI(QWidget):
         self.f_spinbox.valueChanged.connect(self.loop.sensor.set_defocus)
         f_layout.addWidget(self.f_spinbox)
         
-        self.lbl_error = QLabel()
-        self.lbl_error.setAlignment(Qt.AlignRight)
+        self.stripchart_error = StripChart(ylim=ccfg.error_plot_ylim,ytick_interval=ccfg.error_plot_ytick_interval,print_function=ccfg.error_plot_print_func,hlines=[0.0,ccfg.wavelength_m/14.0],buffer_length=ccfg.error_plot_buffer_length)
+        self.stripchart_error.setAlignment(Qt.AlignRight)
+        
+        self.stripchart_defocus = StripChart(ylim=ccfg.zernike_plot_ylim,ytick_interval=ccfg.zernike_plot_ytick_interval,print_function=ccfg.zernike_plot_print_func,buffer_length=ccfg.zernike_plot_buffer_length)
+        self.stripchart_defocus.setAlignment(Qt.AlignRight)
+
         self.lbl_tip = QLabel()
         self.lbl_tip.setAlignment(Qt.AlignRight)
+        
         self.lbl_tilt = QLabel()
         self.lbl_tilt.setAlignment(Qt.AlignRight)
+        
         self.lbl_cond = QLabel()
         self.lbl_cond.setAlignment(Qt.AlignRight)
+        
         self.lbl_sensor_fps = QLabel()
         self.lbl_sensor_fps.setAlignment(Qt.AlignRight)
+        
         self.lbl_mirror_fps = QLabel()
         self.lbl_mirror_fps.setAlignment(Qt.AlignRight)
+        
         self.lbl_ui_fps = QLabel()
         self.lbl_ui_fps.setAlignment(Qt.AlignRight)
         
@@ -410,7 +591,8 @@ class UI(QWidget):
         column_2.addWidget(self.cb_draw_lines)
         column_2.addWidget(self.pb_quit)
         
-        column_2.addWidget(self.lbl_error)
+        column_2.addWidget(self.stripchart_error)
+        column_2.addWidget(self.stripchart_defocus)
         column_2.addWidget(self.lbl_tip)
         column_2.addWidget(self.lbl_tilt)
         column_2.addWidget(self.lbl_cond)
@@ -464,7 +646,10 @@ class UI(QWidget):
 
         self.id_zoomed_spots.show(self.id_spots.zoomed())
         
-        self.lbl_error.setText(ccfg.wavefront_error_fmt%(sensor.error*1e9))
+        #self.lbl_error.setText(ccfg.wavefront_error_fmt%(sensor.error*1e9))
+        self.stripchart_error.setValue(sensor.error)
+        self.stripchart_defocus.setValue(sensor.zernikes[4]*ccfg.beam_diameter_m)
+        
         self.lbl_tip.setText(ccfg.tip_fmt%(sensor.tip*1000000))
         self.lbl_tilt.setText(ccfg.tilt_fmt%(sensor.tilt*1000000))
         self.lbl_cond.setText(ccfg.cond_fmt%(self.loop.get_condition_number()))
@@ -472,7 +657,7 @@ class UI(QWidget):
         self.lbl_mirror_fps.setText(ccfg.mirror_fps_fmt%mirror.frame_timer.fps)
         self.lbl_ui_fps.setText(ccfg.ui_fps_fmt%self.frame_timer.fps)
 
-        if self.loop.condition_good:
+        if self.loop.close_ok:
             self.cb_closed.setEnabled(True)
         else:
             self.cb_closed.setEnabled(False)
@@ -489,251 +674,6 @@ class UI(QWidget):
 
     def paintEvent(self,event):
         self.frame_timer.tick()
-
-
-
-
-class ImageDisplay(QWidget):
-    def __init__(self,name,downsample=None,clim=None,colormap=None,mouse_event_handler=None,image_min=None,image_max=None,width=512,height=512,zoom_height=ccfg.zoom_height,zoom_width=ccfg.zoom_width,zoomable=False,draw_boxes=False,draw_lines=False):
-        
-        super(ImageDisplay,self).__init__()
-        self.name = name
-        self.autoscale = False
-        
-        if downsample is None:
-            self.downsample = ccfg.image_downsample_factor
-        else:
-            self.downsample = downsample
-            
-        self.sx = width
-        self.sy = height
-        self.draw_boxes = draw_boxes
-        self.draw_lines = draw_lines
-        self.zoomable = zoomable
-        
-        if clim is None:
-            try:
-                clim = np.loadtxt('.gui_settings/clim_%s.txt'%name)
-            except Exception as e:
-                self.autoscale = True
-        
-        self.clim = clim
-        self.pixmap = QPixmap()
-        self.label = QLabel()
-
-        self.label.setScaledContents(False)
-
-        
-        
-        self.image_max = image_max
-        self.image_min = image_min
-        self.zoom_width = zoom_width
-        self.zoom_height = zoom_height
-        
-        layout = QHBoxLayout()
-        layout.addWidget(self.label)
-
-        if image_min is not None and image_max is not None and not self.autoscale:
-            self.n_steps = 100
-        
-            self.cmin_slider = QSlider(Qt.Vertical)
-            self.cmax_slider = QSlider(Qt.Vertical)
-
-            self.cmin_slider.setMinimum(0)
-            self.cmax_slider.setMinimum(0)
-
-            self.cmin_slider.setSingleStep(1)
-            self.cmax_slider.setSingleStep(1)
-
-            self.cmin_slider.setPageStep(10)
-            self.cmax_slider.setPageStep(10)
-
-            self.cmin_slider.setMaximum(self.n_steps)
-            self.cmax_slider.setMaximum(self.n_steps)
-
-            self.cmin_slider.setValue(self.real2slider(self.clim[0]))
-            self.cmax_slider.setValue(self.real2slider(self.clim[1]))
-
-            self.cmin_slider.valueChanged.connect(self.set_cmin)
-            self.cmax_slider.valueChanged.connect(self.set_cmax)
-            
-            layout.addWidget(self.cmin_slider)
-            layout.addWidget(self.cmax_slider)
-
-        
-        self.setLayout(layout)
-
-        self.zoomed = False
-        self.colormap = colormap
-        if self.colormap is not None:
-            self.colortable = colortable(self.colormap)
-        if mouse_event_handler is not None:
-            self.mousePressEvent = mouse_event_handler
-        else:
-            self.mousePressEvent = self.zoom
-            
-        self.downsample = downsample
-        
-        data = np.random.rand(100,100)
-        self.show(data)
-        
-        self.zoom_x1 = 0
-        self.zoom_x2 = self.sx-1
-        self.zoom_y1 = 0
-        self.zoom_y2 = self.sy-1
-        self.label_xoffset = 0.0
-        self.label_yoffset = 0.0
-        self.label_offsets_set = False
-        
-    def real2slider(self,val):
-        # convert a real value into a slider value
-        return round(int((val-float(self.image_min))/float(self.image_max-self.image_min)*self.n_steps))
-
-    def slider2real(self,val):
-        # convert a slider integer into a real value
-        return float(val)/float(self.n_steps)*(self.image_max-self.image_min)+self.image_min
-    
-    def set_cmax(self,slider_value):
-        self.clim = (self.clim[0],self.slider2real(slider_value))
-        np.savetxt('.gui_settings/clim_%s.txt'%self.name,self.clim)
-
-    def set_cmin(self,slider_value):
-        self.clim = (self.slider2real(slider_value),self.clim[1])
-        np.savetxt('.gui_settings/clim_%s.txt'%self.name,self.clim)
-        
-    def show(self,data,boxes=None,lines=None,mask=None):
-
-        if mask is None:
-            if boxes is not None:
-                mask = np.ones(boxes[0].shape)
-            elif lines is not None:
-                mask = np.ones(lines[0].shape)
-            else:
-                assert (boxes is None) and (mask is None)
-        
-#        if self.name=='mirror':
-#            print data[6,6]
-            
-        if self.autoscale:
-            clim = (data.min(),data.max())
-        else:
-            clim = self.clim
-
-        cmin,cmax = clim
-        downsample = self.downsample
-        data = data[::downsample,::downsample]
-        
-        if self.zoomed:
-            x_scale = float(data.shape[1])/float(self.sx)
-            y_scale = float(data.shape[0])/float(self.sy)
-
-            zy1 = int(round(self.zoom_y1*y_scale))
-            zy2 = int(round(self.zoom_y2*y_scale))
-            zx1 = int(round(self.zoom_x1*x_scale))
-            zx2 = int(round(self.zoom_x2*x_scale))
-            
-            #data = data[self.zoom_y1:self.zoom_y2,self.zoom_x1:self.zoom_x2]
-            data = data[zy1:zy2,zx1:zx2]
-            
-        bmp = np.round(np.clip((data.astype(np.float)-cmin)/(cmax-cmin),0,1)*255).astype(np.uint8)
-        sy,sx = bmp.shape
-        n_bytes = bmp.nbytes
-        bytes_per_line = int(n_bytes/sy)
-        image = QImage(bmp,sy,sx,bytes_per_line,QImage.Format_Indexed8)
-        if self.colormap is not None:
-            image.setColorTable(self.colortable)
-        self.pixmap.convertFromImage(image)
-
-
-        self.label_xoffset = float(self.label.width()-self.pixmap.width())/2.0
-        
-        if boxes is not None and self.draw_boxes:
-            x1vec,x2vec,y1vec,y2vec = boxes
-            pen = QPen()
-            pen.setColor(QColor(*ccfg.search_box_color))
-            pen.setWidth(ccfg.search_box_thickness)
-            painter = QPainter()
-            painter.begin(self.pixmap)
-            painter.setPen(pen)
-            for index,(x1,y1,x2,y2) in enumerate(zip(x1vec,y1vec,x2vec,y2vec)):
-                if mask[index]:
-                    width = float(x2 - x1 + 1)/float(self.downsample)
-                    painter.drawRect(x1/float(self.downsample)-self.zoom_x1,y1/float(self.downsample)-self.zoom_y1,width,width)
-            painter.end()
-            
-        if lines is not None and self.draw_lines:
-            x1vec,x2vec,y1vec,y2vec = lines
-            pen = QPen()
-            pen.setColor(QColor(*ccfg.slope_line_color))
-            pen.setWidth(ccfg.slope_line_thickness)
-            painter = QPainter()
-            painter.begin(self.pixmap)
-            painter.setPen(pen)
-            for index,(x1,y1,x2,y2) in enumerate(zip(x1vec,y1vec,x2vec,y2vec)):
-                if mask[index]:
-                    painter.drawLine(QLine(x1/float(self.downsample)- self.zoom_x1,y1/float(self.downsample)-self.zoom_y1,x2/float(self.downsample)- self.zoom_x1,y2/float(self.downsample)- self.zoom_y1))
-            painter.end()
-
-
-        if sy==self.sy and sx==self.sx:
-            self.label.setPixmap(self.pixmap)
-        else:
-            self.label.setPixmap(self.pixmap.scaled(self.sy,self.sx))
-        
-    def set_clim(self,clim):
-        self.clim = clim
-
-    def zoom(self,event):
-        if not self.zoomable:
-            return
-        
-        if self.zoom_width>=self.sx or self.zoom_height>=self.sy:
-            return
-        
-        x,y = event.x(),event.y()
-        if self.zoomed:
-            self.zoomed = False
-            self.zoom_x1 = 0
-            self.zoom_x2 = self.sx-1
-            self.zoom_y1 = 0
-            self.zoom_y2 = self.sy-1
-        else:
-            self.zoomed = True
-            self.zoom_x1 = x-self.zoom_width//2
-            self.zoom_x2 = x+self.zoom_width//2
-            self.zoom_y1 = y-self.zoom_height//2
-            self.zoom_y2 = y+self.zoom_height//2
-            if self.zoom_x1<0:
-                dx = -self.zoom_x1
-                self.zoom_x1+=dx
-                self.zoom_x2+=dx
-            if self.zoom_x2>self.sx-1:
-                dx = self.zoom_x2-(self.sx-1)
-                self.zoom_x1-=dx
-                self.zoom_x2-=dx
-            if self.zoom_y1<0:
-                dy = -self.zoom_y1
-                self.zoom_y1+=dy
-                self.zoom_y2+=dy
-            if self.zoom_y2>self.sy-1:
-                dy = self.zoom_y2-(self.sy-1)
-                self.zoom_y1-=dy
-                self.zoom_y2-=dy
-
-            if self.name=='spots':
-                print self.label.width()
-                print self.pixmap.width()
-                print self.label_xoffset
-                print 'zooming to %d,%d,%d,%d'%(self.zoom_x1,self.zoom_x2,self.zoom_y1,self.zoom_y2)
-
-    def set_draw_lines(self,val):
-        self.draw_lines = val
-
-    def set_draw_boxes(self,val):
-        self.draw_boxes = val
-        
-
-
 
 class MirrorUI(QWidget):
 
@@ -800,7 +740,7 @@ class MirrorUI(QWidget):
         #ta = QTextArea('temp.txt')
         #layout.addWidget(ta,self.n_actuators_y,3,1,1)
 
-        self.mirror_zd = ZoomDisplay('mirror_ui',clim=ccfg.mirror_clim,colormap=ccfg.mirror_colormap,zoom=30.0)
+        self.mirror_zd = ZoomDisplay('mirror_ui',clim=ccfg.mirror_contrast_limits,colormap=ccfg.mirror_colormap,zoom=30.0)
         layout.addWidget(self.mirror_zd,0,self.n_actuators_x,*self.indices.shape)
         
         self.setLayout(layout)

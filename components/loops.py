@@ -156,7 +156,7 @@ class Loop(QObject):
             poke = dummy
             
         self.poke = Poke(poke)
-        self.condition_good = ccfg.loop_condition_llim<self.get_condition_number()<ccfg.loop_condition_ulim
+        self.close_ok = ccfg.loop_condition_llim<self.get_condition_number()<ccfg.loop_condition_ulim
 
     def invert(self):
         if self.poke is not None:
@@ -167,7 +167,7 @@ class Loop(QObject):
             QApplication.processEvents()
             self.unpause()
             time.sleep(.001)
-            self.condition_good = ccfg.loop_condition_llim<self.get_condition_number()<ccfg.loop_condition_ulim
+            self.close_ok = ccfg.loop_condition_llim<self.get_condition_number()<ccfg.loop_condition_ulim
 
     def set_n_modes(self,n):
         try:
@@ -252,7 +252,7 @@ class Loop(QObject):
         np.savetxt(archive_command_fn,commands)
         save_modes_chart(archive_chart_fn,poke,commands,self.mirror.mirror_mask)
         self.poke = Poke(poke)
-        self.condition_good = ccfg.loop_condition_llim<self.get_condition_number()<ccfg.loop_condition_ulim
+        self.close_ok = ccfg.loop_condition_llim<self.get_condition_number()<ccfg.loop_condition_ulim
         time.sleep(1)
         self.unpause()
 

@@ -72,7 +72,7 @@ class Sensor:
         self.error = 0.0
         self.tip = 0.0
         self.tilt = 0.0
-        self.zernikes = None
+        self.zernikes = np.zeros(ccfg.n_zernike_terms)
         self.wavefront = np.zeros(self.sensor_mask.shape)
 
         self.cam = camera

@@ -49,8 +49,8 @@ beam_diameter_m = 10e-3
 interface_scale_factor = 0.75
 wavelength_m = 840e-9
 estimate_background = True
-background_correction = -100
-search_box_half_width = 4
+background_correction = 0
+search_box_half_width = 5
 spots_threshold = 100.0
 sensor_update_rate = 1.0 # deprecated in current version
 sensor_filter_lenslets = False
@@ -90,6 +90,40 @@ zernike_dioptric_equivalent = 1.5
 ui_width_px = 1200
 ui_height_px = 800
 
+plot_width_px = 400
+plot_height_px = 100
+
+caption_height_px = 15
+
+error_plot_ylim = (-10e-9,1000e-9)
+error_plot_ytick_interval = 100e-9
+error_plot_print_func = lambda val: '%0.1f nm RMS'%(val*1e9)
+error_plot_buffer_length = 100
+
+zernike_plot_ylim = (-5e-6,5e-6)
+zernike_plot_ytick_interval = 1e-6
+zernike_plot_print_func = lambda val: '%0.1f um defocus'%(val*1e6)
+zernike_plot_buffer_length = 200
+
+plot_background_color = (255,255,255,255)
+
+plot_line_color = (0,128,0,128)
+plot_line_width = 2.0
+
+plot_hline_color = (0,128,0,255)
+plot_hline_width = 1.0
+
+plot_xtick_color = (0,0,0,255)
+plot_xtick_width = 1.0
+plot_xtick_length = plot_height_px*.1
+plot_xtick_interval = 50
+
+plot_ytick_color = (0,0,0,255)
+plot_ytick_width = 1.0
+
+plot_buffer_length = 100
+
+
 spots_image_downsampling = 1
 search_box_color = (0,63,127,200)
 search_box_thickness = 0.2
@@ -100,10 +134,11 @@ slope_line_thickness = 0.2
 slope_line_color = (200,100,100,200)
 slope_line_magnification = 10
 spots_colormap = 'bone'
+spots_contrast_limits = (0,2**bit_depth-1)
 wavefront_colormap = 'jet'
-wavefront_clim = (-1e-6,1e-6)
+wavefront_contrast_limits = (-1e-6,1e-6)
 mirror_colormap = 'mirror'
-mirror_clim = (-1,1)
+mirror_contrast_limits = (-1,1)
 zoom_width = 32
 zoom_height = 32
 single_spot_color = (255,63,63,255)

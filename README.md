@@ -33,27 +33,26 @@ Almost everything in CIAO could be written in Python using the Numpy library, wi
     
 You may see some warnings (e.g. about deprecation of Numpy features), but no errors.
 
-
 # Quick start
 
 If you have succesfully completed the "Setup and installation" steps above, following this recipe should allow you to get a simulator up and running quickly.
 
-1. Navigate into the ```ciao``` directory and make a copy of ```session_template``` and name it something else, e.g. ```session_foo```.
-2. Navigate into ```session_foo``` and issue ```python script_initialize.py```.
+1. Navigate into the ```ciao``` directory and make a copy of ```session_template``` and name it ```local_session_simulator_256```.
+2. Navigate into ```local_session_simulator_256``` and issue ```python script_initialize.py```.
 3. Create a mirror mask by issuing ```python script_make_mask.py 11 5.5 ./etc/dm/mirror_mask.txt```.
 4. Issue ```python script_initialize.py``` again, and type 'Y' and press enter, to create an all-zero flat file.
-5. Create a SHWS mask by issuing ```python script_make_mask.py 10 4.8 ./etc/ref/reference_mask.txt```.
-6. Edit ```session_foo/ciao_config.py```. Ensure that each of the following parameters are set as described below:
+5. Create a SHWS mask by issuing ```python script_make_mask.py 20 9.6 ./etc/ref/reference_mask.txt```.
+6. Edit ```local_session_simulator_256/ciao_config.py```. Ensure that each of the following parameters are set as described below:
 
         simulate = True
         system_id = 'simulator'
         mirror_id = 'simulator'
         camera_id = 'simulator'
-        image_width_px = 128
-        image_height_px = 128
-        lenslet_pitch_m = 1e-3
+        image_width_px = 256
+        image_height_px = 256
+        lenslet_pitch_m = 500e-6
         lenslet_focal_length_m = 20.0e-3
-        pixel_size_m = 80e-6
+        pixel_size_m = 39e-6
         beam_diameter_m = 10e-3
         search_box_half_width = 5
         iterative_centroiding_step = 2
@@ -63,7 +62,7 @@ If you have succesfully completed the "Setup and installation" steps above, foll
 7. Issue ```python script_record_initial_reference_coordinates.py etc/ref/reference_initial.txt``` to create bootstrapping reference coordinates. Follow the instructions in the terminal and use the resulting plots to refine these coordinates.
 8. Issue ```python ui_ciao.py```. The UI should appear.
 9. Click **Record reference** a few times.
-10. Click **Poke** and wait for the poke matrix to be measured.
+10. Click **Measure poke matrix** and wait for the poke matrix to be measured.
 11. Click **Loop closed**.
 
 # Slow start
@@ -80,7 +79,7 @@ In short, every top level script must begin with the following two lines:
     sys.path.append(os.path.split(__file__)[0])
 
 
-# ```session_template``` folder
+## ```session_template``` folder
 
 The default installation contains a folder called ```session_template``` which should can be copied to create a new session. This contains at least the following files:
 
@@ -96,10 +95,13 @@ The default installation contains a folder called ```session_template``` which s
 4. ```script_record_initial_reference_coordinates.py``` is used to generate ballpark reference coordinates which can then be used to bootstrap precise reference coordinates. The problem is that we need search boxes before we can compute the centroids of reference beam spots, but we need centroids of the reference beam spots in order to position search boxes. This script attempts to guess the initial locations of search boxes based on the spots image, and permits a bit of interactive adjustment of those coordinates.
 5. ```ui_ciao.py``` launches the closed-loop GUI.
 
+## Local sessions
+
+By default, any session whose name begins with ```local_session_``` will not be pushed into or pulled from the Git repository. This is a convenient way to guard against accidental collisions between local sessions and those stored in the repo.
 
 ## Creating a session
 
-The quickest way to create a session is to use ```script_initialize.py```. After creating a copy of ```session_template```, enter the directory and issue the following command:
+The quickest way to create a session is to use ```script_initialize.py```. After creating a copy of ```session_template```, rename it something descriptive starting with ```local_session_```, enter the directory and issue the following command:
 
     python script_initialize.py
     
@@ -107,6 +109,8 @@ This will create the following directory structure in your session directory.
 
     .
     |-- ciao_config.py
+    |-- icons
+    |   `-- ciao.png
     |-- etc
     |   |-- ctrl
     |   |-- dm
@@ -116,6 +120,7 @@ This will create the following directory structure in your session directory.
     |-- script_make_mask.py
     |-- script_record_initial_reference_coordinates.py
     `-- ui_ciao.py
+    
     
 It will also prompt you to create mask files, reference coordinates, etc.
 
