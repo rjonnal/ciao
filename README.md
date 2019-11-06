@@ -31,7 +31,7 @@ Almost everything in CIAO could be written in Python using the Numpy library, wi
 
     python setup.py build_ext --inplace
     
-You may see some warnings (e.g. about deprecation of Numpy features), but no errors.
+You may see some warnings (e.g. about deprecation of Numpy features), but shouldn't see any errors.
 
 # Quick start
 
