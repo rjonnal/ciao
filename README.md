@@ -52,7 +52,7 @@ If you have succesfully completed the "Setup and installation" steps above, foll
         image_height_px = 256
         lenslet_pitch_m = 500e-6
         lenslet_focal_length_m = 20.0e-3
-        pixel_size_m = 39e-6
+        pixel_size_m = 40e-6
         beam_diameter_m = 10e-3
         search_box_half_width = 5
         iterative_centroiding_step = 2
