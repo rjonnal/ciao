@@ -18,7 +18,8 @@ else:
     else:
         sys.exit('Camera %s not available.'%ccfg.camera)
     mirror = ciao.mirrors.Mirror()
-
+    sensor = ciao.sensors.Sensor(cam)
+    
 app = QApplication(sys.argv)
 loop = ciao.loops.Loop(sensor,mirror)
 ui = ciao.ui.UI(loop)

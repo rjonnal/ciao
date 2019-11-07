@@ -7,7 +7,7 @@ Python tools for controlling, simulating, and characterizing adaptive optics (AO
 
 These are the prerequisites for installing a version of the software which allows it to be run in simulation mode.
 
-1. Install [Notepad++](https://notepad-plus-plus.org/download) or another editor.
+1. Install [emacs](https://www.gnu.org/software/emacs/), [Notepad++](https://notepad-plus-plus.org/download), or another editor.
 2. Install [Git](https://git-scm.com/download/win)
 3. Install [Anaconda for Python 2.7](https://www.anaconda.com/distribution/#download-section)
 4. If you're using Windows, install the [Visual C++ compiler for Python 2.7](https://www.microsoft.com/en-us/download/details.aspx?id=44266). In Linux, gcc will be invoked instead; it's probably already installed on your system, but you can verify that it is with ```gcc --version```.
