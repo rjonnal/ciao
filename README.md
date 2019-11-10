@@ -214,6 +214,8 @@ One probably common use case for CIAO is having multiple "installations" or "ver
 
 5. **Sessions**. Create folders with all top-level CIAO scripts and a single ```ciao_config.py``` in each. Advantages: once it's set up correctly you can forget about it; obviates confusing code in most of CIAO code base. Disadvantages: requires all scripts to live in the same directory as the config file; requires every script to modify ```sys.path``` at the very top, adding the session directory so that the only ```ciao_config.py``` file visible to any CIAO object is the session's. This is the approach I've selected, because it prioritizes ease of use, at the slight expense of transparency and flexibility.
 
+
+
 # Topics for conversation
 
 1. Other than condition number, what algorithmic or numerical tests can be employed to predict the performance of a given poke/control matrix?
