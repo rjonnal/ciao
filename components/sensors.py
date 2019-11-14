@@ -43,6 +43,21 @@ class Sensor:
         self.reconstruct_wavefront = ccfg.sensor_reconstruct_wavefront
         self.remove_tip_tilt = ccfg.sensor_remove_tip_tilt
 
+        # calculate diffraction limited spot size on sensor, to determine
+        # the centroiding window size
+        lenslet_dlss = 1.22*self.wavelength_m*self.lenslet_focal_length_m/self.lenslet_pitch_m
+        lenslet_dlss_px = lenslet_dlss/self.pixel_size_m
+        # now we need to account for smearing of spots due to axial displacement of retinal layers
+        extent = 500e-6 # retinal thickness
+        smear = extent*6.75/16.67 # pupil diameter and focal length; use diameter in case beacon is at edge of field
+        try:
+            magnification = ccfg.retina_sensor_magnification
+        except Exception as e:
+            magnification = 1.0
+        total_size = lenslet_dlss+smear*magnification
+        total_size_px = total_size/self.pixel_size_m
+        self.centroiding_half_width = int(np.floor(total_size_px/2.0))*2
+        
         try:
             xy = np.loadtxt(ccfg.reference_coordinates_filename)
         except Exception as e:
@@ -68,6 +83,12 @@ class Sensor:
         self.box_maxes = np.zeros(n_lenslets)
         self.box_mins = np.zeros(n_lenslets)
         self.box_means = np.zeros(n_lenslets)
+        self.valid_centroids = np.zeros(n_lenslets,dtype=np.int16)
+
+        try:
+            self.fast_centroiding = ccfg.fast_centroiding
+        except Exception as e:
+            self.fast_centroiding = False
         self.box_backgrounds = np.zeros(n_lenslets)
         self.error = 0.0
         self.tip = 0.0
@@ -127,6 +148,8 @@ class Sensor:
         self.background_correction = val
         #sensor_mutex.unlock()
 
+    def set_fast_centroiding(self,val):
+        self.fast_centroiding = val
 
     def set_logging(self,val):
         self.logging = val
@@ -141,28 +164,46 @@ class Sensor:
         self.search_boxes.move(newx,newy)
         
         self.unpause()
+
+    def set_centroiding_half_width(self,val):
+        self.centroiding_half_width = val
         
     def sense(self,debug=False):
         self.image = self.cam.get_image()
-        centroid.estimate_backgrounds(spots_image=self.image,
-                                      sb_x_vec = self.search_boxes.x,
-                                      sb_y_vec = self.search_boxes.y,
-                                      sb_bg_vec = self.box_backgrounds,
-                                      sb_half_width_p = self.search_boxes.half_width)
-        centroid.compute_centroids(spots_image=self.image,
-                                   sb_x_vec = self.search_boxes.x,
-                                   sb_y_vec = self.search_boxes.y,
-                                   sb_bg_vec = self.box_backgrounds,
-                                   sb_half_width_p = self.search_boxes.half_width,
-                                   iterations_p = self.centroiding_iterations,
-                                   iteration_step_px_p = self.iterative_centroiding_step,
-                                   x_out = self.x_centroids,
-                                   y_out = self.y_centroids,
-                                   mean_intensity = self.box_means,
-                                   maximum_intensity = self.box_maxes,
-                                   minimum_intensity = self.box_mins,
-                                   num_threads_p = 1)
-        
+
+        t0 = time.time()
+        if not self.fast_centroiding:
+            centroid.estimate_backgrounds(spots_image=self.image,
+                                          sb_x_vec = self.search_boxes.x,
+                                          sb_y_vec = self.search_boxes.y,
+                                          sb_bg_vec = self.box_backgrounds,
+                                          sb_half_width_p = self.search_boxes.half_width)
+            centroid.compute_centroids(spots_image=self.image,
+                                       sb_x_vec = self.search_boxes.x,
+                                       sb_y_vec = self.search_boxes.y,
+                                       sb_bg_vec = self.box_backgrounds,
+                                       sb_half_width_p = self.search_boxes.half_width,
+                                       iterations_p = self.centroiding_iterations,
+                                       iteration_step_px_p = self.iterative_centroiding_step,
+                                       x_out = self.x_centroids,
+                                       y_out = self.y_centroids,
+                                       mean_intensity = self.box_means,
+                                       maximum_intensity = self.box_maxes,
+                                       minimum_intensity = self.box_mins,
+                                       num_threads_p = 1)
+        else:
+            centroid.fast_centroids(spots_image=self.image,
+                                    sb_x_vec = self.search_boxes.x,
+                                    sb_y_vec = self.search_boxes.y,
+                                    sb_half_width_p = self.search_boxes.half_width,
+                                    centroiding_half_width_p = self.centroiding_half_width,
+                                    x_out = self.x_centroids,
+                                    y_out = self.y_centroids,
+                                    sb_max_vec = self.box_maxes,
+                                    valid_vec = self.valid_centroids,
+                                    verbose_p = 0,
+                                    num_threads_p = 1)
+        self.centroiding_time = time.time()-t0
         self.x_slopes = (self.x_centroids-self.search_boxes.x)*self.pixel_size_m/self.lenslet_focal_length_m
         self.y_slopes = (self.y_centroids-self.search_boxes.y)*self.pixel_size_m/self.lenslet_focal_length_m
         self.tilt = np.mean(self.x_slopes)

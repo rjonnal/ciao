@@ -204,7 +204,24 @@ class StripChart(QWidget):
         self.painter.end()
         self.plot.setPixmap(pixmap)
 
-            
+
+class Indicator(QLabel):
+    """Permits time-averaged display and formatting of a numerical value."""
+
+    def __init__(self,buffer_length=ccfg.plot_buffer_length,print_function=lambda val: '%0.1e'%val):
+        
+        super(Indicator,self).__init__()
+        self.buf = np.zeros(buffer_length)
+        self.buffer_length = buffer_length
+        self.buffer_current_index = 0
+        self.print_function = print_function
+        
+    def setValue(self,new_value):
+        self.buf[self.buffer_current_index] = new_value
+        self.buffer_current_index = (self.buffer_current_index+1)%self.buffer_length
+        self.setText('%s'%self.print_function(self.buf.mean()))
+        
+        
 class Overlay(QWidget):
     """Stores a list of 4-tuples (x1,x2,y1,y2), and can draw
     these over its pixmap as either lines between (x1,y1) and (x2,y2),
@@ -538,6 +555,20 @@ class UI(QWidget):
         self.pb_invert.clicked.connect(self.loop.invert)
         poke_layout.addWidget(self.pb_invert)
 
+
+        centroiding_layout = QHBoxLayout()
+        centroiding_layout.addWidget(QLabel('Centroiding:'))
+        self.cb_fast_centroiding = QCheckBox('Fast centroiding')
+        self.cb_fast_centroiding.setChecked(self.loop.sensor.fast_centroiding)
+        self.cb_fast_centroiding.stateChanged.connect(self.loop.sensor.set_fast_centroiding)
+        centroiding_layout.addWidget(self.cb_fast_centroiding)
+        self.centroiding_width_spinbox = QSpinBox()
+        self.centroiding_width_spinbox.setMaximum(self.loop.sensor.search_boxes.half_width)
+        self.centroiding_width_spinbox.setMinimum(0)
+        self.centroiding_width_spinbox.valueChanged.connect(self.loop.sensor.set_centroiding_half_width)
+        self.centroiding_width_spinbox.setValue(self.loop.sensor.centroiding_half_width)
+        centroiding_layout.addWidget(self.centroiding_width_spinbox)
+        
         bg_layout = QHBoxLayout()
         bg_layout.addWidget(QLabel('Background correction:'))
         self.bg_spinbox = QSpinBox()
@@ -572,9 +603,13 @@ class UI(QWidget):
         
         self.lbl_cond = QLabel()
         self.lbl_cond.setAlignment(Qt.AlignRight)
+
         
         self.lbl_sensor_fps = QLabel()
         self.lbl_sensor_fps.setAlignment(Qt.AlignRight)
+
+        self.ind_centroiding_time = Indicator(buffer_length=50,print_function=lambda x: '%0.0f us (centroiding)'%(x*1e6))
+        self.ind_centroiding_time.setAlignment(Qt.AlignRight)
         
         self.lbl_mirror_fps = QLabel()
         self.lbl_mirror_fps.setAlignment(Qt.AlignRight)
@@ -584,7 +619,9 @@ class UI(QWidget):
         
         column_2.addWidget(self.pb_flatten)
         column_2.addWidget(self.cb_closed)
+        #column_2.addWidget(self.cb_fast_centroiding)
         column_2.addLayout(f_layout)
+        column_2.addLayout(centroiding_layout)
         column_2.addLayout(bg_layout)
         column_2.addLayout(poke_layout)
         column_2.addWidget(self.cb_draw_boxes)
@@ -596,6 +633,7 @@ class UI(QWidget):
         column_2.addWidget(self.lbl_tip)
         column_2.addWidget(self.lbl_tilt)
         column_2.addWidget(self.lbl_cond)
+        column_2.addWidget(self.ind_centroiding_time)
         column_2.addWidget(self.lbl_sensor_fps)
         column_2.addWidget(self.lbl_mirror_fps)
         column_2.addWidget(self.lbl_ui_fps)
@@ -653,6 +691,9 @@ class UI(QWidget):
         self.lbl_tip.setText(ccfg.tip_fmt%(sensor.tip*1000000))
         self.lbl_tilt.setText(ccfg.tilt_fmt%(sensor.tilt*1000000))
         self.lbl_cond.setText(ccfg.cond_fmt%(self.loop.get_condition_number()))
+        
+        self.ind_centroiding_time.setValue(sensor.centroiding_time)
+        
         self.lbl_sensor_fps.setText(ccfg.sensor_fps_fmt%sensor.frame_timer.fps)
         self.lbl_mirror_fps.setText(ccfg.mirror_fps_fmt%mirror.frame_timer.fps)
         self.lbl_ui_fps.setText(ccfg.ui_fps_fmt%self.frame_timer.fps)
