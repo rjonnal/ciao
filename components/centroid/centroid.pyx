@@ -388,11 +388,11 @@ cpdef fast_centroids(np.ndarray[np.int16_t,ndim=2] spots_image,
                         #printf('\t%d,%d,%0.2f,%0.2f,%0.2f\n',x,y,xnum,ynum,denom)
 
                 if denom>0:
-                    printf('%f,%f,%f,\n',xnum,ynum,denom)
+                    #printf('%f,%f,%f,\n',xnum,ynum,denom)
                     x_out[spot_index] = xnum/denom
                     y_out[spot_index] = ynum/denom
-                    printf('%f,%f\n',x_out[spot_index],y_out[spot_index])
-                    printf('\n')
+                    #printf('%f,%f\n',x_out[spot_index],y_out[spot_index])
+                    #printf('\n')
                     valid_vec[spot_index] = 1
                 else:
                     printf('centroid.fast_centroids: centroiding coordinates x=[%d,%d], y=[%d,%d] produce search box with zero intensity. Check image.\n',x1,x2,y1,y2,sx,sy)

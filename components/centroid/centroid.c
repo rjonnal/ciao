@@ -4523,8 +4523,6 @@ static PyObject *__pyx_f_8centroid_fast_centroids(PyArrayObject *__pyx_v_spots_i
   Py_ssize_t __pyx_t_36;
   Py_ssize_t __pyx_t_37;
   Py_ssize_t __pyx_t_38;
-  Py_ssize_t __pyx_t_39;
-  Py_ssize_t __pyx_t_40;
   __Pyx_RefNannySetupContext("fast_centroids", 0);
   if (__pyx_optional_args) {
     if (__pyx_optional_args->__pyx_n > 0) {
@@ -5381,27 +5379,18 @@ static PyObject *__pyx_f_8centroid_fast_centroids(PyArrayObject *__pyx_v_spots_i
  *                         #printf('\t%d,%d,%0.2f,%0.2f,%0.2f\n',x,y,xnum,ynum,denom)
  * 
  *                 if denom>0:             # <<<<<<<<<<<<<<
- *                     printf('%f,%f,%f,\n',xnum,ynum,denom)
+ *                     #printf('%f,%f,%f,\n',xnum,ynum,denom)
  *                     x_out[spot_index] = xnum/denom
  */
       __pyx_t_15 = ((__pyx_v_denom > 0.0) != 0);
       if (__pyx_t_15) {
 
-        /* "centroid.pyx":391
- * 
- *                 if denom>0:
- *                     printf('%f,%f,%f,\n',xnum,ynum,denom)             # <<<<<<<<<<<<<<
- *                     x_out[spot_index] = xnum/denom
- *                     y_out[spot_index] = ynum/denom
- */
-        (void)(printf(((char const *)"%f,%f,%f,\n"), __pyx_v_xnum, __pyx_v_ynum, __pyx_v_denom));
-
         /* "centroid.pyx":392
  *                 if denom>0:
- *                     printf('%f,%f,%f,\n',xnum,ynum,denom)
+ *                     #printf('%f,%f,%f,\n',xnum,ynum,denom)
  *                     x_out[spot_index] = xnum/denom             # <<<<<<<<<<<<<<
  *                     y_out[spot_index] = ynum/denom
- *                     printf('%f,%f\n',x_out[spot_index],y_out[spot_index])
+ *                     #printf('%f,%f\n',x_out[spot_index],y_out[spot_index])
  */
         if (unlikely(__pyx_v_denom == 0)) {
           PyErr_SetString(PyExc_ZeroDivisionError, "float division");
@@ -5411,11 +5400,11 @@ static PyObject *__pyx_f_8centroid_fast_centroids(PyArrayObject *__pyx_v_spots_i
         *__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float_t *, __pyx_pybuffernd_x_out.rcbuffer->pybuffer.buf, __pyx_t_33, __pyx_pybuffernd_x_out.diminfo[0].strides) = (__pyx_v_xnum / __pyx_v_denom);
 
         /* "centroid.pyx":393
- *                     printf('%f,%f,%f,\n',xnum,ynum,denom)
+ *                     #printf('%f,%f,%f,\n',xnum,ynum,denom)
  *                     x_out[spot_index] = xnum/denom
  *                     y_out[spot_index] = ynum/denom             # <<<<<<<<<<<<<<
- *                     printf('%f,%f\n',x_out[spot_index],y_out[spot_index])
- *                     printf('\n')
+ *                     #printf('%f,%f\n',x_out[spot_index],y_out[spot_index])
+ *                     #printf('\n')
  */
         if (unlikely(__pyx_v_denom == 0)) {
           PyErr_SetString(PyExc_ZeroDivisionError, "float division");
@@ -5424,41 +5413,21 @@ static PyObject *__pyx_f_8centroid_fast_centroids(PyArrayObject *__pyx_v_spots_i
         __pyx_t_34 = __pyx_v_spot_index;
         *__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float_t *, __pyx_pybuffernd_y_out.rcbuffer->pybuffer.buf, __pyx_t_34, __pyx_pybuffernd_y_out.diminfo[0].strides) = (__pyx_v_ynum / __pyx_v_denom);
 
-        /* "centroid.pyx":394
- *                     x_out[spot_index] = xnum/denom
- *                     y_out[spot_index] = ynum/denom
- *                     printf('%f,%f\n',x_out[spot_index],y_out[spot_index])             # <<<<<<<<<<<<<<
- *                     printf('\n')
- *                     valid_vec[spot_index] = 1
- */
-        __pyx_t_35 = __pyx_v_spot_index;
-        __pyx_t_36 = __pyx_v_spot_index;
-        (void)(printf(((char const *)"%f,%f\n"), (*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float_t *, __pyx_pybuffernd_x_out.rcbuffer->pybuffer.buf, __pyx_t_35, __pyx_pybuffernd_x_out.diminfo[0].strides)), (*__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float_t *, __pyx_pybuffernd_y_out.rcbuffer->pybuffer.buf, __pyx_t_36, __pyx_pybuffernd_y_out.diminfo[0].strides))));
-
-        /* "centroid.pyx":395
- *                     y_out[spot_index] = ynum/denom
- *                     printf('%f,%f\n',x_out[spot_index],y_out[spot_index])
- *                     printf('\n')             # <<<<<<<<<<<<<<
- *                     valid_vec[spot_index] = 1
- *                 else:
- */
-        (void)(printf(((char const *)"\n")));
-
         /* "centroid.pyx":396
- *                     printf('%f,%f\n',x_out[spot_index],y_out[spot_index])
- *                     printf('\n')
+ *                     #printf('%f,%f\n',x_out[spot_index],y_out[spot_index])
+ *                     #printf('\n')
  *                     valid_vec[spot_index] = 1             # <<<<<<<<<<<<<<
  *                 else:
  *                     printf('centroid.fast_centroids: centroiding coordinates x=[%d,%d], y=[%d,%d] produce search box with zero intensity. Check image.\n',x1,x2,y1,y2,sx,sy)
  */
-        __pyx_t_37 = __pyx_v_spot_index;
-        *__Pyx_BufPtrStrided1d(__pyx_t_5numpy_int16_t *, __pyx_pybuffernd_valid_vec.rcbuffer->pybuffer.buf, __pyx_t_37, __pyx_pybuffernd_valid_vec.diminfo[0].strides) = 1;
+        __pyx_t_35 = __pyx_v_spot_index;
+        *__Pyx_BufPtrStrided1d(__pyx_t_5numpy_int16_t *, __pyx_pybuffernd_valid_vec.rcbuffer->pybuffer.buf, __pyx_t_35, __pyx_pybuffernd_valid_vec.diminfo[0].strides) = 1;
 
         /* "centroid.pyx":390
  *                         #printf('\t%d,%d,%0.2f,%0.2f,%0.2f\n',x,y,xnum,ynum,denom)
  * 
  *                 if denom>0:             # <<<<<<<<<<<<<<
- *                     printf('%f,%f,%f,\n',xnum,ynum,denom)
+ *                     #printf('%f,%f,%f,\n',xnum,ynum,denom)
  *                     x_out[spot_index] = xnum/denom
  */
         goto __pyx_L34;
@@ -5481,8 +5450,8 @@ static PyObject *__pyx_f_8centroid_fast_centroids(PyArrayObject *__pyx_v_spots_i
  *                     x_out[spot_index] = -1
  *                     y_out[spot_index] = -1
  */
-        __pyx_t_38 = __pyx_v_spot_index;
-        *__Pyx_BufPtrStrided1d(__pyx_t_5numpy_int16_t *, __pyx_pybuffernd_valid_vec.rcbuffer->pybuffer.buf, __pyx_t_38, __pyx_pybuffernd_valid_vec.diminfo[0].strides) = 0;
+        __pyx_t_36 = __pyx_v_spot_index;
+        *__Pyx_BufPtrStrided1d(__pyx_t_5numpy_int16_t *, __pyx_pybuffernd_valid_vec.rcbuffer->pybuffer.buf, __pyx_t_36, __pyx_pybuffernd_valid_vec.diminfo[0].strides) = 0;
 
         /* "centroid.pyx":400
  *                     printf('centroid.fast_centroids: centroiding coordinates x=[%d,%d], y=[%d,%d] produce search box with zero intensity. Check image.\n',x1,x2,y1,y2,sx,sy)
@@ -5491,8 +5460,8 @@ static PyObject *__pyx_f_8centroid_fast_centroids(PyArrayObject *__pyx_v_spots_i
  *                     y_out[spot_index] = -1
  * 
  */
-        __pyx_t_39 = __pyx_v_spot_index;
-        *__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float_t *, __pyx_pybuffernd_x_out.rcbuffer->pybuffer.buf, __pyx_t_39, __pyx_pybuffernd_x_out.diminfo[0].strides) = -1.0;
+        __pyx_t_37 = __pyx_v_spot_index;
+        *__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float_t *, __pyx_pybuffernd_x_out.rcbuffer->pybuffer.buf, __pyx_t_37, __pyx_pybuffernd_x_out.diminfo[0].strides) = -1.0;
 
         /* "centroid.pyx":401
  *                     valid_vec[spot_index] = 0
@@ -5501,8 +5470,8 @@ static PyObject *__pyx_f_8centroid_fast_centroids(PyArrayObject *__pyx_v_spots_i
  * 
  * 
  */
-        __pyx_t_40 = __pyx_v_spot_index;
-        *__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float_t *, __pyx_pybuffernd_y_out.rcbuffer->pybuffer.buf, __pyx_t_40, __pyx_pybuffernd_y_out.diminfo[0].strides) = -1.0;
+        __pyx_t_38 = __pyx_v_spot_index;
+        *__Pyx_BufPtrStrided1d(__pyx_t_5numpy_float_t *, __pyx_pybuffernd_y_out.rcbuffer->pybuffer.buf, __pyx_t_38, __pyx_pybuffernd_y_out.diminfo[0].strides) = -1.0;
       }
       __pyx_L34:;
     }
