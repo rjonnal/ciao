@@ -101,48 +101,63 @@ class Loop(QObject):
 
             self.sensor.update()
 
-            
+            current_active_lenslets = np.zeros(self.active_lenslets.shape)
+            current_active_lenslets[np.where(self.sensor.box_maxes>ccfg.spots_threshold)] = 1
             if self.closed and self.has_poke():
 
-                current_active_lenslets = np.zeros(self.active_lenslets.shape)
-                current_active_lenslets[np.where(self.sensor.box_maxes>ccfg.spots_threshold)] = 1
-                n_active_lenslets = int(np.sum(current_active_lenslets))
-                
-                if not all(self.active_lenslets==current_active_lenslets):
-                    self.active_lenslets[:] = current_active_lenslets[:]
-                    return
-                
+
+                lenslets_changed = not all(self.active_lenslets==current_active_lenslets)
+                all_lenslets_active = np.sum(current_active_lenslets)==self.sensor.n_lenslets
+                # if the lenslets have changed, we have two options:
+                # 1. if they're not all active, and ccfg.poke_invert_on_demand
+                #    is set to True, then we do one of two things:
+                #    a. if the active lenslets have changed, then we need to
+                #       re-invert and set ready_to_correct True
+                #    b. if the active lenslets haven't changed, then we just
+                #       set ready_to_correct true
+                # 2. if they're not all active, and ccfg.poke_invert_on_demand
+                #    is set to False, then we need to set ready_to_correct to False
+                # 3. if they're all active, set ready_to_correct True
+
+                if not all_lenslets_active:
                     if ccfg.poke_invert_on_demand:
-                        self.poke.invert(mask=self.active_lenslets)
-
+                        if lenslets_changed:
+                            self.poke.invert(mask=current_active_lenslets)
+                        self.ready_to_correct = True
                     else:
-                        if not self.sensor.n_lenslets==n_active_lenslets:
-                            return
+                        self.ready_to_correct = False
+                else:
+                    self.ready_to_correct = True
 
-                xs = self.sensor.x_slopes[np.where(self.active_lenslets)[0]]
-                ys = self.sensor.y_slopes[np.where(self.active_lenslets)[0]]
+                xs = self.sensor.x_slopes[np.where(current_active_lenslets)[0]]
+                ys = self.sensor.y_slopes[np.where(current_active_lenslets)[0]]
 
-                if len(xs)==0 or 2*len(xs)!=self.poke.ctrl.shape[1]:
-                    sys.exit('Error: mismatch between active lenslets and poke.')
+                if self.ready_to_correct:
+                    assert 2*len(xs)==self.poke.ctrl.shape[1]
                 
                 if self.verbose>=1:
                     error = self.sensor.error
                     pcount = int(round(error*1e8))
                     print 'rms'+'.'*pcount
-                
-                slope_vec = np.hstack((xs,ys))
-                command = self.gain * np.dot(self.poke.ctrl,slope_vec)
-                    
-                command = self.mirror.get_command()*(1-self.loss) - command
-                self.mirror.set_command(command)
 
-                if self.verbose>=1:
-                    if command.max()>ccfg.mirror_command_max*.95:
-                        print 'actuator saturated'
-                    if command.min()<ccfg.mirror_command_min*.95:
-                        print 'actuator saturated'
+                if self.ready_to_correct:
+                    slope_vec = np.hstack((xs,ys))
+                    command = self.gain * np.dot(self.poke.ctrl,slope_vec)
 
-            self.mirror.update()
+                    command = self.mirror.get_command()*(1-self.loss) - command
+                    self.mirror.set_command(command)
+                    self.mirror.update()
+
+                    if self.verbose>=1:
+                        if command.max()>ccfg.mirror_command_max*.99:
+                            print 'actuator saturated'
+                        if command.min()<ccfg.mirror_command_min*.99:
+                            print 'actuator saturated'
+                else:
+                    print 'not ready to correct'
+
+            self.active_lenslets[:] = current_active_lenslets[:]
+            
         self.n = self.n + 1
         self.finished.emit()
         

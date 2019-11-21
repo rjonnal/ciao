@@ -264,6 +264,10 @@ class Simulator:
             xslope = np.mean(np.diff(subwf.mean(0)))
             dx = xslope*self.f/self.pixel_size_m
             xcentroid = x+dx
+            
+            #if idx==20:
+            #    continue
+            
             self.spots = self.interpolate_dirac(xcentroid,ycentroid,self.spots)
             x_slope_vec.append(xslope)
             y_slope_vec.append(yslope)

@@ -232,6 +232,12 @@ class Overlay(QWidget):
         self.pen = QPen()
         self.pen.setColor(QColor(*color))
         self.pen.setWidth(thickness)
+
+        err_color = (color[2],color[1],color[0],color[3])
+        self.err_pen = QPen()
+        self.err_pen.setColor(QColor(*err_color))
+        self.err_pen.setWidth(thickness*2)
+
         self.mode = mode
         self.visible = visible
         self.active = np.ones(len(coords))
@@ -256,10 +262,13 @@ class Overlay(QWidget):
             painter.begin(pixmap)
             painter.setPen(self.pen)
             for index,(x1,x2,y1,y2) in enumerate(self.coords):
-                if active[index]:
-                    width = x2-x1
-                    height = y2-y1
-                    painter.drawRect(x1/d,y1/d,width/d,height/d)
+                if not active[index]:
+                    painter.setPen(self.err_pen)
+                else:
+                    painter.setPen(self.pen)
+                width = x2-x1
+                height = y2-y1
+                painter.drawRect(x1/d,y1/d,width/d,height/d)
             painter.end()
             
 class ZoomDisplay(QWidget):
