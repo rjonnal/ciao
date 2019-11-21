@@ -30,6 +30,9 @@ class Sensor:
     def __init__(self,camera):
         self.image_width_px = ccfg.image_width_px
         self.image_height_px = ccfg.image_height_px
+        self.dark_image = np.zeros((ccfg.image_height_px,ccfg.image_width_px),dtype=np.int16)
+        self.dark_subtract = False
+        self.n_dark = 10
         self.lenslet_pitch_m = ccfg.lenslet_pitch_m
         self.lenslet_focal_length_m = ccfg.lenslet_focal_length_m
         self.pixel_size_m = ccfg.pixel_size_m
@@ -96,6 +99,10 @@ class Sensor:
         self.zernikes = np.zeros(ccfg.n_zernike_terms)
         self.wavefront = np.zeros(self.sensor_mask.shape)
 
+        self.image_max = -1
+        self.image_min = -1
+        self.image_mean = -1
+        
         self.cam = camera
         self.frame_timer = FrameTimer('Sensor',verbose=False)
         self.reconstructor = Reconstructor(self.search_boxes.x,
@@ -121,6 +128,21 @@ class Sensor:
     def unpause(self):
         print 'sensor unpaused'
         self.paused = False
+
+    def set_dark_subtraction(self,val):
+        self.dark_subtract = val
+
+    def set_n_dark(self,val):
+        self.n_dark = val
+
+    def set_dark(self):
+        self.pause()
+        temp = np.zeros(self.dark_image.shape)
+        for k in range(self.n_dark):
+            temp = temp + self.cam.get_image()
+        temp = np.round(temp/float(self.n_dark)).astype(np.int16)
+        self.dark_image[...] = temp[...]
+        self.unpause()
 
     def log(self):
         outfn = os.path.join(ccfg.logging_directory,'sensor_%s.mat'%(now_string(True)))
@@ -170,7 +192,13 @@ class Sensor:
         
     def sense(self,debug=False):
         self.image = self.cam.get_image()
+        if self.dark_subtract:
+            self.image = self.image - self.dark_image
 
+        self.image_min = self.image.min()
+        self.image_mean = self.image.mean()
+        self.image_max = self.image.max()
+        
         t0 = time.time()
         if not self.fast_centroiding:
             centroid.estimate_backgrounds(spots_image=self.image,

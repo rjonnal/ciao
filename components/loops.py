@@ -81,6 +81,16 @@ class Loop(QObject):
         self.sensor.unpause()
         self.paused = False
         print 'loop unpaused'
+
+    def set_paused(self,val):
+        if val:
+            self.mirror.pause()
+            self.sensor.pause()
+            self.paused = True
+        else:
+            self.mirror.unpause()
+            self.sensor.unpause()
+            self.paused = False
         
     @pyqtSlot()
     def update(self):
@@ -98,17 +108,23 @@ class Loop(QObject):
                 current_active_lenslets[np.where(self.sensor.box_maxes>ccfg.spots_threshold)] = 1
                 n_active_lenslets = int(np.sum(current_active_lenslets))
                 
-                if ccfg.poke_invert_on_demand:
-                    if not all(self.active_lenslets==current_active_lenslets):
-                        self.active_lenslets[:] = current_active_lenslets[:]
+                if not all(self.active_lenslets==current_active_lenslets):
+                    self.active_lenslets[:] = current_active_lenslets[:]
+                    return
+                
+                    if ccfg.poke_invert_on_demand:
                         self.poke.invert(mask=self.active_lenslets)
 
-                else:
-                    if not self.sensor.n_lenslets==n_active_lenslets:
-                        return
+                    else:
+                        if not self.sensor.n_lenslets==n_active_lenslets:
+                            return
 
                 xs = self.sensor.x_slopes[np.where(self.active_lenslets)[0]]
                 ys = self.sensor.y_slopes[np.where(self.active_lenslets)[0]]
+
+                if len(xs)==0 or 2*len(xs)!=self.poke.ctrl.shape[1]:
+                    sys.exit('Error: mismatch between active lenslets and poke.')
+                
                 if self.verbose>=1:
                     error = self.sensor.error
                     pcount = int(round(error*1e8))
@@ -116,6 +132,7 @@ class Loop(QObject):
                 
                 slope_vec = np.hstack((xs,ys))
                 command = self.gain * np.dot(self.poke.ctrl,slope_vec)
+                    
                 command = self.mirror.get_command()*(1-self.loss) - command
                 self.mirror.set_command(command)
 

@@ -234,8 +234,12 @@ class Overlay(QWidget):
         self.pen.setWidth(thickness)
         self.mode = mode
         self.visible = visible
+        self.active = np.ones(len(coords))
         
-    def draw(self,pixmap,downsample=1):
+    def draw(self,pixmap,downsample=1,active=None):
+        if active is None:
+            active=self.active
+            
         d = float(downsample)
         if not self.visible:
             return
@@ -244,16 +248,18 @@ class Overlay(QWidget):
             painter.begin(pixmap)
             painter.setPen(self.pen)
             for index,(x1,x2,y1,y2) in enumerate(self.coords):
-                painter.drawLine(QLine(x1/d,y1/d,x2/d,y2/d))
+                if active[index]:
+                    painter.drawLine(QLine(x1/d,y1/d,x2/d,y2/d))
             painter.end()
         elif self.mode=='rects':
             painter = QPainter()
             painter.begin(pixmap)
             painter.setPen(self.pen)
             for index,(x1,x2,y1,y2) in enumerate(self.coords):
-                width = x2-x1
-                height = y2-y1
-                painter.drawRect(x1/d,y1/d,width/d,height/d)
+                if active[index]:
+                    width = x2-x1
+                    height = y2-y1
+                    painter.drawRect(x1/d,y1/d,width/d,height/d)
             painter.end()
             
 class ZoomDisplay(QWidget):
@@ -402,7 +408,7 @@ class ZoomDisplay(QWidget):
         np.savetxt('.gui_settings/clim_%s.txt'%self.name,self.display_clim)
         self.cmin_slider.setToolTip('%0.1e'%self.display_clim[0])
 
-    def show(self,data):
+    def show(self,data,active=None):
         data = data[::self.downsample,::self.downsample]
         self.data = data
         if not self.sized:
@@ -419,7 +425,7 @@ class ZoomDisplay(QWidget):
             image.setColorTable(self.colortable)
             self.pixmap.convertFromImage(image)
             for o in self.overlays:
-                o.draw(self.pixmap,self.downsample)
+                o.draw(self.pixmap,self.downsample,active)
             #self.label.setPixmap(self.pixmap)
             self.label.setPixmap(self.pixmap.scaled(self.label.width(),self.label.height(),Qt.KeepAspectRatio))
             self.display_ratio = float(self.sx)/float(self.label.width())
@@ -519,6 +525,15 @@ class UI(QWidget):
         self.cb_closed.setChecked(self.loop.closed)
         self.cb_closed.stateChanged.connect(self.loop.set_closed)
 
+        self.cb_paused = QCheckBox('Loop &paused')
+        self.cb_paused.setChecked(self.loop.paused)
+        self.cb_paused.stateChanged.connect(self.loop.set_paused)
+        
+        loop_control_layout = QHBoxLayout()
+        loop_control_layout.addWidget(self.cb_closed)
+        loop_control_layout.addWidget(self.cb_paused)
+        
+        
         self.cb_draw_boxes = QCheckBox('Draw boxes')
         self.cb_draw_boxes.setChecked(self.draw_boxes)
         self.cb_draw_boxes.stateChanged.connect(self.set_draw_boxes)
@@ -556,6 +571,27 @@ class UI(QWidget):
         poke_layout.addWidget(self.pb_invert)
 
 
+        dark_layout = QHBoxLayout()
+        self.cb_dark_subtraction = QCheckBox('Subtract dark')
+        self.cb_dark_subtraction.setChecked(self.loop.sensor.dark_subtract)
+        self.cb_dark_subtraction.stateChanged.connect(self.loop.sensor.set_dark_subtraction)
+        dark_layout.addWidget(self.cb_dark_subtraction)
+        
+        dark_layout.addWidget(QLabel('Dark subtract N:'))
+        self.n_dark_spinbox = QSpinBox()
+        self.n_dark_spinbox.setMinimum(1)
+        self.n_dark_spinbox.setMaximum(9999)
+        self.n_dark_spinbox.valueChanged.connect(self.loop.sensor.set_n_dark)
+        self.n_dark_spinbox.setValue(self.loop.sensor.n_dark)
+        dark_layout.addWidget(self.n_dark_spinbox)
+        
+        self.pb_set_dark = QPushButton('Set dark')
+        self.pb_set_dark.clicked.connect(self.loop.sensor.set_dark)
+        dark_layout.addWidget(self.pb_set_dark)
+
+        
+        
+
         centroiding_layout = QHBoxLayout()
         centroiding_layout.addWidget(QLabel('Centroiding:'))
         self.cb_fast_centroiding = QCheckBox('Fast centroiding')
@@ -592,8 +628,8 @@ class UI(QWidget):
         self.stripchart_error = StripChart(ylim=ccfg.error_plot_ylim,ytick_interval=ccfg.error_plot_ytick_interval,print_function=ccfg.error_plot_print_func,hlines=[0.0,ccfg.wavelength_m/14.0],buffer_length=ccfg.error_plot_buffer_length)
         self.stripchart_error.setAlignment(Qt.AlignRight)
         
-        self.stripchart_defocus = StripChart(ylim=ccfg.zernike_plot_ylim,ytick_interval=ccfg.zernike_plot_ytick_interval,print_function=ccfg.zernike_plot_print_func,buffer_length=ccfg.zernike_plot_buffer_length)
-        self.stripchart_defocus.setAlignment(Qt.AlignRight)
+        #self.stripchart_defocus = StripChart(ylim=ccfg.zernike_plot_ylim,ytick_interval=ccfg.zernike_plot_ytick_interval,print_function=ccfg.zernike_plot_print_func,buffer_length=ccfg.zernike_plot_buffer_length)
+        #self.stripchart_defocus.setAlignment(Qt.AlignRight)
 
         self.lbl_tip = QLabel()
         self.lbl_tip.setAlignment(Qt.AlignRight)
@@ -604,13 +640,19 @@ class UI(QWidget):
         self.lbl_cond = QLabel()
         self.lbl_cond.setAlignment(Qt.AlignRight)
 
-        
         self.lbl_sensor_fps = QLabel()
         self.lbl_sensor_fps.setAlignment(Qt.AlignRight)
 
         self.ind_centroiding_time = Indicator(buffer_length=50,print_function=lambda x: '%0.0f us (centroiding)'%(x*1e6))
         self.ind_centroiding_time.setAlignment(Qt.AlignRight)
-        
+
+        self.ind_image_max = Indicator(buffer_length=10,print_function=lambda x: '%d ADU (max)'%x)
+        self.ind_image_mean = Indicator(buffer_length=10,print_function=lambda x: '%d ADU (mean)'%x)
+        self.ind_image_min = Indicator(buffer_length=10,print_function=lambda x: '%d ADU (min)'%x)
+        self.ind_image_max.setAlignment(Qt.AlignRight)
+        self.ind_image_mean.setAlignment(Qt.AlignRight)
+        self.ind_image_min.setAlignment(Qt.AlignRight)
+
         self.lbl_mirror_fps = QLabel()
         self.lbl_mirror_fps.setAlignment(Qt.AlignRight)
         
@@ -618,22 +660,27 @@ class UI(QWidget):
         self.lbl_ui_fps.setAlignment(Qt.AlignRight)
         
         column_2.addWidget(self.pb_flatten)
-        column_2.addWidget(self.cb_closed)
+        column_2.addLayout(loop_control_layout)
         #column_2.addWidget(self.cb_fast_centroiding)
         column_2.addLayout(f_layout)
         column_2.addLayout(centroiding_layout)
         column_2.addLayout(bg_layout)
         column_2.addLayout(poke_layout)
+        column_2.addLayout(dark_layout)
         column_2.addWidget(self.cb_draw_boxes)
         column_2.addWidget(self.cb_draw_lines)
         column_2.addWidget(self.pb_quit)
         
         column_2.addWidget(self.stripchart_error)
-        column_2.addWidget(self.stripchart_defocus)
+        #column_2.addWidget(self.stripchart_defocus)
         column_2.addWidget(self.lbl_tip)
         column_2.addWidget(self.lbl_tilt)
         column_2.addWidget(self.lbl_cond)
+        column_2.addWidget(self.ind_image_max)
+        column_2.addWidget(self.ind_image_mean)
+        column_2.addWidget(self.ind_image_min)
         column_2.addWidget(self.ind_centroiding_time)
+        
         column_2.addWidget(self.lbl_sensor_fps)
         column_2.addWidget(self.lbl_mirror_fps)
         column_2.addWidget(self.lbl_ui_fps)
@@ -675,7 +722,7 @@ class UI(QWidget):
             y2 = y+dy
             self.overlay_slopes.coords.append((x,x2,y,y2))
 
-        self.id_spots.show(sensor.image)
+        self.id_spots.show(sensor.image,self.loop.active_lenslets)
 
         mirror_map = np.zeros(mirror.mirror_mask.shape)
         mirror_map[np.where(mirror.mirror_mask)] = mirror.get_command()[:]
@@ -686,12 +733,15 @@ class UI(QWidget):
         
         #self.lbl_error.setText(ccfg.wavefront_error_fmt%(sensor.error*1e9))
         self.stripchart_error.setValue(sensor.error)
-        self.stripchart_defocus.setValue(sensor.zernikes[4]*ccfg.beam_diameter_m)
+        #self.stripchart_defocus.setValue(sensor.zernikes[4]*ccfg.beam_diameter_m)
         
         self.lbl_tip.setText(ccfg.tip_fmt%(sensor.tip*1000000))
         self.lbl_tilt.setText(ccfg.tilt_fmt%(sensor.tilt*1000000))
         self.lbl_cond.setText(ccfg.cond_fmt%(self.loop.get_condition_number()))
-        
+
+        self.ind_image_max.setValue(sensor.image_max)
+        self.ind_image_mean.setValue(sensor.image_mean)
+        self.ind_image_min.setValue(sensor.image_min)
         self.ind_centroiding_time.setValue(sensor.centroiding_time)
         
         self.lbl_sensor_fps.setText(ccfg.sensor_fps_fmt%sensor.frame_timer.fps)
