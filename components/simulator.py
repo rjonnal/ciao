@@ -180,11 +180,10 @@ class Simulator:
         for j in range(self.n_zernike_terms):
             self.zernike_orders[j] = self.zernike.j2nm(j)[0]
 
-        self.baseline_error_sigma = 1.0/(1.0+self.zernike_orders)*10.0
-        self.baseline_error_sigma[3:6] = 100.0
+        self.baseline_error_sigma = 1.0/(1.0+self.zernike_orders)*10.0*0.0
+        self.baseline_error_sigma[3:6] = 50.0*0.0
         
         self.new_error_sigma = self.zernike_orders/10.0*0.0
-
         
         # don't generate any piston, tip, or tilt:
         self.baseline_error_sigma[:3] = 0.0
