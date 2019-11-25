@@ -1,18 +1,11 @@
 # Compiled source #
 ###################
-*.dll
-*.exe
-*.o
-*.so
 *.pyc
-*.pyd
 __pycache__/
 
 # Logs and databases #
 ######################
 *.log
-*.sql
-*.sqlite
 .simulator_cache/
 .gui_settings/
 log/
@@ -23,14 +16,6 @@ log/
 ##################
 local_session_*/
 
-# OS generated files #
-######################
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-*~
+# Obsolete files #
+##################
 obs/
