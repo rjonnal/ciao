@@ -156,24 +156,6 @@ cond_fmt = '%0.2f (Condition)'
 
 search_box_half_width_max = int(lenslet_pitch_m/pixel_size_m)//2
 
-# Audio settings
-audio_directory = ciao_session + '/etc/audio'
-error_tones = [[(0e-9,10e-9),'C_4'],
-               [(10e-9,20e-9),'D_4'],
-               [(20e-9,30e-9),'D_sharp_4'],
-               [(30e-9,40e-9),'F_4'],
-               [(40e-9,50e-9),'G_4'],
-               [(50e-9,60e-9),'G_sharp_4'],
-               [(60e-9,70e-9),'A_sharp_4'],
-               [(70e-9,80e-9),'C_5'],
-               [(80e-9,90e-9),'D_5'],
-               [(90e-9,100e-9),'D_sharp_5'],
-               [(100e-9,110e-9),'F_5'],
-               [(110e-9,120e-9),'G_5'],
-               [(120e-9,130e-9),'G_sharp_5'],
-               [(130e-9,140e-9),'A_sharp_5']]
-
-
 rigorous_iteration = False
 if rigorous_iteration:
     # First, calculate the PSF FWHM for the lenslets:

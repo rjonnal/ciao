@@ -159,25 +159,39 @@ class Simulator:
 
 
         zfn = os.path.join(ccfg.simulator_cache_directory,'%s_zernike_basis.npy'%key)
+        self.zernike = Zernike()
         try:
             self.zernike_basis = np.load(zfn)
             print 'Loading cached zernike basis set...'
         except Exception as e:
             zernike_basis = []
             print 'Building zernike basis set...'
-            zernike = Zernike()
+            #zernike = Zernike()
             for z in range(self.n_zernike_terms):
-                surf = zernike.get_j_surface(z,self.XX,self.YY)
+                surf = self.zernike.get_j_surface(z,self.XX,self.YY)
                 zernike_basis.append(surf.ravel())
 
             self.zernike_basis = np.array(zernike_basis)
             np.save(zfn,self.zernike_basis)
 
-        #self.new_error_sigma = np.ones(self.n_zernike_terms)*10.0
+        #self.new_error_sigma = np.ones(self.n_zernike_terms)*100.0
 
-        self.new_error_sigma = 1.0/np.arange(self.n_zernike_terms)*0.0
+        self.zernike_orders = np.zeros(self.n_zernike_terms)
+        for j in range(self.n_zernike_terms):
+            self.zernike_orders[j] = self.zernike.j2nm(j)[0]
+
+        self.baseline_error_sigma = 1.0/(1.0+self.zernike_orders)*10.0
+        self.baseline_error_sigma[3:6] = 100.0
+        
+        self.new_error_sigma = self.zernike_orders/10.0*0.0
+
+        
+        # don't generate any piston, tip, or tilt:
+        self.baseline_error_sigma[:3] = 0.0
         self.new_error_sigma[:3] = 0.0
-
+        
+        self.error = self.get_error(self.baseline_error_sigma)
+        
         self.paused = False
 
     def pause(self):
@@ -209,11 +223,8 @@ class Simulator:
         noiserms = np.random.randn(im.shape[0],im.shape[1])*np.sqrt(im)
         return im+noiserms
 
-    def get_new_error(self):
-        #self.new_error_sigma = np.ones(self.n_zernike_terms)
-        coefs = np.random.randn(self.n_zernike_terms)*self.new_error_sigma
-        coefs[:3] = 0.0
-        coefs[4:] = 0.0
+    def get_error(self,sigma):
+        coefs = np.random.randn(self.n_zernike_terms)*sigma
         return np.reshape(np.dot(coefs,self.zernike_basis),(self.sy,self.sx))
 
     def defocus_animation(self):
@@ -237,7 +248,8 @@ class Simulator:
     def update(self):
         mirror = np.reshape(np.dot(self.command,self.actuator_basis),(self.sy,self.sx))
         
-        err = self.get_new_error()
+        err = self.error + self.get_error(self.new_error_sigma)
+
         dx = np.diff(err,axis=1)
         dy = np.diff(err,axis=0)
         sy,sx = err.shape

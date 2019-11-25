@@ -24,6 +24,7 @@ from ctypes import CDLL,c_void_p
 from search_boxes import SearchBoxes
 import ciao_config as ccfg
 from frame_timer import FrameTimer
+from beeper import Beeper
 
 class Sensor:
 
@@ -107,6 +108,10 @@ class Sensor:
         self.frame_timer = FrameTimer('Sensor',verbose=False)
         self.reconstructor = Reconstructor(self.search_boxes.x,
                                            self.search_boxes.y,self.sensor_mask)
+        self.centroiding_time = -1.0
+
+        self.beeper = Beeper()
+        
         self.logging = False
         self.paused = False
         
@@ -241,7 +246,12 @@ class Sensor:
             self.y_slopes-=self.tip
         if self.reconstruct_wavefront:
             self.zernikes,self.wavefront,self.error = self.reconstructor.get_wavefront(self.x_slopes,self.y_slopes)
-        
+        try:
+            self.beeper.beep(self.error)
+        except Exception as e:
+            print e
+            print self.error
+            sys.exit()
         
     def record_reference(self):
         print 'recording reference'
