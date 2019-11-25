@@ -4,21 +4,29 @@ import ciao_config as ccfg
 import sys
 import numpy as np
 import time
-import pygame
+import os
 
 class Beeper:
 
     def __init__(self):
 
-        self.active = ('audio_directory' in dir(ccfg) and 'error_tones' in dir(ccfg))
-
+        qadi = QAudioDeviceInfo()
+        codecs = qadi.supportedCodecs()
+        codec_exists = len(codecs)
+        
+        self.active = ('audio_directory' in dir(ccfg) and 'error_tones' in dir(ccfg) and codec_exists)
+        
         if self.active:
             self.tone_dict = {}
-            for minmax,tonefn in ccfg.error_tones:
+            for minmax,tone_string in ccfg.error_tones:
                 key = self.err_to_int(minmax[0])
-                val = QSoundEffect()
-                val.setSource(QUrl(tonefn))
-
+                tonefn = os.path.join(ccfg.audio_directory,'%s.wav'%tone_string)
+                if False:
+                    val = QSoundEffect()
+                    val.setSource(QUrl(tonefn))
+                if True:
+                    val = QSound(tonefn)
+                    
                 self.tone_dict[key] = val
                 #self.tonepg_dict[key] = pygame.mixer.Sound(tonefn)
                 
@@ -31,12 +39,7 @@ class Beeper:
             if k in self.tone_dict.keys():
                 se = self.tone_dict[k]
                 se.play()
-                print 'play %0.1f'%(error_in_nm*1e9)
+        else:
+            print 'play %0.1f'%(error_in_nm*1e9)
 
-    
-    def beep1(self,error_in_nm):
-        if self.active:
-            k = self.err_to_int(error_in_nm)
-            if k in self.tonepg_dict.keys():
-                pygame.mixer.Sound.play(self.tonepg_dict[k])
                 
