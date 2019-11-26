@@ -111,7 +111,7 @@ class Sensor:
         self.centroiding_time = -1.0
 
         self.beeper = Beeper()
-        
+
         self.logging = False
         self.paused = False
         

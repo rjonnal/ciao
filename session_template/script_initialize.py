@@ -6,7 +6,7 @@ print 'Running CIAO initialization script.'
 
 # Check to make sure the required directories are present, and if not, make them.
 print 'Checking for required directories...'
-required_directories = [ccfg.reference_directory,ccfg.dm_directory,ccfg.poke_directory,ccfg.logging_directory,ccfg.simulator_cache_directory]
+required_directories = [ccfg.reference_directory,ccfg.dm_directory,ccfg.poke_directory,ccfg.logging_directory,ccfg.simulator_cache_directory,ccfg.audio_directory]
 
 for d in required_directories:
     try:

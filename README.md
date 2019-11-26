@@ -11,7 +11,7 @@ These are the prerequisites for installing a version of the software which allow
 2. Install [Git](https://git-scm.com/download/win)
 3. Install [Anaconda for Python 2.7](https://www.anaconda.com/distribution/#download-section)
 4. If you're using Windows, install the [Visual C++ compiler for Python 2.7](https://www.microsoft.com/en-us/download/details.aspx?id=44266). In Linux, gcc will be invoked instead; it's probably already installed on your system, but you can verify that it is with ```gcc --version```.
-5. Clone this repository
+5. Clone this repository.
 
 These prerequisites assume you are using the default hardware (Alpao mirror and a SHWS based on a Basler Ace USB3 camera).
 
@@ -42,7 +42,8 @@ If you have succesfully completed the "Setup and installation" steps above, foll
 3. Create a mirror mask by issuing ```python script_make_mask.py 11 5.5 ./etc/dm/mirror_mask.txt```.
 4. Issue ```python script_initialize.py``` again, and type 'Y' and press enter, to create an all-zero flat file.
 5. Create a SHWS mask by issuing ```python script_make_mask.py 20 9.6 ./etc/ref/reference_mask.txt```.
-6. Edit ```local_session_simulator_256/ciao_config.py```. Ensure that each of the following parameters are set as described below:
+6. Optional: issue ```python script_make_beeps.py``` to generate the WAV files for audio feedback.
+7. Edit ```local_session_simulator_256/ciao_config.py```. Ensure that each of the following parameters are set as described below:
 
         simulate = True
         system_id = 'simulator'
@@ -59,11 +60,11 @@ If you have succesfully completed the "Setup and installation" steps above, foll
         centroiding_iterations = 2
         mirror_n_actuators = 97
 
-7. Issue ```python script_record_initial_reference_coordinates.py etc/ref/reference_initial.txt``` to create bootstrapping reference coordinates. Follow the instructions in the terminal and use the resulting plots to refine these coordinates.
-8. Issue ```python ui_ciao.py```. The UI should appear.
-9. Click **Record reference** a few times.
-10. Click **Measure poke matrix** and wait for the poke matrix to be measured.
-11. Click **Loop closed**.
+8. Issue ```python script_record_initial_reference_coordinates.py etc/ref/reference_initial.txt``` to create bootstrapping reference coordinates. Follow the instructions in the terminal and use the resulting plots to refine these coordinates.
+9. Issue ```python ui_ciao.py```. The UI should appear.
+10. Click **Record reference** a few times.
+11. Click **Measure poke matrix** and wait for the poke matrix to be measured.
+12. Click **Loop closed**.
 
 # Slow start
 
@@ -112,6 +113,7 @@ This will create the following directory structure in your session directory.
     |-- icons
     |   `-- ciao.png
     |-- etc
+    |   |-- audio
     |   |-- ctrl
     |   |-- dm
     |   `-- ref

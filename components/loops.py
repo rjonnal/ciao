@@ -30,6 +30,7 @@ from poke import Poke
 class Loop(QObject):
 
     finished = pyqtSignal()
+    started = pyqtSignal()
     
     def __init__(self,sensor,mirror,verbose=0):
         super(Loop,self).__init__()
@@ -62,12 +63,14 @@ class Loop(QObject):
         self.loss = ccfg.loop_loss
         self.paused = False
         self.n = 0
+        self.started.connect(self.sensor.beeper.cache_tones)
 
     def start(self):
         self.timer = QTimer()
         self.timer.timeout.connect(self.update)
         self.timer.start(1.0/self.update_rate*1000.0)
-
+        self.started.emit()
+        
     def has_poke(self):
         return self.poke is not None
 

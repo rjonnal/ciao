@@ -1,5 +1,6 @@
 from PyQt5.QtMultimedia import QSound,QSoundEffect,QAudioDeviceInfo
-from PyQt5.QtCore import QUrl
+from PyQt5.QtCore import QUrl,pyqtSlot
+from PyQt5.Qt import QApplication
 import ciao_config as ccfg
 import sys
 import numpy as np
@@ -15,12 +16,14 @@ class Beeper:
         qadi = QAudioDeviceInfo()
         codecs = qadi.supportedCodecs()
         codec_exists = len(codecs)
-
         self.active = ('audio_directory' in dir(ccfg) and 'error_tones' in dir(ccfg))
-        
+        self.tone_dict = {}
+        #self.cache_tones()
 
+    @pyqtSlot()
+    def cache_tones(self):
         if self.active:
-            self.tone_dict = {}
+            print 'Caching beeper tones...'
             for minmax,tone_string in ccfg.error_tones:
                 key = self.err_to_int(minmax[0])
                 tonefn = os.path.join(ccfg.audio_directory,'%s.wav'%tone_string)
@@ -33,6 +36,7 @@ class Beeper:
                     
                 self.tone_dict[key] = val
                 #self.tonepg_dict[key] = pygame.mixer.Sound(tonefn)
+            print 'Done!'
                 
     def err_to_int(self,err):
         return int(np.floor(err*1e8))

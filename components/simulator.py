@@ -126,7 +126,10 @@ class Simulator:
         self.flat = np.zeros(int(np.sum(self.mirror_mask)))
         
         self.n_zernike_terms = ccfg.n_zernike_terms
-        actuator_sigma = actuator_spacing*0.75
+        #actuator_sigma = actuator_spacing*0.75
+        actuator_sigma = actuator_spacing*1.5
+
+        
         key = '%d'%hash((tuple(ax),tuple(ay),actuator_sigma,tuple(self.X),tuple(self.Y),self.n_zernike_terms))
         key = key.replace('-','m')
 
@@ -180,10 +183,10 @@ class Simulator:
         for j in range(self.n_zernike_terms):
             self.zernike_orders[j] = self.zernike.j2nm(j)[0]
 
-        self.baseline_error_sigma = 1.0/(1.0+self.zernike_orders)*10.0*0.0
-        self.baseline_error_sigma[3:6] = 50.0*0.0
+        self.baseline_error_sigma = 1.0/(1.0+self.zernike_orders)*10.0
+        self.baseline_error_sigma[3:6] = 150.0
         
-        self.new_error_sigma = self.zernike_orders/10.0*0.0
+        self.new_error_sigma = self.zernike_orders/10.0/100.0
         
         # don't generate any piston, tip, or tilt:
         self.baseline_error_sigma[:3] = 0.0
