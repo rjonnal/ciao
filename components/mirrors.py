@@ -135,6 +135,7 @@ class Mirror:
         self.mirror_mask = np.loadtxt(ccfg.mirror_mask_filename)
         self.n_actuators = ccfg.mirror_n_actuators
         self.flat = np.loadtxt(ccfg.mirror_flat_filename)
+        self.flat0 = np.loadtxt(ccfg.mirror_flat_filename)
         self.command_max = ccfg.mirror_command_max
         self.command_min = ccfg.mirror_command_min
         self.settling_time = ccfg.mirror_settling_time_s
@@ -175,6 +176,13 @@ class Mirror:
         
     def get_command(self):
         return self.controller.command
+        
+        
+    def restore_flat(self):
+        self.flat[:] = self.flat0[:]
+        
+    def set_flat(self):
+        self.flat[:] = self.get_command()[:]
         
     def log(self):
         outfn = os.path.join(ccfg.logging_directory,'mirror_%s.mat'%(now_string(True)))

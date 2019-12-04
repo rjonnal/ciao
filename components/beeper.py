@@ -9,7 +9,7 @@ import os
 
 class Beeper:
 
-    def __init__(self,nskip=4):
+    def __init__(self,nskip=3):
 
         self.interval = nskip+1
         self.n = 0
@@ -27,14 +27,9 @@ class Beeper:
             for minmax,tone_string in ccfg.error_tones:
                 key = self.err_to_int(minmax[0])
                 tonefn = os.path.join(ccfg.audio_directory,'%s.wav'%tone_string)
-                if False:
-                    val = QSoundEffect()
-                    val.setSource(QUrl(tonefn))
-                if True:
-                    if os.path.exists(tonefn):
-                        val = QSound(tonefn)
-                    
-                self.tone_dict[key] = val
+                if os.path.exists(tonefn):
+                    val = QSound(tonefn)
+                    self.tone_dict[key] = val
                 #self.tonepg_dict[key] = pygame.mixer.Sound(tonefn)
             print 'Done!'
                 

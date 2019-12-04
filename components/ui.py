@@ -560,8 +560,21 @@ class UI(QWidget):
         self.pb_poke.clicked.connect(self.loop.run_poke)
         self.pb_record_reference = QPushButton('Record reference')
         self.pb_record_reference.clicked.connect(self.loop.sensor.record_reference)
+        
+        
         self.pb_flatten = QPushButton('&Flatten')
-        self.pb_flatten.clicked.connect(self.flatten)
+        self.pb_flatten.clicked.connect(self.loop.mirror.flatten)
+
+        self.pb_restore_flat = QPushButton('Restore flat')
+        self.pb_restore_flat.clicked.connect(self.restore_flat)
+        self.pb_restore_flat.setEnabled(False)
+        
+
+        self.pb_set_flat = QPushButton('Set flat')
+        self.pb_set_flat.clicked.connect(self.set_flat)
+        self.pb_set_flat.setCheckable(True)
+        #print dir(self.pb_set_flat)
+        #sys.exit()
         
         self.pb_quit = QPushButton('&Quit')
         self.pb_quit.clicked.connect(self.quit)
@@ -668,7 +681,13 @@ class UI(QWidget):
         self.lbl_ui_fps = QLabel()
         self.lbl_ui_fps.setAlignment(Qt.AlignRight)
         
-        column_2.addWidget(self.pb_flatten)
+        flatten_layout = QHBoxLayout()
+        flatten_layout.addWidget(self.pb_flatten)
+        flatten_layout.addWidget(self.pb_restore_flat)
+        flatten_layout.addWidget(self.pb_set_flat)
+        
+        column_2.addLayout(flatten_layout)
+        
         column_2.addLayout(loop_control_layout)
         #column_2.addWidget(self.cb_fast_centroiding)
         column_2.addLayout(f_layout)
@@ -694,8 +713,11 @@ class UI(QWidget):
         column_2.addWidget(self.lbl_mirror_fps)
         column_2.addWidget(self.lbl_ui_fps)
         
+        
+        
         column_2.addWidget(self.pb_poke)
         column_2.addWidget(self.pb_record_reference)
+        
         column_2.addWidget(self.cb_logging)
         
         layout.addLayout(column_2,0,6,3,1)
@@ -710,7 +732,17 @@ class UI(QWidget):
         self.mirror_mutex.lock()
         self.loop.mirror.flatten()
         self.mirror_mutex.unlock()
-
+        
+    def restore_flat(self):
+        self.loop.mirror.restore_flat()
+        self.pb_set_flat.setChecked(False)
+        self.pb_set_flat.setFocus(False)
+        self.pb_restore_flat.setEnabled(False)
+        
+    def set_flat(self):
+        self.loop.mirror.set_flat()
+        self.pb_set_flat.setChecked(True)
+        self.pb_restore_flat.setEnabled(True)
         
     @pyqtSlot()
     def update(self):
