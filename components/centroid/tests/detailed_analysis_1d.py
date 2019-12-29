@@ -108,10 +108,12 @@ def compare_methods(func,variable_vector,variable_name,solution_vector,title_str
 x0_default = 45.0
 sigma_default = 3.0
 dc_default = 100.0
+
 sb_half_width_default = 10
 n_iterations_default = 3
 iteration_step_px_default = 2
-c_half_width_default = 4
+
+c_half_width_default = 7
     
 f_foo = lambda foo: spot_and_com(x0_default,sigma_default,dc_default,
                             sb_half_width_default,n_iterations_default,
@@ -134,7 +136,7 @@ f_sbhw = lambda sbhw: spot_and_com(x0_default,sigma_default,dc_default,
                             iteration_step_px_default,c_half_width_default)
 
 
-compare_methods(f_dc,np.arange(0,500),'DC level (ADU)',x0_default,'DC-related error (spot peak 1000 ADU)')
+compare_methods(f_dc,np.arange(0,2500),'DC level (ADU)',x0_default,'DC-related error (spot peak 1000 ADU)')
 compare_methods(f_x0,np.arange(40,60,.1),'spot location',np.arange(40,60,.1),'aberration-dependent error')
 compare_methods(f_sigma,np.arange(.1,10.0,.1),'spot size',x0_default,'spot-size dependent error')
 compare_methods(f_niter,range(1,8),'number of iterations',x0_default,'iteration n error')

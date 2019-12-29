@@ -123,7 +123,8 @@ class Simulator:
         ay = ay-ay.mean()
         ax = ax-ax.mean()
 
-        self.flat = np.zeros(int(np.sum(self.mirror_mask)))
+        self.flat = np.loadtxt(ccfg.mirror_flat_filename)
+        self.flat0 = np.loadtxt(ccfg.mirror_flat_filename)
         
         self.n_zernike_terms = ccfg.n_zernike_terms
         #actuator_sigma = actuator_spacing*0.75
@@ -206,9 +207,14 @@ class Simulator:
         self.logging = val
 
     def flatten(self):
-        self.command[:] = 0.0
+        self.command[:] = self.flat[:]
         #self.update()
 
+    def restore_flat(self):
+        self.flat[:] = self.flat0[:]
+        
+    def set_flat(self):
+        self.flat[:] = self.get_command()[:]
         
     def get_command(self):
         return self.command
