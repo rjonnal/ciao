@@ -538,9 +538,14 @@ class UI(QWidget):
         self.cb_paused.setChecked(self.loop.paused)
         self.cb_paused.stateChanged.connect(self.loop.set_paused)
         
+        self.cb_safe = QCheckBox('Loop safe')
+        self.cb_safe.setChecked(self.loop.safe)
+        self.cb_safe.stateChanged.connect(self.loop.set_safe)
+        
         loop_control_layout = QHBoxLayout()
         loop_control_layout.addWidget(self.cb_closed)
         loop_control_layout.addWidget(self.cb_paused)
+        loop_control_layout.addWidget(self.cb_safe)
         
         
         self.cb_draw_boxes = QCheckBox('Draw boxes')

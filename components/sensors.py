@@ -167,6 +167,8 @@ class Sensor:
         d['tilt'] = self.tilt
         d['wavefront'] = self.wavefront
         d['zernikes'] = self.zernikes
+        d['spots_image'] = self.image
+        
         
         sio.savemat(outfn,d)
 

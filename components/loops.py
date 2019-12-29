@@ -48,6 +48,7 @@ class Loop(QObject):
         
         self.poke = None
         self.closed = False
+        self.safe = True
 
         # try to load the poke file specified in
         # ciao_config.py; if it doesn't exist, create
@@ -85,6 +86,9 @@ class Loop(QObject):
         self.paused = False
         print 'loop unpaused'
 
+    def set_safe(self,val):
+        self.safe = val
+
     def set_paused(self,val):
         if val:
             self.mirror.pause()
@@ -104,8 +108,12 @@ class Loop(QObject):
 
             self.sensor.update()
 
-            current_active_lenslets = np.zeros(self.active_lenslets.shape)
-            current_active_lenslets[np.where(self.sensor.box_maxes>ccfg.spots_threshold)] = 1
+            current_active_lenslets = np.ones(self.active_lenslets.shape)
+            
+            # if we're in safe mode, check the boxes:
+            if self.safe:
+                current_active_lenslets[np.where(self.sensor.box_maxes<ccfg.spots_threshold)] = 0
+            
             if self.closed and self.has_poke():
 
 
@@ -131,6 +139,7 @@ class Loop(QObject):
                         self.ready_to_correct = False
                 else:
                     self.ready_to_correct = True
+
 
                 xs = self.sensor.x_slopes[np.where(current_active_lenslets)[0]]
                 ys = self.sensor.y_slopes[np.where(current_active_lenslets)[0]]
