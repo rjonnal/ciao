@@ -647,8 +647,8 @@ class UI(QWidget):
         self.f_spinbox = QDoubleSpinBox()
         self.f_spinbox.setValue(0.0)
         self.f_spinbox.setSingleStep(0.01)
-        self.f_spinbox.setMaximum(1.0)
-        self.f_spinbox.setMinimum(-1.0)
+        self.f_spinbox.setMaximum(10.0)
+        self.f_spinbox.setMinimum(-10.0)
         self.f_spinbox.valueChanged.connect(self.loop.sensor.set_defocus)
         f_layout.addWidget(self.f_spinbox)
         
