@@ -18,8 +18,6 @@ These prerequisites assume you are using the default hardware (Alpao mirror and 
 ## Additional prerequisites for UC Davis hardware loop implementation
 
 1. Install Alpao drivers
-2. Install [Basler Pylon 5.2](https://www.baslerweb.com/en/sales-support/downloads/software-downloads/pylon-5-2-0-windows/)
-3. Install [pypylon](https://github.com/basler/pypylon/releases/download/1.4.0/pypylon-1.4.0-cp27-cp27m-win_amd64.whl). First download, then use 'pip install pypylon...amd64.whl'.
 
 ## Anaconda prompt
 
@@ -199,6 +197,23 @@ Several approaches have been used to generate these coordinates, but a common ap
 3. **Avoid overspecification.** Specify parameters of the system in only one place. For example, since the number of lenslets is specified by the SHWS mask, don't specify it elsewhere. The size of the poke matrix, for instance, is implied by the SHWS and mirror masks, and needn't be specified anywhere else.
 
 4. **Variable naming.** Class names should be one word with a capitalized first letter; if multiple words are necessary, use CamelCase. Variable names should be descriptive, with underscores between words. In order to maximize the exploratory and educational value of the code, when a variable has a unit, please append it to the end of the variable name, e.g. ```wavelength_m = 800e-9```.
+
+## Camera-specific installation instructions
+
+### Ximea cameras
+
+1. Install the [latest Ximea API](https://www.ximea.com/support/wiki/apis/XIMEA_Windows_Software_Package).
+
+2. During installation, make sure to check or select the Python API, as it is sometimes unchecked by default.
+
+3. After installation, copy the ```API/Python/v2/ximea``` directory into your Python [site-packages](https://stackoverflow.com/questions/122327/how-do-i-find-the-location-of-my-python-site-packages-directory) directory. (This does not seem like the best way to accomplish this; I think ```c:/XIMEA/API/Python/v2/ximea``` should be added to the system's ```PYTHONPATH``` environment variable, but I haven't tested this approach.)
+
+### Basler cameras (GigE and USB only)
+
+1. Install [Basler Pylon 5.2](https://www.baslerweb.com/en/sales-support/downloads/software-downloads/pylon-5-2-0-windows/)
+
+2. Install [pypylon](https://github.com/basler/pypylon/releases/download/1.4.0/pypylon-1.4.0-cp27-cp27m-win_amd64.whl). First download, then use 'pip install pypylon...amd64.whl'.
+
 
 # Design considerations
 
