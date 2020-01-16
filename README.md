@@ -202,9 +202,9 @@ Several approaches have been used to generate these coordinates, but a common ap
 
 ### Ximea cameras
 
-1. Install the [latest Ximea API](https://www.ximea.com/support/wiki/apis/XIMEA_Windows_Software_Package).
+1. Install the [latest Ximea API](https://www.ximea.com/support/wiki/apis/XIMEA_Windows_Software_Package). As of January, 2020, this was "V4.19.14 Beta", and this is the earliest version to contain the Python API.
 
-2. During installation, make sure to check or select the Python API, as it is sometimes unchecked by default.
+2. During installation, make sure to check or select the Python API ("xiApiPython"), as it may be unchecked by default.
 
 3. After installation, copy the ```API/Python/v2/ximea``` directory into your Python [site-packages](https://stackoverflow.com/questions/122327/how-do-i-find-the-location-of-my-python-site-packages-directory) directory. (This does not seem like the best way to accomplish this; I think ```c:/XIMEA/API/Python/v2/ximea``` should be added to the system's ```PYTHONPATH``` environment variable, but I haven't tested this approach.)
 
