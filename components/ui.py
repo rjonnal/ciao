@@ -598,6 +598,17 @@ class UI(QWidget):
         poke_layout.addWidget(self.pb_invert)
 
 
+        modal_layout = QHBoxLayout()
+        modal_layout.addWidget(QLabel('Corrected Zernike orders:'))
+        self.corrected_order_spinbox = QSpinBox()
+        max_order = self.loop.sensor.reconstructor.N_orders
+        self.corrected_order_spinbox.setMaximum(max_order)
+        self.corrected_order_spinbox.setMinimum(0)
+        self.corrected_order_spinbox.valueChanged.connect(self.loop.sensor.set_n_zernike_orders_corrected)
+        self.corrected_order_spinbox.setValue(self.loop.sensor.get_n_zernike_orders_corrected())
+        modal_layout.addWidget(self.corrected_order_spinbox)
+        modal_layout.addWidget(QLabel('(%d -> no filtering)'%max_order))
+        
         dark_layout = QHBoxLayout()
         self.cb_dark_subtraction = QCheckBox('Subtract dark')
         self.cb_dark_subtraction.setChecked(self.loop.sensor.dark_subtract)
@@ -699,6 +710,7 @@ class UI(QWidget):
         column_2.addLayout(centroiding_layout)
         column_2.addLayout(bg_layout)
         column_2.addLayout(poke_layout)
+        column_2.addLayout(modal_layout)
         column_2.addLayout(dark_layout)
         column_2.addWidget(self.cb_draw_boxes)
         column_2.addWidget(self.cb_draw_lines)

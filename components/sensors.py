@@ -108,6 +108,8 @@ class Sensor:
         self.frame_timer = FrameTimer('Sensor',verbose=False)
         self.reconstructor = Reconstructor(self.search_boxes.x,
                                            self.search_boxes.y,self.sensor_mask)
+
+        self.n_zernike_orders_corrected=self.reconstructor.N_orders
         self.centroiding_time = -1.0
 
         self.beeper = Beeper()
@@ -134,6 +136,12 @@ class Sensor:
         print 'sensor unpaused'
         self.paused = False
 
+    def get_n_zernike_orders_corrected(self):
+        return self.n_zernike_orders_corrected
+
+    def set_n_zernike_orders_corrected(self,n):
+        self.n_zernike_orders_corrected = n
+        
     def set_dark_subtraction(self,val):
         self.dark_subtract = val
 
@@ -243,11 +251,45 @@ class Sensor:
         self.y_slopes = (self.y_centroids-self.search_boxes.y)*self.pixel_size_m/self.lenslet_focal_length_m
         self.tilt = np.mean(self.x_slopes)
         self.tip = np.mean(self.y_slopes)
+        
         if self.remove_tip_tilt:
             self.x_slopes-=self.tilt
             self.y_slopes-=self.tip
         if self.reconstruct_wavefront:
             self.zernikes,self.wavefront,self.error = self.reconstructor.get_wavefront(self.x_slopes,self.y_slopes)
+            self.filter_slopes = self.n_zernike_orders_corrected<self.reconstructor.N_orders
+            
+            if self.filter_slopes:
+
+                # Outline of approach: the basic idea is to filter the residual error
+                # slopes by Zernike mode before multiplying by the mirror command
+                # matrix.
+                # 1. multiply the slopes by a wavefront reconstructor matrix
+                #    to get Zernike coefficients; these are already output by
+                #    the call to self.reconstructor.get_wavefront above
+                # 2. zero the desired modes
+                # 3. multiply the modes by the inverse of that matrix, which is stored
+                #    in the Reconstructor object as reconstructor.slope_matrix
+
+                # convert the order into a number of terms:
+                n_terms = self.reconstructor.Z.nm2j(self.n_zernike_orders_corrected,self.n_zernike_orders_corrected)
+
+                # get the slope matrix (inverse of zernike matrix, which maps slopes onto zernikes)
+                slope_matrix = self.reconstructor.slope_matrix
+
+                # create a filtered set of zernike terms
+                # not sure if we should zero piston here
+                z_filt = np.zeros(len(self.zernikes))
+                z_filt[:n_terms+1] = self.zernikes[:n_terms+1]
+                zero_piston = True
+                if zero_piston:
+                    z_filt[0] = 0.0
+                
+                # filter the slopes, and assign them to this sensor object:
+                filtered_slopes = np.dot(slope_matrix,z_filt)
+                self.x_slopes = filtered_slopes[:self.n_lenslets]
+                self.y_slopes = filtered_slopes[self.n_lenslets:]
+            
         try:
             self.beeper.beep(self.error)
         except Exception as e:

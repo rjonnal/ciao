@@ -336,9 +336,13 @@ class Reconstructor:
         self.pixel_size = ccfg.pixel_size_m
         self.pupil_size = ccfg.beam_diameter_m
         self.N = ccfg.n_zernike_terms
+        
         self.regularize = regularize
         self.mask = mask
         Z = Zernike()
+        self.Z = Z
+
+        self.N_orders = self.Z.j2nm(self.N)[0]
         refx = x
         refy = y
         
@@ -370,6 +374,8 @@ class Reconstructor:
     
         dxmat = np.array(dxmat)
         dymat = np.array(dymat)
+        hmat = np.array(hmat)
+
         if self.regularize:
             A = np.vstack((dxmat.T,dymat.T,np.ones(self.N)))
         else:
@@ -377,12 +383,18 @@ class Reconstructor:
         
         #why did I originally write it this way?
         #self.matrix = np.dot(np.linalg.pinv(np.dot(A.T,A)),A.T)
-        
+
+        # a matrix for converting slopes into zernike coefficients:
         self.zernike_matrix = np.linalg.pinv(A)
+
+        # it's inverse, a matrix for converting zernikes into slopes:
+        self.slope_matrix = A
+        
         self.wavefront_matrix = np.array(hmat).T
         self.wavefront = np.zeros(self.mask.shape)
         
     def get_wavefront(self,xslopes,yslopes):
+        
         if self.regularize:
             newSlopeRow = np.zeros([1])
             slopes = np.hstack((xslopes,yslopes,newSlopeRow))
