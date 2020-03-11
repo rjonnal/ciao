@@ -130,6 +130,8 @@ class Simulator:
         #actuator_sigma = actuator_spacing*0.75
         actuator_sigma = actuator_spacing*1.5
 
+
+        self.exposure = 10000 # microseconds
         
         key = '%d'%hash((tuple(ax),tuple(ay),actuator_sigma,tuple(self.X),tuple(self.Y),self.n_zernike_terms))
         key = key.replace('-','m')
@@ -209,6 +211,12 @@ class Simulator:
     def flatten(self):
         self.command[:] = self.flat[:]
         #self.update()
+
+    def set_exposure(self,val):
+        self.exposure = val
+        
+    def get_exposure(self):
+        return self.exposure
 
     def restore_flat(self):
         self.flat[:] = self.flat0[:]
@@ -300,7 +308,7 @@ class Simulator:
         self.update()
         self.frame_timer.tick()
         spots = (self.spots-self.spots.min())/(self.spots.max()-self.spots.min())*self.spots_range+self.dc
-        nspots = self.noise(spots)
+        nspots = self.noise(spots)*(self.exposure/10000)
         nspots = np.clip(nspots,0,4095)
         nspots = np.round(nspots).astype(np.int16)
         return nspots

@@ -17,6 +17,17 @@ from ctypes.util import find_library
 import milc
 from time import time
 
+
+def get_camera():
+    if ccfg.camera_id.lower()=='pylon':
+        return PylonCamera()
+    elif ccfg.camera_id.lower()=='ace':
+        return AOCameraAce()
+    elif ccfg.camera_id.lower()=='ximea':
+        return XimeaCamera()
+    else:
+        return SimulatedCamera()
+
 class PylonCamera:
 
     def __init__(self,timeout=500):
@@ -24,7 +35,7 @@ class PylonCamera:
             pylon.TlFactory.GetInstance().CreateFirstDevice())
 
         self.camera.Open()
-
+        
         # enable all chunks
         self.camera.ChunkModeActive = True
         #self.camera.PixelFormat = "Mono12"
@@ -34,6 +45,13 @@ class PylonCamera:
             self.camera.ChunkEnable = True
 
         self.timeout = timeout
+
+    def set_exposure(self,t_microseconds):
+        self.camera.ExposureTime=int(t_microseconds)
+        print self.camera.ExposureTime.Value
+        
+    def get_exposure(self):
+        return self.camera.ExposureTime.Value
 
     def get_image(self):
         return self.camera.GrabOne(self.timeout).Array.astype(np.int16)
@@ -47,13 +65,21 @@ class XimeaCamera:
         self.camera = xiapi.Camera()
         self.camera.open_device()
         self.camera.set_exposure(10000)
+        self.camera.set_imgdataformat('XI_RAW16')
+
         self.camera.start_acquisition()
         self.img = xiapi.Image()
 
+    def set_exposure(self,t_microseconds):
+        self.camera.set_exposure(t_microseconds)
+        
+    def get_exposure(self):
+        return self.camera.get_exposure()
+
     def get_image(self):
         self.camera.get_image(self.img)
-        return np.reshape(np.frombuffer(self.img.get_image_data_raw(),dtype=np.uint8),
-                          (img.height,img.width))
+        return np.reshape(np.frombuffer(self.img.get_image_data_raw(),dtype=np.int16),
+                          (self.img.height,self.img.width))
 
     def close(self):
         self.camera.stop_acquisition()
@@ -78,6 +104,12 @@ class SimulatedCamera:
 
     def get_opacity(self):
         return self.opacity
+        
+    def set_exposure(self,t_microseconds):
+        pass
+        
+    def get_exposure(self):
+        return -1
             
     def get_image(self):
         im = np.load(self.image_list[self.index])
