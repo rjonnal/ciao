@@ -663,6 +663,19 @@ class UI(QWidget):
         self.f_spinbox.valueChanged.connect(self.loop.sensor.set_defocus)
         f_layout.addWidget(self.f_spinbox)
         
+        
+        e_layout = QHBoxLayout()
+        e_layout.addWidget(QLabel('Exposure:'))
+        self.e_spinbox = QSpinBox()
+        self.e_spinbox.setValue(self.loop.sensor.cam.get_exposure())
+        self.e_spinbox.setSingleStep(1000)
+        self.e_spinbox.setMaximum(1000000)
+        self.e_spinbox.setMinimum(1000)
+        self.e_spinbox.valueChanged.connect(self.loop.sensor.cam.set_exposure)
+        e_layout.addWidget(self.e_spinbox)
+        
+        
+        
         self.stripchart_error = StripChart(ylim=ccfg.error_plot_ylim,ytick_interval=ccfg.error_plot_ytick_interval,print_function=ccfg.error_plot_print_func,hlines=[0.0,ccfg.wavelength_m/14.0],buffer_length=ccfg.error_plot_buffer_length)
         self.stripchart_error.setAlignment(Qt.AlignRight)
         
@@ -707,6 +720,7 @@ class UI(QWidget):
         column_2.addLayout(loop_control_layout)
         #column_2.addWidget(self.cb_fast_centroiding)
         column_2.addLayout(f_layout)
+        column_2.addLayout(e_layout)
         column_2.addLayout(centroiding_layout)
         column_2.addLayout(bg_layout)
         column_2.addLayout(poke_layout)

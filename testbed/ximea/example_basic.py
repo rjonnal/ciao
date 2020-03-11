@@ -15,8 +15,9 @@ cam.open_device()
 
 #settings
 cam.set_exposure(10000)
+cam.set_imgdataformat('XI_RAW16')
 print('Exposure was set to %i us' %cam.get_exposure())
-
+print('Image format was set to %s.'%cam.get_imgdataformat())
 #create instance of Image to store image data and metadata
 img = xiapi.Image()
 
@@ -33,7 +34,7 @@ for i in range(1000):
     #for Python3.x function returns bytes
     data_raw = img.get_image_data_raw()
 
-    arr = np.reshape(np.frombuffer(data_raw,dtype=np.uint8),(img.height,img.width))
+    arr = np.reshape(np.frombuffer(data_raw,dtype=np.uint16),(img.height,img.width))
 
     # the last line is all we need for a frame acquisition; everything after may
     # be useful for debugging, etc.
