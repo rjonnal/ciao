@@ -663,6 +663,16 @@ class UI(QWidget):
         self.f_spinbox.valueChanged.connect(self.loop.sensor.set_defocus)
         f_layout.addWidget(self.f_spinbox)
         
+        exp_layout = QHBoxLayout()
+        exp_layout.addWidget(QLabel('Exposure (us):'))
+        self.exp_spinbox = QSpinBox()
+        self.exp_spinbox.setValue(self.loop.sensor.cam.get_exposure())
+        self.exp_spinbox.setSingleStep(100)
+        self.exp_spinbox.setMaximum(1000000)
+        self.exp_spinbox.setMinimum(100)
+        self.exp_spinbox.valueChanged.connect(self.loop.sensor.cam.set_exposure)
+        exp_layout.addWidget(self.exp_spinbox)
+        
         self.stripchart_error = StripChart(ylim=ccfg.error_plot_ylim,ytick_interval=ccfg.error_plot_ytick_interval,print_function=ccfg.error_plot_print_func,hlines=[0.0,ccfg.wavelength_m/14.0],buffer_length=ccfg.error_plot_buffer_length)
         self.stripchart_error.setAlignment(Qt.AlignRight)
         
@@ -687,9 +697,13 @@ class UI(QWidget):
         self.ind_image_max = Indicator(buffer_length=10,print_function=lambda x: '%d ADU (max)'%x)
         self.ind_image_mean = Indicator(buffer_length=10,print_function=lambda x: '%d ADU (mean)'%x)
         self.ind_image_min = Indicator(buffer_length=10,print_function=lambda x: '%d ADU (min)'%x)
+        self.ind_mean_box_background = Indicator(buffer_length=10,print_function=lambda x: '%d ADU (background)'%x)
+        
         self.ind_image_max.setAlignment(Qt.AlignRight)
         self.ind_image_mean.setAlignment(Qt.AlignRight)
         self.ind_image_min.setAlignment(Qt.AlignRight)
+        self.ind_mean_box_background.setAlignment(Qt.AlignRight)
+        
 
         self.lbl_mirror_fps = QLabel()
         self.lbl_mirror_fps.setAlignment(Qt.AlignRight)
@@ -707,6 +721,7 @@ class UI(QWidget):
         column_2.addLayout(loop_control_layout)
         #column_2.addWidget(self.cb_fast_centroiding)
         column_2.addLayout(f_layout)
+        column_2.addLayout(exp_layout)
         column_2.addLayout(centroiding_layout)
         column_2.addLayout(bg_layout)
         column_2.addLayout(poke_layout)
@@ -724,6 +739,8 @@ class UI(QWidget):
         column_2.addWidget(self.ind_image_max)
         column_2.addWidget(self.ind_image_mean)
         column_2.addWidget(self.ind_image_min)
+        column_2.addWidget(self.ind_mean_box_background)
+        
         column_2.addWidget(self.ind_centroiding_time)
         
         column_2.addWidget(self.lbl_sensor_fps)
@@ -800,6 +817,8 @@ class UI(QWidget):
         self.ind_image_max.setValue(sensor.image_max)
         self.ind_image_mean.setValue(sensor.image_mean)
         self.ind_image_min.setValue(sensor.image_min)
+        self.ind_mean_box_background.setValue(sensor.get_average_background())
+        
         self.ind_centroiding_time.setValue(sensor.centroiding_time)
         
         self.lbl_sensor_fps.setText(ccfg.sensor_fps_fmt%sensor.frame_timer.fps)

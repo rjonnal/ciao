@@ -136,6 +136,9 @@ class Sensor:
         print 'sensor unpaused'
         self.paused = False
 
+    def get_average_background(self):
+        return np.mean(self.box_backgrounds)
+
     def get_n_zernike_orders_corrected(self):
         return self.n_zernike_orders_corrected
 
@@ -257,6 +260,8 @@ class Sensor:
             self.y_slopes-=self.tip
         if self.reconstruct_wavefront:
             self.zernikes,self.wavefront,self.error = self.reconstructor.get_wavefront(self.x_slopes,self.y_slopes)
+            
+            
             self.filter_slopes = self.n_zernike_orders_corrected<self.reconstructor.N_orders
             
             if self.filter_slopes:
@@ -281,6 +286,7 @@ class Sensor:
                 # not sure if we should zero piston here
                 z_filt = np.zeros(len(self.zernikes))
                 z_filt[:n_terms+1] = self.zernikes[:n_terms+1]
+                
                 zero_piston = True
                 if zero_piston:
                     z_filt[0] = 0.0
