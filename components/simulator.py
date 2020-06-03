@@ -194,6 +194,8 @@ class Simulator:
         self.new_error_sigma[:3] = 0.0
         
         self.error = self.get_error(self.baseline_error_sigma)
+
+        self.exposure_us = 10000
         
         self.paused = False
 
@@ -228,10 +230,11 @@ class Simulator:
         self.update()
         
     def set_exposure(self,exposure_us):
+        self.exposure_us = long(exposure_us)
         return
         
     def get_exposure(self):
-        return 10000
+        return self.exposure_us
 
     def noise(self,im):
         noiserms = np.random.randn(im.shape[0],im.shape[1])*np.sqrt(im)
@@ -305,7 +308,7 @@ class Simulator:
     def get_image(self):
         self.update()
         self.frame_timer.tick()
-        spots = (self.spots-self.spots.min())/(self.spots.max()-self.spots.min())*self.spots_range+self.dc
+        spots = (self.spots-self.spots.min())/(self.spots.max()-self.spots.min())*self.spots_range*float(self.exposure_us)/20000.+self.dc
         nspots = self.noise(spots)
         nspots = np.clip(nspots,0,4095)
         nspots = np.round(nspots).astype(np.int16)
