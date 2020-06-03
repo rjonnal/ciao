@@ -227,6 +227,12 @@ class Simulator:
         self.command[index]=value
         self.update()
         
+    def set_exposure(self,exposure_us):
+        return
+        
+    def get_exposure(self):
+        return 10000
+
     def noise(self,im):
         noiserms = np.random.randn(im.shape[0],im.shape[1])*np.sqrt(im)
         return im+noiserms

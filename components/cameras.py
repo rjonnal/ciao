@@ -52,6 +52,13 @@ class PylonCamera:
     def close(self):
         return
 
+    def set_exposure(self,exposure_us):
+        return
+        
+    def get_exposure(self):
+        return 10000
+    
+
 class XimeaCamera:
 
     def __init__(self,timeout=500):
@@ -133,7 +140,7 @@ class SimulatedCamera:
         return
         
     def get_exposure(self):
-        return -1
+        return 10000
         
 
 class AOCameraAce():
@@ -300,5 +307,5 @@ class AOCameraAce():
         return
         
     def get_exposure(self):
-        return -1
+        return 10000
 
