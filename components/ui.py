@@ -653,15 +653,44 @@ class UI(QWidget):
         bg_layout.addWidget(self.bg_spinbox)
 
 
-        f_layout = QHBoxLayout()
-        f_layout.addWidget(QLabel('Defocus:'))
+        aberration_layout = QHBoxLayout()
+
+        aberration_layout.addWidget(QLabel('Defocus:'))
         self.f_spinbox = QDoubleSpinBox()
         self.f_spinbox.setValue(0.0)
         self.f_spinbox.setSingleStep(0.01)
         self.f_spinbox.setMaximum(10.0)
         self.f_spinbox.setMinimum(-10.0)
         self.f_spinbox.valueChanged.connect(self.loop.sensor.set_defocus)
-        f_layout.addWidget(self.f_spinbox)
+        aberration_layout.addWidget(self.f_spinbox)
+        
+        aberration_layout.addWidget(QLabel('Astig 0:'))
+        self.a0_spinbox = QDoubleSpinBox()
+        self.a0_spinbox.setValue(0.0)
+        self.a0_spinbox.setSingleStep(0.01)
+        self.a0_spinbox.setMaximum(10.0)
+        self.a0_spinbox.setMinimum(-10.0)
+        self.a0_spinbox.valueChanged.connect(self.loop.sensor.set_astig0)
+        aberration_layout.addWidget(self.a0_spinbox)
+
+        aberration_layout.addWidget(QLabel('Astig 45:'))
+        self.a1_spinbox = QDoubleSpinBox()
+        self.a1_spinbox.setValue(0.0)
+        self.a1_spinbox.setSingleStep(0.01)
+        self.a1_spinbox.setMaximum(10.0)
+        self.a1_spinbox.setMinimum(-10.0)
+        self.a1_spinbox.valueChanged.connect(self.loop.sensor.set_astig1)
+        aberration_layout.addWidget(self.a1_spinbox)
+
+        self.pb_aberration_reset = QPushButton('Reset')
+        def reset():
+            self.f_spinbox.setValue(0.0)
+            self.a0_spinbox.setValue(0.0)
+            self.a1_spinbox.setValue(0.0)
+            self.loop.sensor.aberration_reset()
+        self.pb_aberration_reset.clicked.connect(reset)
+        aberration_layout.addWidget(self.pb_aberration_reset)
+
         
         exp_layout = QHBoxLayout()
         exp_layout.addWidget(QLabel('Exposure (us):'))
@@ -720,7 +749,7 @@ class UI(QWidget):
         
         column_2.addLayout(loop_control_layout)
         #column_2.addWidget(self.cb_fast_centroiding)
-        column_2.addLayout(f_layout)
+        column_2.addLayout(aberration_layout)
         column_2.addLayout(exp_layout)
         column_2.addLayout(centroiding_layout)
         column_2.addLayout(bg_layout)

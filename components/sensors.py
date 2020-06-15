@@ -198,13 +198,40 @@ class Sensor:
     def set_defocus(self,val):
         self.pause()
         
-        newx = self.x0 + self.reconstructor.defocus_dx*val*ccfg.zernike_dioptric_equivalent
+        newx = self.search_boxes.x + self.reconstructor.defocus_dx*val*ccfg.zernike_dioptric_equivalent
         
-        newy = self.y0 + self.reconstructor.defocus_dy*val*ccfg.zernike_dioptric_equivalent
+        newy = self.search_boxes.y + self.reconstructor.defocus_dy*val*ccfg.zernike_dioptric_equivalent
         self.search_boxes.move(newx,newy)
         
         self.unpause()
 
+    def set_astig0(self,val):
+        self.pause()
+        
+        newx = self.search_boxes.x + self.reconstructor.astig0_dx*val*ccfg.zernike_dioptric_equivalent
+        
+        newy = self.search_boxes.y + self.reconstructor.astig0_dy*val*ccfg.zernike_dioptric_equivalent
+        self.search_boxes.move(newx,newy)
+        
+        self.unpause()
+        
+    def set_astig1(self,val):
+        self.pause()
+        
+        newx = self.search_boxes.x + self.reconstructor.astig1_dx*val*ccfg.zernike_dioptric_equivalent
+        
+        newy = self.search_boxes.y + self.reconstructor.astig1_dy*val*ccfg.zernike_dioptric_equivalent
+
+        self.search_boxes.move(newx,newy)
+        
+        self.unpause()
+
+
+    def aberration_reset(self):
+        self.pause()
+        self.search_boxes.move(self.x0,self.y0)
+        self.unpause()
+        
     def set_centroiding_half_width(self,val):
         self.centroiding_half_width = val
         

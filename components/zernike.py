@@ -366,10 +366,19 @@ class Reconstructor:
             hmat.append(h)
             dxmat.append(dx)
             dymat.append(dy)
+            
             if j==4:
                 self.defocus_h = h
                 self.defocus_dx = dx
                 self.defocus_dy = dy
+            if j==3:
+                self.astig0_h = h
+                self.astig0_dx = dx
+                self.astig0_dy = dy
+            if j==5:
+                self.astig1_h = h
+                self.astig1_dx = dx
+                self.astig1_dy = dy
         
     
         dxmat = np.array(dxmat)
