@@ -4,23 +4,23 @@
 
 ##############################################################
 # Use simulated camera and mirror (True) or simulate these (False):
-simulate = False
+simulate = True
 # A unique, permanent identifier for the optical system
 # associated with this installation of ciao:
-system_id = 'AOSSFFOCT'
+system_id = 'simulator'
 
 # An identifier for the deformable mirror, used to load
 # the correct configuration files:
-mirror_id = 'HSDM97-15-010'
+mirror_id = 'simulator'
 
-# An identifier for the camera; can be 'ace', 'pylon', 'ximea', or
+# An identifier for the camera; can be 'ace', 'pylon', or
 # 'simulator'
-camera_id = 'ximea'
+camera_id = 'simulator'
 
 import os # 
-image_width_px = 1280
-image_height_px = 1024
-bit_depth = 10
+image_width_px = 256
+image_height_px = 256
+bit_depth = 12
 
 ciao_session = '.'
 ciao_session = os.path.split(__file__)[0]
@@ -41,16 +41,16 @@ poke_filename = poke_directory + 'poke.txt'
 
 # sensor settings:
 reference_n_measurements = 10
-lenslet_pitch_m = 150e-6
-lenslet_focal_length_m = 6.0e-3
-pixel_size_m = 4.8e-6
+lenslet_pitch_m = 500e-6
+lenslet_focal_length_m = 10.0e-3
+pixel_size_m = 40e-6
 
-beam_diameter_m = 4.5e-3
+beam_diameter_m = 10e-3
 interface_scale_factor = 0.75
 wavelength_m = 840e-9
 estimate_background = True
 background_correction = 0
-search_box_half_width = 12
+search_box_half_width = 5
 spots_threshold = 100.0
 sensor_update_rate = 1.0 # deprecated in current version
 sensor_filter_lenslets = False
@@ -59,7 +59,6 @@ sensor_remove_tip_tilt = True
 centroiding_num_threads = 1
 iterative_centroiding_step = 2
 centroiding_iterations = 2
-camera_exposure_us = 10000
 
 mirror_update_rate = 1.0 # deprecated in current version
 mirror_flat_filename = dm_directory + 'flat.txt'
@@ -156,23 +155,6 @@ tilt_fmt = '%0.4f mrad (Tilt)'
 cond_fmt = '%0.2f (Condition)'
 
 search_box_half_width_max = int(lenslet_pitch_m/pixel_size_m)//2
-
-# Audio settings
-audio_directory = ciao_session + '/etc/audio'
-error_tones = [((0.0, 1e-08), 'A_sharp_5'),
-               ((1e-08, 2e-08), 'G_sharp_5'),
-               ((2e-08, 3e-08), 'G_5'),
-               ((3e-08, 4e-08), 'F_5'),
-               ((4e-08, 5e-08), 'D_sharp_5'),
-               ((5e-08, 6e-08), 'D_5'),
-               ((6e-08, 7e-08), 'C_5'),
-               ((7e-08, 8e-08), 'A_sharp_4'),
-               ((8e-08, 9e-08), 'G_sharp_4'),
-               ((9e-08, 1e-07), 'G_4'),
-               ((1e-07, 1.1e-07), 'F_4'),
-               ((1.1e-07, 1.2e-07), 'D_sharp_4'),
-               ((1.2e-07, 1.3e-07), 'D_4'),
-               ((1.3e-07, 1.4e-07), 'C_4')]
 
 rigorous_iteration = False
 if rigorous_iteration:

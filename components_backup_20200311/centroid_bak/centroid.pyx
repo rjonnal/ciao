@@ -4,24 +4,10 @@ from matplotlib import pyplot as plt
 import cython
 from cython.parallel import prange
 from libc.stdio cimport printf
+from libc.math cimport round as c_round
 import sys,os
-# Importing round is failing in windows for some reason; it may have
-# something to do with the MSVS c compiler and a 32-bit 64-bit clash.
-# If we want to implement parallelism at some point, we need to figure
-# this out, because the python round function cannot be used in a
-# 'with nogil:' context (since it's a python object), but we need some
-# way to round values and it's risky to write our own c round function
-# because it might be inefficient compared to clang's version.
-# from libc.math cimport round as c_round
-
-# Changes required to compile parallel version (Linux only):
-# 1. uncomment the "from libc.math cimport round as c_round" line above
-# 2. change all calls to round below to c_round
-# 3. add back the 'with nogil:' context, just above the prange
-# 4. change range to prange in the outermost loop (the one that iterates
-#    over the spots
-
 ctypedef np.uint16_t uint16_t
+
 
 # Function compute_centroids:
 # this function takes the following arguments:
@@ -118,10 +104,10 @@ cpdef compute_centroids(np.ndarray[np.int16_t,ndim=2] spots_image,
             intensity = 0.0
             counter = 0.0
 
-            x1 = int(round(x_out[k_spot]))-sb_half_width+k_iteration*iteration_step_px
-            x2 = int(round(x_out[k_spot]))+sb_half_width-k_iteration*iteration_step_px
-            y1 = int(round(y_out[k_spot]))-sb_half_width+k_iteration*iteration_step_px
-            y2 = int(round(y_out[k_spot]))+sb_half_width-k_iteration*iteration_step_px
+            x1 = int(c_round(x_out[k_spot]))-sb_half_width+k_iteration*iteration_step_px
+            x2 = int(c_round(x_out[k_spot]))+sb_half_width-k_iteration*iteration_step_px
+            y1 = int(c_round(y_out[k_spot]))-sb_half_width+k_iteration*iteration_step_px
+            y2 = int(c_round(y_out[k_spot]))+sb_half_width-k_iteration*iteration_step_px
 
             if x1<0 or x2>sx-1 or y1<0 or y2>sy-1:
                 printf("Search box x=(%ld,%ld),y=(%ld,%ld) extends beyond image edge. Possibly search box width too large.\n",x1,x2,y1,y2)
@@ -132,15 +118,13 @@ cpdef compute_centroids(np.ndarray[np.int16_t,ndim=2] spots_image,
                 #exit(0)
 
             background = sb_bg_vec[k_spot]
-            #printf("background=%0.1f\n",background)
-                    
+
             for x in range(x1,x2+1):
                 for y in range(y1,y2+1):
 
                     # not sure if it's better to cast with python's float()
                     # or c's <float>:
                     pixel = float(spots_image[y,x])-background
-                    
                     if pixel<0.0:
                         pixel = 0.0
                     xprod = xprod + pixel*x
@@ -204,10 +188,10 @@ cpdef estimate_backgrounds(np.ndarray[np.int16_t,ndim=2] spots_image,
         intensity = 0.0
         counter = 0.0
 
-        x1 = int(round(sb_x_vec[k_spot]))-sb_half_width
-        x2 = int(round(sb_x_vec[k_spot]))+sb_half_width
-        y1 = int(round(sb_y_vec[k_spot]))-sb_half_width
-        y2 = int(round(sb_y_vec[k_spot]))+sb_half_width
+        x1 = int(c_round(sb_x_vec[k_spot]))-sb_half_width
+        x2 = int(c_round(sb_x_vec[k_spot]))+sb_half_width
+        y1 = int(c_round(sb_y_vec[k_spot]))-sb_half_width
+        y2 = int(c_round(sb_y_vec[k_spot]))+sb_half_width
 
         if x1<0 or x2>sx-1 or y1<0 or y2>sy-1:
             printf("Search box x=(%ld,%ld),y=(%ld,%ld) extends beyond image edge. Possibly search box width too large.\n",x1,x2,y1,y2)
@@ -309,27 +293,15 @@ cpdef fast_centroids(np.ndarray[np.int16_t,ndim=2] spots_image,
 
     # first we have to iterate through the spots; do this without the gil, for
     # future parallelization
-    #with nogil:
-    # changed this for the time being to prevent linking errors in windows due
-    # to 32-bit libc.math.round being incompatile with 64 bit python. Replacing
-    # 'with nogil:' with 'if True:' to avoid having to unindent everything after.
     if True:
-        # For parallel version change range to prange
+
         for spot_index in range(n_spots):
             current_max = -2**16+1
 
-            # This is how we have to do it if we want nogil and parallelism:
-            #x1 = <int>c_round(sb_x_vec_view[spot_index]-sb_half_width_c)
-            #x2 = <int>c_round(sb_x_vec_view[spot_index]+sb_half_width_c)
-            #y1 = <int>c_round(sb_y_vec_view[spot_index]-sb_half_width_c)
-            #y2 = <int>c_round(sb_y_vec_view[spot_index]+sb_half_width_c)
-
-            # This is how we do it (with Python round) to avoid the Windows
-            # problem but this prevents parallelizing:
-            x1 = <int>round(sb_x_vec_view[spot_index]-sb_half_width_c)
-            x2 = <int>round(sb_x_vec_view[spot_index]+sb_half_width_c)
-            y1 = <int>round(sb_y_vec_view[spot_index]-sb_half_width_c)
-            y2 = <int>round(sb_y_vec_view[spot_index]+sb_half_width_c)
+            x1 = <int>c_round(sb_x_vec_view[spot_index]-sb_half_width_c)
+            x2 = <int>c_round(sb_x_vec_view[spot_index]+sb_half_width_c)
+            y1 = <int>c_round(sb_y_vec_view[spot_index]-sb_half_width_c)
+            y2 = <int>c_round(sb_y_vec_view[spot_index]+sb_half_width_c)
 
             if verbose_c>0:
                 printf('cython A %d,%d,%d,%d,%d\n',spot_index,x1,x2,y1,y2)
@@ -351,19 +323,11 @@ cpdef fast_centroids(np.ndarray[np.int16_t,ndim=2] spots_image,
                         max_x = x
 
             sb_max_vec[spot_index] = current_max
-
-            # See note abouve about c_round vs round
-            # x1 = <int>c_round(max_x-centroiding_half_width_c)
-            # x2 = <int>c_round(max_x+centroiding_half_width_c)
-            # y1 = <int>c_round(max_y-centroiding_half_width_c)
-            # y2 = <int>c_round(max_y+centroiding_half_width_c)
-
-            # Using Python round instead of libc.math.round for
-            # windows compatibility
-            x1 = <int>round(max_x-centroiding_half_width_c)
-            x2 = <int>round(max_x+centroiding_half_width_c)
-            y1 = <int>round(max_y-centroiding_half_width_c)
-            y2 = <int>round(max_y+centroiding_half_width_c)
+            x1 = <int>c_round(max_x-centroiding_half_width_c)
+            x2 = <int>c_round(max_x+centroiding_half_width_c)
+            y1 = <int>c_round(max_y-centroiding_half_width_c)
+            y2 = <int>c_round(max_y+centroiding_half_width_c)
+            
 
             if verbose_c>0:
                 printf('cython B %d,%d,%d,%d,%d\n',spot_index,x1,x2,y1,y2)
@@ -390,11 +354,8 @@ cpdef fast_centroids(np.ndarray[np.int16_t,ndim=2] spots_image,
                         #printf('\t%d,%d,%0.2f,%0.2f,%0.2f\n',x,y,xnum,ynum,denom)
 
                 if denom>0:
-                    #printf('%f,%f,%f,\n',xnum,ynum,denom)
                     x_out[spot_index] = xnum/denom
                     y_out[spot_index] = ynum/denom
-                    #printf('%f,%f\n',x_out[spot_index],y_out[spot_index])
-                    #printf('\n')
                     valid_vec[spot_index] = 1
                 else:
                     printf('centroid.fast_centroids: centroiding coordinates x=[%d,%d], y=[%d,%d] produce search box with zero intensity. Check image.\n',x1,x2,y1,y2,sx,sy)

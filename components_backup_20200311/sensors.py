@@ -136,9 +136,6 @@ class Sensor:
         print 'sensor unpaused'
         self.paused = False
 
-    def get_average_background(self):
-        return np.mean(self.box_backgrounds)
-
     def get_n_zernike_orders_corrected(self):
         return self.n_zernike_orders_corrected
 
@@ -161,12 +158,8 @@ class Sensor:
         self.unpause()
 
     def log(self):
-        t_string = now_string(True)
-
-        seconds = float(datetime.datetime.strptime(t_string,'%Y%m%d%H%M%S.%f').strftime('%s.%f'))
-        outfn = os.path.join(ccfg.logging_directory,'sensor_%s.mat'%(t_string))
+        outfn = os.path.join(ccfg.logging_directory,'sensor_%s.mat'%(now_string(True)))
         d = {}
-        d['time_seconds'] = seconds
         d['x_slopes'] = self.x_slopes
         d['y_slopes'] = self.y_slopes
         d['x_centroids'] = self.x_centroids
@@ -177,12 +170,14 @@ class Sensor:
         d['search_box_y2'] = self.search_boxes.y2
         d['ref_x'] = self.search_boxes.x
         d['ref_y'] = self.search_boxes.y
-        d['error'] = np.squeeze(self.error)
+        d['error'] = self.error
         d['tip'] = self.tip
         d['tilt'] = self.tilt
         d['wavefront'] = self.wavefront
-        d['zernikes'] = np.squeeze(self.zernikes)
-        #d['spots_image'] = self.image
+        d['zernikes'] = self.zernikes
+        d['spots_image'] = self.image
+        
+        
         sio.savemat(outfn,d)
 
     def set_background_correction(self,val):
@@ -200,40 +195,13 @@ class Sensor:
     def set_defocus(self,val):
         self.pause()
         
-        newx = self.search_boxes.x + self.reconstructor.defocus_dx*val*ccfg.zernike_dioptric_equivalent
+        newx = self.x0 + self.reconstructor.defocus_dx*val*ccfg.zernike_dioptric_equivalent
         
-        newy = self.search_boxes.y + self.reconstructor.defocus_dy*val*ccfg.zernike_dioptric_equivalent
+        newy = self.y0 + self.reconstructor.defocus_dy*val*ccfg.zernike_dioptric_equivalent
         self.search_boxes.move(newx,newy)
         
         self.unpause()
 
-    def set_astig0(self,val):
-        self.pause()
-        
-        newx = self.search_boxes.x + self.reconstructor.astig0_dx*val*ccfg.zernike_dioptric_equivalent
-        
-        newy = self.search_boxes.y + self.reconstructor.astig0_dy*val*ccfg.zernike_dioptric_equivalent
-        self.search_boxes.move(newx,newy)
-        
-        self.unpause()
-        
-    def set_astig1(self,val):
-        self.pause()
-        
-        newx = self.search_boxes.x + self.reconstructor.astig1_dx*val*ccfg.zernike_dioptric_equivalent
-        
-        newy = self.search_boxes.y + self.reconstructor.astig1_dy*val*ccfg.zernike_dioptric_equivalent
-
-        self.search_boxes.move(newx,newy)
-        
-        self.unpause()
-
-
-    def aberration_reset(self):
-        self.pause()
-        self.search_boxes.move(self.x0,self.y0)
-        self.unpause()
-        
     def set_centroiding_half_width(self,val):
         self.centroiding_half_width = val
         
@@ -289,8 +257,6 @@ class Sensor:
             self.y_slopes-=self.tip
         if self.reconstruct_wavefront:
             self.zernikes,self.wavefront,self.error = self.reconstructor.get_wavefront(self.x_slopes,self.y_slopes)
-            
-            
             self.filter_slopes = self.n_zernike_orders_corrected<self.reconstructor.N_orders
             
             if self.filter_slopes:
@@ -315,7 +281,6 @@ class Sensor:
                 # not sure if we should zero piston here
                 z_filt = np.zeros(len(self.zernikes))
                 z_filt[:n_terms+1] = self.zernikes[:n_terms+1]
-                
                 zero_piston = True
                 if zero_piston:
                     z_filt[0] = 0.0

@@ -132,15 +132,13 @@ cpdef compute_centroids(np.ndarray[np.int16_t,ndim=2] spots_image,
                 #exit(0)
 
             background = sb_bg_vec[k_spot]
-            #printf("background=%0.1f\n",background)
-                    
+
             for x in range(x1,x2+1):
                 for y in range(y1,y2+1):
 
                     # not sure if it's better to cast with python's float()
                     # or c's <float>:
                     pixel = float(spots_image[y,x])-background
-                    
                     if pixel<0.0:
                         pixel = 0.0
                     xprod = xprod + pixel*x
