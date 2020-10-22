@@ -163,10 +163,10 @@ class Sensor:
     def log0(self):
         t_string = now_string(True)
 
-        seconds = float(datetime.datetime.strptime(t_string,'%Y%m%d%H%M%S.%f').strftime('%s.%f'))
+        #seconds = float(datetime.datetime.strptime(t_string,'%Y%m%d%H%M%S.%f').strftime('%s.%f'))
         outfn = os.path.join(ccfg.logging_directory,'sensor_%s.mat'%(t_string))
         d = {}
-        d['time_seconds'] = seconds
+        #d['time_seconds'] = seconds
         d['x_slopes'] = self.x_slopes
         d['y_slopes'] = self.y_slopes
         d['x_centroids'] = self.x_centroids
@@ -188,9 +188,9 @@ class Sensor:
     def log(self):
         t_string = now_string(True)
 
-        seconds = float(datetime.datetime.strptime(t_string,'%Y%m%d%H%M%S.%f').strftime('%s.%f'))
+        #seconds = float(datetime.datetime.strptime(t_string,'%Y%m%d%H%M%S.%f').strftime('%s.%f'))
         d = {}
-        d['time_seconds'] = np.array([seconds])
+        #d['time_seconds'] = np.array([seconds])
         d['x_slopes'] = self.x_slopes
         d['y_slopes'] = self.y_slopes
         d['x_centroids'] = self.x_centroids
