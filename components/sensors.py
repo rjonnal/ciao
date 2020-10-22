@@ -209,7 +209,6 @@ class Sensor:
         #d['spots_image'] = self.image
 
         for k in d.keys():
-            print k
             outfn = os.path.join(ccfg.logging_directory,'sensor_%s_%s.txt'%(k,t_string))
             np.savetxt(outfn,d[k])
             
