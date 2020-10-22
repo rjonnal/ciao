@@ -198,6 +198,11 @@ class Simulator:
         self.exposure_us = 10000
         
         self.paused = False
+        self.logging = False
+
+    def log(self):
+        outfn = os.path.join(ccfg.logging_directory,'mirror_%s.txt'%(now_string(True)))
+        np.savetxt(outfn,self.command)
 
     def pause(self):
         self.paused = True
@@ -304,6 +309,9 @@ class Simulator:
         self.spots = np.abs(np.fft.ifft2(np.fft.fftshift(np.fft.fft2(self.spots))*self.disc))
         self.x_slopes = np.array(x_slope_vec)
         self.y_slopes = np.array(y_slope_vec)
+        if self.logging:
+            self.log()
+        
         
     def get_image(self):
         self.update()

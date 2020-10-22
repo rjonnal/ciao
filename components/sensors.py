@@ -160,7 +160,7 @@ class Sensor:
         self.dark_image[...] = temp[...]
         self.unpause()
 
-    def log(self):
+    def log0(self):
         t_string = now_string(True)
 
         seconds = float(datetime.datetime.strptime(t_string,'%Y%m%d%H%M%S.%f').strftime('%s.%f'))
@@ -185,6 +185,38 @@ class Sensor:
         #d['spots_image'] = self.image
         sio.savemat(outfn,d)
 
+    def log(self):
+        t_string = now_string(True)
+
+        seconds = float(datetime.datetime.strptime(t_string,'%Y%m%d%H%M%S.%f').strftime('%s.%f'))
+        d = {}
+        d['time_seconds'] = np.array([seconds])
+        d['x_slopes'] = self.x_slopes
+        d['y_slopes'] = self.y_slopes
+        d['x_centroids'] = self.x_centroids
+        d['y_centroids'] = self.y_centroids
+        d['search_box_x1'] = self.search_boxes.x1
+        d['search_box_x2'] = self.search_boxes.x2
+        d['search_box_y1'] = self.search_boxes.y1
+        d['search_box_y2'] = self.search_boxes.y2
+        d['ref_x'] = self.search_boxes.x
+        d['ref_y'] = self.search_boxes.y
+        d['error'] = np.array([np.squeeze(self.error)])
+        #d['tip'] = self.tip
+        #d['tilt'] = self.tilt
+        d['wavefront'] = self.wavefront
+        d['zernikes'] = np.squeeze(self.zernikes)
+        #d['spots_image'] = self.image
+
+        for k in d.keys():
+            print k
+            outfn = os.path.join(ccfg.logging_directory,'sensor_%s_%s.txt'%(k,t_string))
+            np.savetxt(outfn,d[k])
+            
+        
+        #sio.savemat(outfn,d)
+
+        
     def set_background_correction(self,val):
         #sensor_mutex.lock()
         self.background_correction = val
