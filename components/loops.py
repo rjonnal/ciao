@@ -64,7 +64,10 @@ class Loop(QObject):
         self.loss = ccfg.loop_loss
         self.paused = False
         self.n = 0
-        self.started.connect(self.sensor.beeper.cache_tones)
+        try:
+            self.started.connect(self.sensor.beeper.cache_tones)
+        except TypeError:
+            pass
 
     def start(self):
         self.timer = QTimer()
