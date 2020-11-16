@@ -809,8 +809,8 @@ class UI(QWidget):
         
     @pyqtSlot()
     def update(self):
-        self.mirror_mutex.lock()
-        self.sensor_mutex.lock()
+        #self.mirror_mutex.lock()
+        #self.sensor_mutex.lock()
         sensor = self.loop.sensor
         mirror = self.loop.mirror
 
@@ -861,8 +861,8 @@ class UI(QWidget):
             self.cb_closed.setChecked(False)
             self.loop.closed = False
             
-        self.mirror_mutex.unlock()
-        self.sensor_mutex.unlock()
+        #self.mirror_mutex.unlock()
+        #self.sensor_mutex.unlock()
             
     def select_single_spot(self,click):
         x = click.x()*self.downsample

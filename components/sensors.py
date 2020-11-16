@@ -206,11 +206,14 @@ class Sensor:
         #d['tilt'] = self.tilt
         d['wavefront'] = self.wavefront
         d['zernikes'] = np.squeeze(self.zernikes)
-        #d['spots_image'] = self.image
+        d['spots_image'] = self.image.astype(np.uint16)
 
         for k in d.keys():
             outfn = os.path.join(ccfg.logging_directory,'sensor_%s_%s.txt'%(k,t_string))
-            np.savetxt(outfn,d[k])
+            if k=='spots_image':
+                np.savetxt(outfn,d[k],fmt='%d')
+            else:
+                np.savetxt(outfn,d[k])
             
         
         #sio.savemat(outfn,d)
