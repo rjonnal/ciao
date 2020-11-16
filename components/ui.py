@@ -598,6 +598,17 @@ class UI(QWidget):
         poke_layout.addWidget(self.pb_invert)
 
 
+        modal_layout = QHBoxLayout()
+        modal_layout.addWidget(QLabel('Corrected Zernike orders:'))
+        self.corrected_order_spinbox = QSpinBox()
+        max_order = self.loop.sensor.reconstructor.N_orders
+        self.corrected_order_spinbox.setMaximum(max_order)
+        self.corrected_order_spinbox.setMinimum(0)
+        self.corrected_order_spinbox.valueChanged.connect(self.loop.sensor.set_n_zernike_orders_corrected)
+        self.corrected_order_spinbox.setValue(self.loop.sensor.get_n_zernike_orders_corrected())
+        modal_layout.addWidget(self.corrected_order_spinbox)
+        modal_layout.addWidget(QLabel('(%d -> no filtering)'%max_order))
+        
         dark_layout = QHBoxLayout()
         self.cb_dark_subtraction = QCheckBox('Subtract dark')
         self.cb_dark_subtraction.setChecked(self.loop.sensor.dark_subtract)
@@ -642,28 +653,54 @@ class UI(QWidget):
         bg_layout.addWidget(self.bg_spinbox)
 
 
-        f_layout = QHBoxLayout()
-        f_layout.addWidget(QLabel('Defocus:'))
+        aberration_layout = QHBoxLayout()
+
+        aberration_layout.addWidget(QLabel('Defocus:'))
         self.f_spinbox = QDoubleSpinBox()
         self.f_spinbox.setValue(0.0)
         self.f_spinbox.setSingleStep(0.01)
         self.f_spinbox.setMaximum(10.0)
         self.f_spinbox.setMinimum(-10.0)
         self.f_spinbox.valueChanged.connect(self.loop.sensor.set_defocus)
-        f_layout.addWidget(self.f_spinbox)
+        aberration_layout.addWidget(self.f_spinbox)
         
+        aberration_layout.addWidget(QLabel('Astig 0:'))
+        self.a0_spinbox = QDoubleSpinBox()
+        self.a0_spinbox.setValue(0.0)
+        self.a0_spinbox.setSingleStep(0.01)
+        self.a0_spinbox.setMaximum(10.0)
+        self.a0_spinbox.setMinimum(-10.0)
+        self.a0_spinbox.valueChanged.connect(self.loop.sensor.set_astig0)
+        aberration_layout.addWidget(self.a0_spinbox)
+
+        aberration_layout.addWidget(QLabel('Astig 45:'))
+        self.a1_spinbox = QDoubleSpinBox()
+        self.a1_spinbox.setValue(0.0)
+        self.a1_spinbox.setSingleStep(0.01)
+        self.a1_spinbox.setMaximum(10.0)
+        self.a1_spinbox.setMinimum(-10.0)
+        self.a1_spinbox.valueChanged.connect(self.loop.sensor.set_astig1)
+        aberration_layout.addWidget(self.a1_spinbox)
+
+        self.pb_aberration_reset = QPushButton('Reset')
+        def reset():
+            self.f_spinbox.setValue(0.0)
+            self.a0_spinbox.setValue(0.0)
+            self.a1_spinbox.setValue(0.0)
+            self.loop.sensor.aberration_reset()
+        self.pb_aberration_reset.clicked.connect(reset)
+        aberration_layout.addWidget(self.pb_aberration_reset)
+
         
-        e_layout = QHBoxLayout()
-        e_layout.addWidget(QLabel('Exposure:'))
-        self.e_spinbox = QSpinBox()
-        self.e_spinbox.setValue(self.loop.sensor.cam.get_exposure())
-        self.e_spinbox.setSingleStep(1000)
-        self.e_spinbox.setMaximum(1000000)
-        self.e_spinbox.setMinimum(1000)
-        self.e_spinbox.valueChanged.connect(self.loop.sensor.cam.set_exposure)
-        e_layout.addWidget(self.e_spinbox)
-        
-        
+        exp_layout = QHBoxLayout()
+        exp_layout.addWidget(QLabel('Exposure (us):'))
+        self.exp_spinbox = QSpinBox()
+        self.exp_spinbox.setValue(self.loop.sensor.cam.get_exposure())
+        self.exp_spinbox.setSingleStep(100)
+        self.exp_spinbox.setMaximum(1000000)
+        self.exp_spinbox.setMinimum(100)
+        self.exp_spinbox.valueChanged.connect(self.loop.sensor.cam.set_exposure)
+        exp_layout.addWidget(self.exp_spinbox)
         
         self.stripchart_error = StripChart(ylim=ccfg.error_plot_ylim,ytick_interval=ccfg.error_plot_ytick_interval,print_function=ccfg.error_plot_print_func,hlines=[0.0,ccfg.wavelength_m/14.0],buffer_length=ccfg.error_plot_buffer_length)
         self.stripchart_error.setAlignment(Qt.AlignRight)
@@ -689,9 +726,13 @@ class UI(QWidget):
         self.ind_image_max = Indicator(buffer_length=10,print_function=lambda x: '%d ADU (max)'%x)
         self.ind_image_mean = Indicator(buffer_length=10,print_function=lambda x: '%d ADU (mean)'%x)
         self.ind_image_min = Indicator(buffer_length=10,print_function=lambda x: '%d ADU (min)'%x)
+        self.ind_mean_box_background = Indicator(buffer_length=10,print_function=lambda x: '%d ADU (background)'%x)
+        
         self.ind_image_max.setAlignment(Qt.AlignRight)
         self.ind_image_mean.setAlignment(Qt.AlignRight)
         self.ind_image_min.setAlignment(Qt.AlignRight)
+        self.ind_mean_box_background.setAlignment(Qt.AlignRight)
+        
 
         self.lbl_mirror_fps = QLabel()
         self.lbl_mirror_fps.setAlignment(Qt.AlignRight)
@@ -708,11 +749,12 @@ class UI(QWidget):
         
         column_2.addLayout(loop_control_layout)
         #column_2.addWidget(self.cb_fast_centroiding)
-        column_2.addLayout(f_layout)
-        column_2.addLayout(e_layout)
+        column_2.addLayout(aberration_layout)
+        column_2.addLayout(exp_layout)
         column_2.addLayout(centroiding_layout)
         column_2.addLayout(bg_layout)
         column_2.addLayout(poke_layout)
+        column_2.addLayout(modal_layout)
         column_2.addLayout(dark_layout)
         column_2.addWidget(self.cb_draw_boxes)
         column_2.addWidget(self.cb_draw_lines)
@@ -726,6 +768,8 @@ class UI(QWidget):
         column_2.addWidget(self.ind_image_max)
         column_2.addWidget(self.ind_image_mean)
         column_2.addWidget(self.ind_image_min)
+        column_2.addWidget(self.ind_mean_box_background)
+        
         column_2.addWidget(self.ind_centroiding_time)
         
         column_2.addWidget(self.lbl_sensor_fps)
@@ -802,6 +846,8 @@ class UI(QWidget):
         self.ind_image_max.setValue(sensor.image_max)
         self.ind_image_mean.setValue(sensor.image_mean)
         self.ind_image_min.setValue(sensor.image_min)
+        self.ind_mean_box_background.setValue(sensor.get_average_background())
+        
         self.ind_centroiding_time.setValue(sensor.centroiding_time)
         
         self.lbl_sensor_fps.setText(ccfg.sensor_fps_fmt%sensor.frame_timer.fps)

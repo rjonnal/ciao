@@ -108,6 +108,8 @@ class Sensor:
         self.frame_timer = FrameTimer('Sensor',verbose=False)
         self.reconstructor = Reconstructor(self.search_boxes.x,
                                            self.search_boxes.y,self.sensor_mask)
+
+        self.n_zernike_orders_corrected=self.reconstructor.N_orders
         self.centroiding_time = -1.0
 
         self.beeper = Beeper()
@@ -134,6 +136,15 @@ class Sensor:
         print 'sensor unpaused'
         self.paused = False
 
+    def get_average_background(self):
+        return np.mean(self.box_backgrounds)
+
+    def get_n_zernike_orders_corrected(self):
+        return self.n_zernike_orders_corrected
+
+    def set_n_zernike_orders_corrected(self,n):
+        self.n_zernike_orders_corrected = n
+        
     def set_dark_subtraction(self,val):
         self.dark_subtract = val
 
@@ -149,9 +160,13 @@ class Sensor:
         self.dark_image[...] = temp[...]
         self.unpause()
 
-    def log(self):
-        outfn = os.path.join(ccfg.logging_directory,'sensor_%s.mat'%(now_string(True)))
+    def log0(self):
+        t_string = now_string(True)
+
+        #seconds = float(datetime.datetime.strptime(t_string,'%Y%m%d%H%M%S.%f').strftime('%s.%f'))
+        outfn = os.path.join(ccfg.logging_directory,'sensor_%s.mat'%(t_string))
         d = {}
+        #d['time_seconds'] = seconds
         d['x_slopes'] = self.x_slopes
         d['y_slopes'] = self.y_slopes
         d['x_centroids'] = self.x_centroids
@@ -162,16 +177,45 @@ class Sensor:
         d['search_box_y2'] = self.search_boxes.y2
         d['ref_x'] = self.search_boxes.x
         d['ref_y'] = self.search_boxes.y
-        d['error'] = self.error
+        d['error'] = np.squeeze(self.error)
         d['tip'] = self.tip
         d['tilt'] = self.tilt
         d['wavefront'] = self.wavefront
-        d['zernikes'] = self.zernikes
-        d['spots_image'] = self.image
-        
-        
+        d['zernikes'] = np.squeeze(self.zernikes)
+        #d['spots_image'] = self.image
         sio.savemat(outfn,d)
 
+    def log(self):
+        t_string = now_string(True)
+
+        #seconds = float(datetime.datetime.strptime(t_string,'%Y%m%d%H%M%S.%f').strftime('%s.%f'))
+        d = {}
+        #d['time_seconds'] = np.array([seconds])
+        d['x_slopes'] = self.x_slopes
+        d['y_slopes'] = self.y_slopes
+        d['x_centroids'] = self.x_centroids
+        d['y_centroids'] = self.y_centroids
+        d['search_box_x1'] = self.search_boxes.x1
+        d['search_box_x2'] = self.search_boxes.x2
+        d['search_box_y1'] = self.search_boxes.y1
+        d['search_box_y2'] = self.search_boxes.y2
+        d['ref_x'] = self.search_boxes.x
+        d['ref_y'] = self.search_boxes.y
+        d['error'] = np.array([np.squeeze(self.error)])
+        #d['tip'] = self.tip
+        #d['tilt'] = self.tilt
+        d['wavefront'] = self.wavefront
+        d['zernikes'] = np.squeeze(self.zernikes)
+        #d['spots_image'] = self.image
+
+        for k in d.keys():
+            outfn = os.path.join(ccfg.logging_directory,'sensor_%s_%s.txt'%(k,t_string))
+            np.savetxt(outfn,d[k])
+            
+        
+        #sio.savemat(outfn,d)
+
+        
     def set_background_correction(self,val):
         #sensor_mutex.lock()
         self.background_correction = val
@@ -187,13 +231,40 @@ class Sensor:
     def set_defocus(self,val):
         self.pause()
         
-        newx = self.x0 + self.reconstructor.defocus_dx*val*ccfg.zernike_dioptric_equivalent
+        newx = self.search_boxes.x + self.reconstructor.defocus_dx*val*ccfg.zernike_dioptric_equivalent
         
-        newy = self.y0 + self.reconstructor.defocus_dy*val*ccfg.zernike_dioptric_equivalent
+        newy = self.search_boxes.y + self.reconstructor.defocus_dy*val*ccfg.zernike_dioptric_equivalent
         self.search_boxes.move(newx,newy)
         
         self.unpause()
 
+    def set_astig0(self,val):
+        self.pause()
+        
+        newx = self.search_boxes.x + self.reconstructor.astig0_dx*val*ccfg.zernike_dioptric_equivalent
+        
+        newy = self.search_boxes.y + self.reconstructor.astig0_dy*val*ccfg.zernike_dioptric_equivalent
+        self.search_boxes.move(newx,newy)
+        
+        self.unpause()
+        
+    def set_astig1(self,val):
+        self.pause()
+        
+        newx = self.search_boxes.x + self.reconstructor.astig1_dx*val*ccfg.zernike_dioptric_equivalent
+        
+        newy = self.search_boxes.y + self.reconstructor.astig1_dy*val*ccfg.zernike_dioptric_equivalent
+
+        self.search_boxes.move(newx,newy)
+        
+        self.unpause()
+
+
+    def aberration_reset(self):
+        self.pause()
+        self.search_boxes.move(self.x0,self.y0)
+        self.unpause()
+        
     def set_centroiding_half_width(self,val):
         self.centroiding_half_width = val
         
@@ -243,11 +314,48 @@ class Sensor:
         self.y_slopes = (self.y_centroids-self.search_boxes.y)*self.pixel_size_m/self.lenslet_focal_length_m
         self.tilt = np.mean(self.x_slopes)
         self.tip = np.mean(self.y_slopes)
+        
         if self.remove_tip_tilt:
             self.x_slopes-=self.tilt
             self.y_slopes-=self.tip
         if self.reconstruct_wavefront:
             self.zernikes,self.wavefront,self.error = self.reconstructor.get_wavefront(self.x_slopes,self.y_slopes)
+            
+            
+            self.filter_slopes = self.n_zernike_orders_corrected<self.reconstructor.N_orders
+            
+            if self.filter_slopes:
+
+                # Outline of approach: the basic idea is to filter the residual error
+                # slopes by Zernike mode before multiplying by the mirror command
+                # matrix.
+                # 1. multiply the slopes by a wavefront reconstructor matrix
+                #    to get Zernike coefficients; these are already output by
+                #    the call to self.reconstructor.get_wavefront above
+                # 2. zero the desired modes
+                # 3. multiply the modes by the inverse of that matrix, which is stored
+                #    in the Reconstructor object as reconstructor.slope_matrix
+
+                # convert the order into a number of terms:
+                n_terms = self.reconstructor.Z.nm2j(self.n_zernike_orders_corrected,self.n_zernike_orders_corrected)
+
+                # get the slope matrix (inverse of zernike matrix, which maps slopes onto zernikes)
+                slope_matrix = self.reconstructor.slope_matrix
+
+                # create a filtered set of zernike terms
+                # not sure if we should zero piston here
+                z_filt = np.zeros(len(self.zernikes))
+                z_filt[:n_terms+1] = self.zernikes[:n_terms+1]
+                
+                zero_piston = True
+                if zero_piston:
+                    z_filt[0] = 0.0
+                
+                # filter the slopes, and assign them to this sensor object:
+                filtered_slopes = np.dot(slope_matrix,z_filt)
+                self.x_slopes = filtered_slopes[:self.n_lenslets]
+                self.y_slopes = filtered_slopes[self.n_lenslets:]
+            
         try:
             self.beeper.beep(self.error)
         except Exception as e:

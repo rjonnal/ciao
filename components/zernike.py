@@ -336,9 +336,13 @@ class Reconstructor:
         self.pixel_size = ccfg.pixel_size_m
         self.pupil_size = ccfg.beam_diameter_m
         self.N = ccfg.n_zernike_terms
+        
         self.regularize = regularize
         self.mask = mask
         Z = Zernike()
+        self.Z = Z
+
+        self.N_orders = self.Z.j2nm(self.N)[0]
         refx = x
         refy = y
         
@@ -362,14 +366,25 @@ class Reconstructor:
             hmat.append(h)
             dxmat.append(dx)
             dymat.append(dy)
+            
             if j==4:
                 self.defocus_h = h
                 self.defocus_dx = dx
                 self.defocus_dy = dy
+            if j==3:
+                self.astig0_h = h
+                self.astig0_dx = dx
+                self.astig0_dy = dy
+            if j==5:
+                self.astig1_h = h
+                self.astig1_dx = dx
+                self.astig1_dy = dy
         
     
         dxmat = np.array(dxmat)
         dymat = np.array(dymat)
+        hmat = np.array(hmat)
+
         if self.regularize:
             A = np.vstack((dxmat.T,dymat.T,np.ones(self.N)))
         else:
@@ -377,12 +392,18 @@ class Reconstructor:
         
         #why did I originally write it this way?
         #self.matrix = np.dot(np.linalg.pinv(np.dot(A.T,A)),A.T)
-        
+
+        # a matrix for converting slopes into zernike coefficients:
         self.zernike_matrix = np.linalg.pinv(A)
+
+        # it's inverse, a matrix for converting zernikes into slopes:
+        self.slope_matrix = A
+        
         self.wavefront_matrix = np.array(hmat).T
         self.wavefront = np.zeros(self.mask.shape)
         
     def get_wavefront(self,xslopes,yslopes):
+        
         if self.regularize:
             newSlopeRow = np.zeros([1])
             slopes = np.hstack((xslopes,yslopes,newSlopeRow))

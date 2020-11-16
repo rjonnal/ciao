@@ -1,9 +1,4 @@
-try:
-    from PyQt5.QtMultimedia import QSound,QSoundEffect,QAudioDeviceInfo
-    USE_SOUNDS = True
-except Exception as e:
-    USE_SOUNDS = False
-    
+from PyQt5.QtMultimedia import QSound,QSoundEffect,QAudioDeviceInfo
 from PyQt5.QtCore import QUrl,pyqtSlot
 from PyQt5.Qt import QApplication
 import ciao_config as ccfg
@@ -18,12 +13,12 @@ class Beeper:
 
         self.interval = nskip+1
         self.n = 0
-        if USE_SOUNDS:
-            qadi = QAudioDeviceInfo()
-            codecs = qadi.supportedCodecs()
-            codec_exists = len(codecs)
-        self.active = ('audio_directory' in dir(ccfg) and 'error_tones' in dir(ccfg) and USE_SOUNDS)
+        qadi = QAudioDeviceInfo()
+        codecs = qadi.supportedCodecs()
+        codec_exists = len(codecs)
+        self.active = ('audio_directory' in dir(ccfg) and 'error_tones' in dir(ccfg))
         self.tone_dict = {}
+        #self.cache_tones()
 
     @pyqtSlot()
     def cache_tones(self):
@@ -37,8 +32,6 @@ class Beeper:
                     self.tone_dict[key] = val
                 #self.tonepg_dict[key] = pygame.mixer.Sound(tonefn)
             print 'Done!'
-        else:
-            print 'Not caching tones because qtmultimedia failed.'
                 
     def err_to_int(self,err):
         return int(np.floor(err*1e8))
@@ -50,6 +43,5 @@ class Beeper:
                 se = self.tone_dict[k]
                 se.play()
         else:
-            pass
-            #print 'play %0.1f'%(error_in_nm*1e9)
+            print 'play %0.1f'%(error_in_nm*1e9)
         self.n = (self.n+1)%self.interval

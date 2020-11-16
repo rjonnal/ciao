@@ -59,6 +59,7 @@ sensor_remove_tip_tilt = True
 centroiding_num_threads = 1
 iterative_centroiding_step = 2
 centroiding_iterations = 2
+camera_exposure_us = 10000
 
 mirror_update_rate = 1.0 # deprecated in current version
 mirror_flat_filename = dm_directory + 'flat.txt'

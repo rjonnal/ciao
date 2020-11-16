@@ -185,10 +185,13 @@ class Mirror:
         self.flat[:] = self.get_command()[:]
         
     def log(self):
-        outfn = os.path.join(ccfg.logging_directory,'mirror_%s.mat'%(now_string(True)))
-        d = {}
-        d['command'] = self.controller.command
-        sio.savemat(outfn,d)
+        #outfn = os.path.join(ccfg.logging_directory,'mirror_%s.mat'%(now_string(True)))
+        #d = {}
+        #d['command'] = self.controller.command
+        #sio.savemat(outfn,d)
+        outfn = os.path.join(ccfg.logging_directory,'mirror_%s.txt'%(now_string(True)))
+        np.savetxt(outfn,self.controller.command)
+        
 
     def set_logging(self,val):
         self.logging = val
