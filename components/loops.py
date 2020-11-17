@@ -24,7 +24,7 @@ from ctypes import CDLL,c_void_p
 from search_boxes import SearchBoxes
 from reference_generator import ReferenceGenerator
 import ciao_config as ccfg
-from frame_timer import FrameTimer
+from frame_timer import FrameTimer,BlockTimer
 from poke import Poke
 
 class Loop(QObject):
@@ -68,7 +68,13 @@ class Loop(QObject):
             self.started.connect(self.sensor.beeper.cache_tones)
         except TypeError:
             pass
+        self.update_timer = BlockTimer('Loop update method')
+        try:
+            self.profile_update_method = ccfg.profile_loop_update_method
+        except:
+            self.profile_update_method = False
 
+        
     def start(self):
         self.timer = QTimer()
         self.timer.timeout.connect(self.update)
@@ -104,6 +110,9 @@ class Loop(QObject):
         
     @pyqtSlot()
     def update(self):
+
+        if self.profile_update_method:
+            self.update_timer.tick('start')
         if not self.paused:
             if self.verbose>=5:
                 print 'Updating loop.'
@@ -111,6 +120,9 @@ class Loop(QObject):
 
             self.sensor.update()
 
+            if self.profile_update_method:
+                self.update_timer.tick('sensor.update')
+            
             current_active_lenslets = np.ones(self.active_lenslets.shape)
             
             # if we're in safe mode, check the boxes:
@@ -163,6 +175,9 @@ class Loop(QObject):
                     self.mirror.set_command(command)
                     self.mirror.update()
 
+                    if self.profile_update_method:
+                        self.update_timer.tick('mirror.update')
+                    
                     if self.verbose>=1:
                         if command.max()>ccfg.mirror_command_max*.99:
                             print 'actuator saturated'
@@ -172,9 +187,15 @@ class Loop(QObject):
                     print 'not ready to correct'
 
             self.active_lenslets[:] = current_active_lenslets[:]
+
             
         self.n = self.n + 1
+        if self.profile_update_method:
+            self.update_timer.tick('end update')
+            self.update_timer.tock()
+            
         self.finished.emit()
+        
         
     def load_poke(self,poke_filename=None):
         try:

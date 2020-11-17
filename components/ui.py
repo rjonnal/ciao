@@ -25,7 +25,7 @@ from ctypes import CDLL,c_void_p
 from search_boxes import SearchBoxes
 from reference_generator import ReferenceGenerator
 import ciao_config as ccfg
-from frame_timer import FrameTimer
+from frame_timer import FrameTimer,BlockTimer
 from poke import Poke
 import os
 
@@ -449,6 +449,7 @@ class UI(QWidget):
         self.mirror_mutex = QMutex()#loop.mirror_mutex
         self.loop = loop
         try:
+            pass
             self.loop.finished.connect(self.update)
         except Exception as e:
             pass
@@ -456,12 +457,22 @@ class UI(QWidget):
         self.draw_lines = ccfg.show_slope_lines
         self.init_UI()
         self.frame_timer = FrameTimer('UI',verbose=False)
+        self.update_timer = BlockTimer('UI update method')
+        try:
+            self.profile_update_method = ccfg.profile_ui_update_method
+        except:
+            self.profile_update_method = False
+            
         self.show()
 
     #def get_draw_boxes(self):
     #    return self.draw_boxes
 
 
+    def __del__(self):
+        print "hello?"
+        self.update_timer.tock()
+        
     def keyPressEvent(self,event):
         if event.key()==Qt.Key_W:
             self.loop.sensor.search_boxes.up()
@@ -809,6 +820,10 @@ class UI(QWidget):
         
     @pyqtSlot()
     def update(self):
+
+        if self.profile_update_method:
+            self.update_timer.tick('start')
+            
         #self.mirror_mutex.lock()
         #self.sensor_mutex.lock()
         sensor = self.loop.sensor
@@ -826,7 +841,14 @@ class UI(QWidget):
             y2 = y+dy
             self.overlay_slopes.coords.append((x,x2,y,y2))
 
+        if self.profile_update_method:
+            self.update_timer.tick('create slope lines overlay')
+
         self.id_spots.show(sensor.image,self.loop.active_lenslets)
+        
+        if self.profile_update_method:
+            self.update_timer.tick('show spots')
+
 
         mirror_map = np.zeros(mirror.mirror_mask.shape)
         mirror_map[np.where(mirror.mirror_mask)] = mirror.get_command()[:]
@@ -860,9 +882,14 @@ class UI(QWidget):
             self.cb_closed.setEnabled(False)
             self.cb_closed.setChecked(False)
             self.loop.closed = False
+
+        if self.profile_update_method:
+            self.update_timer.tick('end update')
+            self.update_timer.tock()
             
         #self.mirror_mutex.unlock()
         #self.sensor_mutex.unlock()
+            
             
     def select_single_spot(self,click):
         x = click.x()*self.downsample

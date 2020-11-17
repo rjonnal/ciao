@@ -23,7 +23,7 @@ from poke_analysis import save_modes_chart
 from ctypes import CDLL,c_void_p
 from search_boxes import SearchBoxes
 import ciao_config as ccfg
-from frame_timer import FrameTimer
+from frame_timer import FrameTimer,BlockTimer
 from beeper import Beeper
 
 class Sensor:
@@ -116,6 +116,12 @@ class Sensor:
 
         self.logging = False
         self.paused = False
+        self.sense_timer = BlockTimer('Sensor sense method')
+        
+        try:
+            self.profile_update_method = ccfg.profile_sensor_update_method
+        except:
+            self.profile_update_method = False
         
     def update(self):
         if not self.paused:
@@ -272,13 +278,25 @@ class Sensor:
         self.centroiding_half_width = val
         
     def sense(self,debug=False):
+
+        if self.profile_update_method:
+            self.sense_timer.tick('start')
+            
         self.image = self.cam.get_image()
+
+        if self.profile_update_method:
+            self.sense_timer.tick('cam.get_image')
+        
         if self.dark_subtract:
             self.image = self.image - self.dark_image
 
         self.image_min = self.image.min()
         self.image_mean = self.image.mean()
         self.image_max = self.image.max()
+        
+        if self.profile_update_method:
+            self.sense_timer.tick('image stats')
+            
         
         t0 = time.time()
         if not self.fast_centroiding:
@@ -287,6 +305,8 @@ class Sensor:
                                           sb_y_vec = self.search_boxes.y,
                                           sb_bg_vec = self.box_backgrounds,
                                           sb_half_width_p = self.search_boxes.half_width)
+            if self.profile_update_method:
+                self.sense_timer.tick('estimate background')
             centroid.compute_centroids(spots_image=self.image,
                                        sb_x_vec = self.search_boxes.x,
                                        sb_y_vec = self.search_boxes.y,
@@ -300,6 +320,8 @@ class Sensor:
                                        maximum_intensity = self.box_maxes,
                                        minimum_intensity = self.box_mins,
                                        num_threads_p = 1)
+            if self.profile_update_method:
+                self.sense_timer.tick('centroid')
         else:
             centroid.fast_centroids(spots_image=self.image,
                                     sb_x_vec = self.search_boxes.x,
@@ -323,6 +345,8 @@ class Sensor:
             self.y_slopes-=self.tip
         if self.reconstruct_wavefront:
             self.zernikes,self.wavefront,self.error = self.reconstructor.get_wavefront(self.x_slopes,self.y_slopes)
+            if self.profile_update_method:
+                self.sense_timer.tick('reconstruct wavefront')
             
             
             self.filter_slopes = self.n_zernike_orders_corrected<self.reconstructor.N_orders
@@ -358,6 +382,10 @@ class Sensor:
                 filtered_slopes = np.dot(slope_matrix,z_filt)
                 self.x_slopes = filtered_slopes[:self.n_lenslets]
                 self.y_slopes = filtered_slopes[self.n_lenslets:]
+            
+        if self.profile_update_method:
+            self.sense_timer.tick('end sense')
+            self.sense_timer.tock()
             
         try:
             self.beeper.beep(self.error)

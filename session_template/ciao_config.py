@@ -61,6 +61,10 @@ iterative_centroiding_step = 2
 centroiding_iterations = 2
 camera_exposure_us = 10000
 
+profile_ui_update_method = False
+profile_sensor_update_method = False
+profile_loop_update_method = False
+
 mirror_update_rate = 1.0 # deprecated in current version
 mirror_flat_filename = dm_directory + 'flat.txt'
 mirror_mask_filename = dm_directory + 'mirror_mask.txt'
