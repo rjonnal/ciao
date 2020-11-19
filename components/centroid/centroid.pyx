@@ -5,6 +5,8 @@ import cython
 from cython.parallel import prange
 from libc.stdio cimport printf
 import sys,os
+from sys import exit
+
 # Importing round is failing in windows for some reason; it may have
 # something to do with the MSVS c compiler and a 32-bit 64-bit clash.
 # If we want to implement parallelism at some point, we need to figure
