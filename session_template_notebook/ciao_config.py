@@ -45,20 +45,53 @@ lenslet_pitch_m = 500e-6
 lenslet_focal_length_m = 10.0e-3
 pixel_size_m = 40e-6
 
+
+
+
+# use_dark_subtraction provides UI control to acquire a dark image and then
+# subtract it from each acquired frame. It can be used in conjunction with
+# estimate_background, in which case the dark image is subtracted *before*
+# background estimation
+use_dark_subtraction = True
+
+# estimate_background determines whether CIAO tries to estimate the background
+# of each box on the fly, by computing the average signal at the edge of each box.
+# This approach was developed when we noticed that the background light (maybe
+# stray light, maybe difracted light, maybe tails of the spot) in the center of
+# the pupil was several times higher than that near the edges. The (roughly gaussian)
+# profile of the background light prevents us from using a single background value
+# across the whole sensor.
+estimate_background = True
+
+# When CIAO is estimating and subtracting the background, you can manually add to
+# the estimate, by setting this value. Positive numbers increase the background
+# estimate (thus biasing the centroid toward the spot core). Negative numbers decrease
+# the background estimate (thus increasing the influence of spot tails and search box bias).
+background_correction = 0
+
+# The search box width is 2*search_box_half_width+1
+search_box_half_width = 5
+
+# How many steps should be taken in computing the center of mass (COM), and by how many
+# pixels should the search box size be reduced? On each iteration, the
+# search box is moved so that it is centered upon the previous COM estimate, and
+# made smaller to reduce the contribution of noise.
+centroiding_iterations = 2
+iterative_centroiding_step = 2
+
+# When running in "safe mode", CIAO decides whether subapertures have valid signal by checking
+# to make sure that the spots are bright enough. This threshold determines whether they are valid.
+spots_threshold = 100.0
+
+
 beam_diameter_m = 10e-3
 interface_scale_factor = 0.75
 wavelength_m = 840e-9
-estimate_background = True
-background_correction = 0
-search_box_half_width = 5
-spots_threshold = 100.0
 sensor_update_rate = 1.0 # deprecated in current version
 sensor_filter_lenslets = False
 sensor_reconstruct_wavefront = True
 sensor_remove_tip_tilt = True
 centroiding_num_threads = 1
-iterative_centroiding_step = 2
-centroiding_iterations = 2
 
 mirror_update_rate = 1.0 # deprecated in current version
 mirror_flat_filename = dm_directory + 'flat.txt'

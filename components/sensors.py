@@ -300,11 +300,14 @@ class Sensor:
         
         t0 = time.time()
         if not self.fast_centroiding:
-            centroid.estimate_backgrounds(spots_image=self.image,
-                                          sb_x_vec = self.search_boxes.x,
-                                          sb_y_vec = self.search_boxes.y,
-                                          sb_bg_vec = self.box_backgrounds,
-                                          sb_half_width_p = self.search_boxes.half_width)
+            if self.estimate_background:
+                centroid.estimate_backgrounds(spots_image=self.image,
+                                              sb_x_vec = self.search_boxes.x,
+                                              sb_y_vec = self.search_boxes.y,
+                                              sb_bg_vec = self.box_backgrounds,
+                                              sb_half_width_p = self.search_boxes.half_width)
+                self.box_backgrounds = self.box_backgrounds + self.background_correction
+                
             if self.profile_update_method:
                 self.sense_timer.tick('estimate background')
             centroid.compute_centroids(spots_image=self.image,

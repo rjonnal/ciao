@@ -47,6 +47,7 @@ class Beeper:
 
     def beep(self,error_in_nm):
         if self.active:
+            print 1
             k = self.err_to_int(error_in_nm)
             if k in self.tone_dict.keys() and self.n==0:
                 se = self.tone_dict[k]

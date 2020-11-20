@@ -654,8 +654,9 @@ class UI(QWidget):
         self.centroiding_width_spinbox.setValue(self.loop.sensor.centroiding_half_width)
         centroiding_layout.addWidget(self.centroiding_width_spinbox)
         
+        
         bg_layout = QHBoxLayout()
-        bg_layout.addWidget(QLabel('Background correction:'))
+        bg_layout.addWidget(QLabel('Background adjustment:'))
         self.bg_spinbox = QSpinBox()
         self.bg_spinbox.setValue(self.loop.sensor.background_correction)
         self.bg_spinbox.setMaximum(500)
@@ -761,12 +762,16 @@ class UI(QWidget):
         column_2.addLayout(loop_control_layout)
         #column_2.addWidget(self.cb_fast_centroiding)
         column_2.addLayout(aberration_layout)
-        column_2.addLayout(exp_layout)
-        column_2.addLayout(centroiding_layout)
-        column_2.addLayout(bg_layout)
-        column_2.addLayout(poke_layout)
-        column_2.addLayout(modal_layout)
-        column_2.addLayout(dark_layout)
+        #column_2.addLayout(exp_layout)
+        #column_2.addLayout(centroiding_layout)
+        
+        if ccfg.estimate_background:
+            column_2.addLayout(bg_layout)
+        #column_2.addLayout(poke_layout)
+        #column_2.addLayout(modal_layout)
+        if ccfg.use_dark_subtraction:
+            column_2.addLayout(dark_layout)
+            
         column_2.addWidget(self.cb_draw_boxes)
         column_2.addWidget(self.cb_draw_lines)
         column_2.addWidget(self.pb_quit)
