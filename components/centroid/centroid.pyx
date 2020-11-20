@@ -93,8 +93,6 @@ cpdef compute_centroids(np.ndarray[np.int16_t,ndim=2] spots_image,
     cdef np.int_t k_iteration
     cdef np.int_t k_spot
 
-    
-    
     sy = spots_image.shape[0]
     sx = spots_image.shape[1]
 

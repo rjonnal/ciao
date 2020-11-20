@@ -40,6 +40,7 @@ class Simulator:
         self.dc = 100
         self.spots_range = 2000
         self.spots = np.ones((self.sy,self.sx))*self.dc
+        self.image = self.spots.astype(np.uint16)
         self.spots = self.noise(self.spots)
         self.pixel_size_m = ccfg.pixel_size_m
 
@@ -320,6 +321,7 @@ class Simulator:
         nspots = self.noise(spots)
         nspots = np.clip(nspots,0,4095)
         nspots = np.round(nspots).astype(np.int16)
+        self.image = nspots
         return nspots
         
     def interpolate_dirac(self,x,y,frame):

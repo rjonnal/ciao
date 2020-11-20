@@ -45,10 +45,12 @@ class PylonCamera:
             self.camera.ChunkEnable = True
 
         self.timeout = timeout
+        self.image = None
 
     def get_image(self):
-        return self.camera.GrabOne(self.timeout).Array.astype(np.int16)
-
+        self.image = self.camera.GrabOne(self.timeout).Array.astype(np.int16)
+        return self.image
+    
     def close(self):
         return
 
@@ -72,12 +74,14 @@ class XimeaCamera:
             sys.exit()
         self.camera.start_acquisition()
         self.img = xiapi.Image()
+        self.image = None
 
     def get_image(self):
         self.camera.get_image(self.img)
-        return np.reshape(np.frombuffer(self.img.get_image_data_raw(),dtype=np.uint8),
+        self.image = np.reshape(np.frombuffer(self.img.get_image_data_raw(),dtype=np.uint8),
                           (self.img.height,self.img.width)).astype(np.int16)
-
+        return self.image
+    
     def close(self):
         self.camera.stop_acquisition()
         self.camera.close_device()
@@ -101,7 +105,7 @@ class SimulatedCamera:
         self.oy = int(round(np.random.rand()*self.sy//2+self.sy//4))
         self.ox = int(round(np.random.rand()*self.sx//2+self.sx//4))
         self.XX,self.YY = np.meshgrid(np.arange(self.sx),np.arange(self.sy))
-
+        self.image = None
 
     def set_opacity(self,val):
         self.opacity = val
@@ -119,7 +123,8 @@ class SimulatedCamera:
             self.ox = self.ox+np.random.randn()*.5
 
         self.index = (self.index + 1)%self.n_images
-        return im
+        self.image = im
+        return self.image
         
     
     def opacify(self,im,sigma=50):
