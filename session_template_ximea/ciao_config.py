@@ -22,8 +22,7 @@ image_width_px = 1280
 image_height_px = 1024
 bit_depth = 10
 
-ciao_session = '.'
-ciao_session = os.path.split(__file__)[0]
+ciao_session = os.path.abspath('')
 
 # define some directories for configuration files
 reference_directory = ciao_session + '/etc/ref/'
@@ -31,6 +30,7 @@ dm_directory = ciao_session + '/etc/dm/'
 poke_directory = ciao_session + '/etc/ctrl/'
 logging_directory = ciao_session + '/log'
 simulator_cache_directory = ciao_session + '/.simulator_cache'
+
 
 # The reference coordinates need a starting point (see README.md), and these
 # were recorded using calibration/record_reference_coordinates.py:

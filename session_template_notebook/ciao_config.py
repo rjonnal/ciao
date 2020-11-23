@@ -18,19 +18,18 @@ mirror_id = 'simulator'
 camera_id = 'simulator'
 
 import os # 
-image_width_px = 256
-image_height_px = 256
+image_width_px = 512
+image_height_px = 512
 bit_depth = 12
 
-ciao_session = '.'
-ciao_session = os.path.split(__file__)[0]
+ciao_session = os.path.abspath('')
 
 # define some directories for configuration files
-reference_directory = ciao_session + './etc/ref/'
-dm_directory = ciao_session + './etc/dm/'
-poke_directory = ciao_session + './etc/ctrl/'
-logging_directory = ciao_session + './log'
-simulator_cache_directory = ciao_session + './.simulator_cache'
+reference_directory = ciao_session + '/etc/ref/'
+dm_directory = ciao_session + '/etc/dm/'
+poke_directory = ciao_session + '/etc/ctrl/'
+logging_directory = ciao_session + '/log'
+simulator_cache_directory = ciao_session + '/.simulator_cache'
 
 # The reference coordinates need a starting point (see README.md), and these
 # were recorded using calibration/record_reference_coordinates.py:
@@ -43,10 +42,7 @@ poke_filename = poke_directory + 'poke.txt'
 reference_n_measurements = 10
 lenslet_pitch_m = 500e-6
 lenslet_focal_length_m = 10.0e-3
-pixel_size_m = 40e-6
-
-
-
+pixel_size_m = 20e-6
 
 # use_dark_subtraction provides UI control to acquire a dark image and then
 # subtract it from each acquired frame. It can be used in conjunction with
@@ -70,7 +66,7 @@ estimate_background = True
 background_correction = 0
 
 # The search box width is 2*search_box_half_width+1
-search_box_half_width = 5
+search_box_half_width = 10
 
 # How many steps should be taken in computing the center of mass (COM), and by how many
 # pixels should the search box size be reduced? On each iteration, the
@@ -195,7 +191,7 @@ cond_fmt = '%0.2f (Condition)'
 search_box_half_width_max = int(lenslet_pitch_m/pixel_size_m)//2
 
 # Audio settings
-audio_directory = ciao_session + './etc/audio'
+audio_directory = ciao_session + '/etc/audio'
 error_tones = [((0.0, 1e-08), 'A_sharp_5'),
                ((1e-08, 2e-08), 'G_sharp_5'),
                ((2e-08, 3e-08), 'G_5'),

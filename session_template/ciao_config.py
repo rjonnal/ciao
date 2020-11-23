@@ -22,8 +22,7 @@ image_width_px = 256
 image_height_px = 256
 bit_depth = 12
 
-ciao_session = '.'
-ciao_session = os.path.split(__file__)[0]
+ciao_session = os.path.abspath('')
 
 # define some directories for configuration files
 reference_directory = ciao_session + '/etc/ref/'
