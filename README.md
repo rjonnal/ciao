@@ -238,4 +238,3 @@ One probably common use case for CIAO is having multiple "installations" or "ver
 1. Other than condition number, what algorithmic or numerical tests can be employed to predict the performance of a given poke/control matrix?
 
 2. What rules of thumb should be employed when deciding whether a spot should be used? Put differently, how should one choose ```rad``` when generating a SHWS mask, as described above?
-
