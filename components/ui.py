@@ -996,4 +996,5 @@ class MirrorUI(QWidget):
 
     def save(self):
         out = self.mirror.get_command()
+        print "Saving current commands to 'manual_flat.txt'"
         np.savetxt('manual_flat.txt',out)
