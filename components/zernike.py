@@ -329,6 +329,67 @@ class Zernike:
 
         return matrix_out
 
+    def convert_to_string(self,params):
+        """Return a string representation of a Zernike polynomial.
+        This function takes a tuple, consisting of a squared
+        normalizing coefficient and dictionary of inner coefficients
+        and exponents, provided by _zeqn, and returns a string
+        representation of the polynomial, with LaTeX- style markup.
+        Example: a params of (10, {(3,4): 7, (2,5): -1}) would produce a
+        two-term polynomial '\sqrt{10} [7 X^3 Y^4 - X^2 Y^5]', which could be used in LaTeX,
+        pandoc, markdown, MathJax, or Word with MathType, to produce:
+        $$ \sqrt{10} [7 X^3 Y^4 - X^2 Y^5] $$
+        Args:
+          params (tuple): A pair consisting of an outer coefficient
+            $c$ and a dictionary mapping tuples (xexp,yexp) of
+            exponents onto the corresponding term coefficients.
+            
+        Returns:
+          string: A string representation of the polynomial.
+        """
+        c = params[0]
+        cdict = params[1]
+
+
+        keys = sorted(cdict.keys(), key=lambda tup: (tup[0]+tup[1],tup[0]))[::-1]
+
+        outstr = ''
+        firstKey = True
+        for key in keys:
+            coef = cdict[key]
+            if coef>0:
+                sign = '+'
+            else:
+                sign = '-'
+
+            coef = abs(coef)
+            
+            if coef<0 or not firstKey:
+                outstr = outstr + '%s'%sign
+            if coef>1 or (key[0]==0 and key[1]==0):
+                outstr = outstr + '%d'%coef
+            if key[0]:
+                outstr = outstr + 'X^{%d}'%key[0]
+            if key[1]:
+                outstr = outstr + 'Y^{%d}'%key[1]
+            firstKey = False
+            outstr = outstr + ' '
+
+        outstr = outstr.strip()
+        
+
+        if np.sqrt(float(c))%1.0<.00001:
+            cstr = '%d'%(np.sqrt(c))
+        else:
+            cstr = '\sqrt{%d}'%(c)
+
+        if len(outstr):
+            outstr = '%s [%s]'%(cstr,outstr)
+        else:
+            outstr = '%s'%(cstr)
+        return outstr
+
+    
 
 class Reconstructor:
 
